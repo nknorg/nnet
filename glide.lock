@@ -1,5 +1,5 @@
-hash: e7ca2368aae38ee2f5a6ab35f4c04278454b5dca2c7a21f5cfd92c7cb6d42fac
-updated: 2018-10-11T18:51:07.247357-07:00
+hash: 5b3e4a68eea705ea86106e23bca15f945a8e6da1aec2557cae4a5f23012edaa4
+updated: 2018-10-12T15:58:24.805652+08:00
 imports:
 - name: github.com/gogo/protobuf
   version: 636bf0302bc95575d69441b25a2603156ffdddf1
@@ -16,23 +16,8 @@ imports:
   version: e7e905edc00ea8827e58662220139109efea09db
 - name: github.com/klauspost/reedsolomon
   version: 925cb01d65108f2c935e02fdb79ff4a055a4a20d
-- name: github.com/nknorg/nnet
-  version: 8be0074adecc6dae8664e36b186a85dfc1537536
-  subpackages:
-  - cache
-  - common
-  - config
-  - log
-  - message
-  - node
-  - overlay
-  - overlay/chord
-  - overlay/routing
-  - protobuf
-  - transport
-  - util
 - name: github.com/patrickmn/go-cache
-  version: 5633e0862627c011927fa39556acae8b1f1df58a
+  version: a3647f8e31d79543b2d0f0ae2fe5c379d72cedc0
 - name: github.com/pkg/errors
   version: 816c9085562cd7ee03e7f8188a1cfd942858cded
 - name: github.com/templexxx/cpufeat
@@ -44,9 +29,11 @@ imports:
   subpackages:
   - sm4
 - name: github.com/xtaci/kcp-go
-  version: 60be01eef6f665151bfbcde38429ee1d8710f68f
+  version: f48db19e7a48fe347571d6bfc52a7585a53c5315
 - name: golang.org/x/crypto
   version: 0709b304e793a5edb4a2c0145f281ecdc20838a4
+  repo: https://github.com/golang/crypto
+  vcs: git
   subpackages:
   - blowfish
   - cast5
@@ -59,6 +46,8 @@ imports:
   - xtea
 - name: golang.org/x/net
   version: 161cd47e91fd58ac17490ef4d742dc98bb4cf60e
+  repo: https://github.com/golang/net
+  vcs: git
   subpackages:
   - bpf
   - internal/iana

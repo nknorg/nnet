@@ -1,6 +1,19 @@
-package: .
+package: github.com/nknorg/nnet
 import:
-- package: github.com/xtaci/kcp-go
-- package: github.com/patrickmn/go-cache
-- package: github.com/imdario/mergo
+- package: golang.org/x/net
+  repo: https://github.com/golang/net
+  vcs: git
+- package: golang.org/x/crypto
+  repo: https://github.com/golang/crypto
+  vcs: git
 - package: github.com/gogo/protobuf
+  version: ~1.1.1
+  subpackages:
+  - gogoproto
+  - proto
+- package: github.com/imdario/mergo
+  version: ~0.3.6
+- package: github.com/patrickmn/go-cache
+  version: ~2.1.0
+- package: github.com/xtaci/kcp-go
+  version: ~4.3.1
