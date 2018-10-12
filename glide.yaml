@@ -1,0 +1,6 @@
+package: .
+import:
+- package: github.com/xtaci/kcp-go
+- package: github.com/patrickmn/go-cache
+- package: github.com/imdario/mergo
+- package: github.com/gogo/protobuf

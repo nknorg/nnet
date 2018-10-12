@@ -1,0 +1,4 @@
+*.patch
+.DS_Store
+*~
+vendor/
