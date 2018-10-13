@@ -1,8 +1,6 @@
 package chord
 
 import (
-	"encoding/hex"
-
 	"github.com/nknorg/nnet/log"
 	"github.com/nknorg/nnet/node"
 	"github.com/nknorg/nnet/util"
@@ -13,7 +11,7 @@ import (
 func (c *Chord) Connect(addr string, id []byte) error {
 	remoteNode := c.neighbors.GetByID(id)
 	if remoteNode != nil {
-		log.Infof("Node with id %s is already a neighbor", hex.EncodeToString(id))
+		log.Infof("Node with id %x is already a neighbor", id)
 		c.addNeighbor(remoteNode)
 		return nil
 	}

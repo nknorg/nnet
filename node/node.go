@@ -1,6 +1,8 @@
 package node
 
 import (
+	"fmt"
+
 	"github.com/nknorg/nnet/common"
 	"github.com/nknorg/nnet/protobuf"
 )
@@ -25,4 +27,8 @@ func NewNode(id []byte, addr string) (*Node, error) {
 		Addr: addr,
 	}
 	return newNode(n)
+}
+
+func (n *Node) String() string {
+	return fmt.Sprintf("%x@%s", n.Id, n.Addr)
 }

@@ -97,9 +97,9 @@ func (ln *LocalNode) Start() error {
 func (ln *LocalNode) Stop(err error) {
 	ln.StopOnce.Do(func() {
 		if err != nil {
-			log.Warnf("Local node %+v stops because of error: %s", ln.Node, err)
+			log.Warnf("Local node %v stops because of error: %s", ln.Node, err)
 		} else {
-			log.Infof("Local node %+v stops", ln.Node)
+			log.Infof("Local node %v stops", ln.Node)
 		}
 
 		ln.LifeCycle.Stop()
@@ -141,11 +141,14 @@ func (ln *LocalNode) listen() {
 	ln.listener = listener
 
 	for {
+		// listener.Accept() is placed before checking stops to prevent the error
+		// log when local node is stopped and thus conn is closed
+		conn, err := listener.Accept()
+
 		if ln.IsStopped() {
 			return
 		}
 
-		conn, err := listener.Accept()
 		if err != nil {
 			log.Error("Error accepting connection:", err)
 			time.Sleep(1 * time.Second)

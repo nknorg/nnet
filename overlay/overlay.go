@@ -25,6 +25,7 @@ type Interface interface {
 	Start() error
 	Stop(error)
 	Join(string) error
+	ApplyMiddleware(interface{}) error
 }
 
 // Overlay is an abstract overlay network

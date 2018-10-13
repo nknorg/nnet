@@ -44,7 +44,9 @@ message Message {
 message Ping {
 }
 
-message Pong {
+// It took me a month to finally decide not to name this as Pong for naming
+// consistency
+message PingReply {
 }
 
 message GetNode {

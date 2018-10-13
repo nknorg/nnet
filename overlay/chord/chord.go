@@ -1,8 +1,6 @@
 package chord
 
 import (
-	"encoding/hex"
-	"fmt"
 	"sync"
 	"time"
 
@@ -139,6 +137,8 @@ func (c *Chord) Stop(err error) {
 	c.StopOnce.Do(func() {
 		if err != nil {
 			log.Warnf("Chord overlay stops because of error: %s", err)
+		} else {
+			log.Infof("Chord overlay stops")
 		}
 
 		c.LifeCycle.Stop()
@@ -153,11 +153,9 @@ func (c *Chord) Join(seedNodeAddr string) error {
 	}
 
 	var joinOnce sync.Once
-	var join PredecessorAdded = func(remoteNode *node.RemoteNode, index int) bool {
-		// var join node.RemoteNodeReady = func(remoteNode *node.RemoteNode) bool {
-		joinOnce.Do(func() {
-			// time.Sleep(3 * time.Second)
 
+	err = c.ApplyMiddleware(SuccessorAdded(func(remoteNode *node.RemoteNode, index int) bool {
+		joinOnce.Do(func() {
 			var succs []*protobuf.Node
 			// prev is used to prevent msg being routed to self
 			prev := prevID(c.LocalNode.Id, c.nodeIDBits)
@@ -176,10 +174,7 @@ func (c *Chord) Join(seedNodeAddr string) error {
 			}
 		})
 		return true
-	}
-
-	// err = c.LocalNode.ApplyMiddleware(join)
-	err = c.ApplyMiddleware(join)
+	}))
 	if err != nil {
 		return err
 	}
@@ -220,34 +215,6 @@ func (c *Chord) handleMsg() {
 // stabilize periodically updates successors and fingerTable to keep topology
 // correct
 func (c *Chord) stabilize() {
-	go func() {
-		for {
-			time.Sleep(10 * time.Second)
-			if c.LocalNode.Addr == ":23333" {
-				fmt.Printf("\n\nSelf: %s\n", hex.EncodeToString(c.LocalNode.Id))
-				fmt.Printf("\nSuccessors:\n")
-				for _, n := range c.successors.ToRemoteNodeList(true) {
-					fmt.Printf("%s\n", hex.EncodeToString(n.Id))
-				}
-				fmt.Printf("\nPredecessor:\n")
-				for _, n := range c.predecessors.ToRemoteNodeList(true) {
-					fmt.Printf("%s\n", hex.EncodeToString(n.Id))
-				}
-				fmt.Printf("\nFinger Table:\n")
-				for i, finger := range c.fingerTable {
-					if finger.Len() > 0 {
-						fmt.Printf("%d", i)
-						for _, n := range finger.ToRemoteNodeList(true) {
-							fmt.Printf(" %s", hex.EncodeToString(n.Id))
-						}
-						fmt.Printf("\n")
-					}
-				}
-				fmt.Printf("\n\n")
-			}
-		}
-	}()
-
 	go c.updateSuccAndPred()
 	go c.updateNonEmptyFinger()
 	go c.updateEmptyFinger()
@@ -298,6 +265,9 @@ func (c *Chord) updateNonEmptyFinger() {
 				log.Error("Update finger table error:", err)
 			}
 		}
+
+		// to prevent endless looping when fingerTable is all empty
+		time.Sleep(randDuration(c.minStabilizeInterval, c.maxStabilizeInterval))
 	}
 }
 
@@ -344,6 +314,9 @@ func (c *Chord) updateEmptyFinger() {
 				i++
 			}
 		}
+
+		// to prevent endless looping when fingerTable is all non-empty
+		time.Sleep(randDuration(c.minStabilizeInterval, c.maxStabilizeInterval))
 	}
 }
 

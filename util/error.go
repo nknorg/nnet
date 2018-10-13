@@ -15,7 +15,7 @@ func NewErrors() Errors {
 }
 
 // Merged returns a single error containing the string representation of all
-// errors in Errors
+// errors in Errors, or nil if no err in errs
 func (errs Errors) Merged() error {
 	if errs == nil || len(errs) == 0 {
 		return nil

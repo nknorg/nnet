@@ -129,9 +129,9 @@ func (rn *RemoteNode) Start() error {
 func (rn *RemoteNode) Stop(err error) {
 	rn.StopOnce.Do(func() {
 		if err != nil {
-			log.Warnf("Remote node %+v stops because of error: %s", rn.Node, err)
+			log.Warnf("Remote node %v stops because of error: %s", rn.Node, err)
 		} else {
-			log.Infof("Remote node %+v stops", rn.Node)
+			log.Infof("Remote node %v stops", rn.Node)
 		}
 
 		rn.LifeCycle.Stop()

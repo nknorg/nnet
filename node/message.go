@@ -54,7 +54,7 @@ func NewPingMessage() (*protobuf.Message, error) {
 
 // NewPingReply creates a PING reply for heartbeat
 func NewPingReply(replyToID []byte) (*protobuf.Message, error) {
-	msgBody := &protobuf.Pong{}
+	msgBody := &protobuf.PingReply{}
 
 	buf, err := proto.Marshal(msgBody)
 	if err != nil {

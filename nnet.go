@@ -61,6 +61,12 @@ func (nn *NNet) Start() error {
 	return nil
 }
 
+// Stop stops the lifecycle methods of nnet
+func (nn *NNet) Stop(err error) {
+	nn.overlay.Stop(err)
+	nn.localNode.Stop(err)
+}
+
 // Join joins a seed node with address of the form ip:port
 func (nn *NNet) Join(seedNodeAddr string) error {
 	return nn.overlay.Join(seedNodeAddr)

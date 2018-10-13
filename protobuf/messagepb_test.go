@@ -131,15 +131,15 @@ func TestPingMarshalTo(t *testing.T) {
 	}
 }
 
-func TestPongProto(t *testing.T) {
+func TestPingReplyProto(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedPong(popr, false)
+	p := NewPopulatedPingReply(popr, false)
 	dAtA, err := github_com_gogo_protobuf_proto.Marshal(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &Pong{}
+	msg := &PingReply{}
 	if err := github_com_gogo_protobuf_proto.Unmarshal(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -162,10 +162,10 @@ func TestPongProto(t *testing.T) {
 	}
 }
 
-func TestPongMarshalTo(t *testing.T) {
+func TestPingReplyMarshalTo(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedPong(popr, false)
+	p := NewPopulatedPingReply(popr, false)
 	size := p.Size()
 	dAtA := make([]byte, size)
 	for i := range dAtA {
@@ -175,7 +175,7 @@ func TestPongMarshalTo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &Pong{}
+	msg := &PingReply{}
 	if err := github_com_gogo_protobuf_proto.Unmarshal(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -671,16 +671,16 @@ func TestPingJSON(t *testing.T) {
 		t.Fatalf("seed = %d, %#v !Json Equal %#v", seed, msg, p)
 	}
 }
-func TestPongJSON(t *testing.T) {
+func TestPingReplyJSON(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedPong(popr, true)
+	p := NewPopulatedPingReply(popr, true)
 	marshaler := github_com_gogo_protobuf_jsonpb.Marshaler{}
 	jsondata, err := marshaler.MarshalToString(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &Pong{}
+	msg := &PingReply{}
 	err = github_com_gogo_protobuf_jsonpb.UnmarshalString(jsondata, msg)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
@@ -889,12 +889,12 @@ func TestPingProtoCompactText(t *testing.T) {
 	}
 }
 
-func TestPongProtoText(t *testing.T) {
+func TestPingReplyProtoText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedPong(popr, true)
+	p := NewPopulatedPingReply(popr, true)
 	dAtA := github_com_gogo_protobuf_proto.MarshalTextString(p)
-	msg := &Pong{}
+	msg := &PingReply{}
 	if err := github_com_gogo_protobuf_proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -903,12 +903,12 @@ func TestPongProtoText(t *testing.T) {
 	}
 }
 
-func TestPongProtoCompactText(t *testing.T) {
+func TestPingReplyProtoCompactText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedPong(popr, true)
+	p := NewPopulatedPingReply(popr, true)
 	dAtA := github_com_gogo_protobuf_proto.CompactTextString(p)
-	msg := &Pong{}
+	msg := &PingReply{}
 	if err := github_com_gogo_protobuf_proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -1167,9 +1167,9 @@ func TestPingGoString(t *testing.T) {
 		t.Fatal(err)
 	}
 }
-func TestPongGoString(t *testing.T) {
+func TestPingReplyGoString(t *testing.T) {
 	popr := math_rand.New(math_rand.NewSource(time.Now().UnixNano()))
-	p := NewPopulatedPong(popr, false)
+	p := NewPopulatedPingReply(popr, false)
 	s1 := p.GoString()
 	s2 := fmt.Sprintf("%#v", p)
 	if s1 != s2 {
@@ -1328,10 +1328,10 @@ func TestPingSize(t *testing.T) {
 	}
 }
 
-func TestPongSize(t *testing.T) {
+func TestPingReplySize(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedPong(popr, true)
+	p := NewPopulatedPingReply(popr, true)
 	size2 := github_com_gogo_protobuf_proto.Size(p)
 	dAtA, err := github_com_gogo_protobuf_proto.Marshal(p)
 	if err != nil {
@@ -1544,9 +1544,9 @@ func TestPingStringer(t *testing.T) {
 		t.Fatalf("String want %v got %v", s1, s2)
 	}
 }
-func TestPongStringer(t *testing.T) {
+func TestPingReplyStringer(t *testing.T) {
 	popr := math_rand.New(math_rand.NewSource(time.Now().UnixNano()))
-	p := NewPopulatedPong(popr, false)
+	p := NewPopulatedPingReply(popr, false)
 	s1 := p.String()
 	s2 := fmt.Sprintf("%v", p)
 	if s1 != s2 {
