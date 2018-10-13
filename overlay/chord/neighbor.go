@@ -19,7 +19,11 @@ func (c *Chord) Connect(addr string, id []byte) error {
 }
 
 // addNeighbor adds a remote node to the neighbor lists of chord overlay
-func (c *Chord) addNeighbor(remoteNode *node.RemoteNode) bool {
+func (c *Chord) addNeighbor(remoteNode *node.RemoteNode) {
+	if !remoteNode.IsReady() {
+		return
+	}
+
 	if !c.successors.Exists(remoteNode.Id) {
 		added, replaced, err := c.successors.AddOrReplace(remoteNode)
 		if err != nil {
@@ -133,12 +137,14 @@ func (c *Chord) addNeighbor(remoteNode *node.RemoteNode) bool {
 			c.maybeRemove(replaced)
 		}
 	}
-
-	return true
 }
 
 // removeNeighbor removes a remote node from the neighbor lists of chord overlay
-func (c *Chord) removeNeighbor(remoteNode *node.RemoteNode) bool {
+func (c *Chord) removeNeighbor(remoteNode *node.RemoteNode) {
+	if !remoteNode.IsReady() {
+		return
+	}
+
 	removed := c.successors.Remove(remoteNode)
 	if removed {
 		for _, f := range c.middlewareStore.successorRemoved {
@@ -176,8 +182,6 @@ func (c *Chord) removeNeighbor(remoteNode *node.RemoteNode) bool {
 			}
 		}
 	}
-
-	return true
 }
 
 // maybeRemove removes an outbound node that is no longer in successors,

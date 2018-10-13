@@ -24,11 +24,15 @@ enum RoutingType {
 }
 
 enum MessageType {
+  // Node message
   PING = 0;
   GET_NODE = 1;
-  GET_SUCC_AND_PRED = 2;
-  FIND_SUCCESSORS = 3;
-  FIND_PREDECESSOR = 4;
+  STOP = 2;
+
+  // Chord message
+  GET_SUCC_AND_PRED = 3;
+  FIND_SUCCESSORS = 4;
+  FIND_PREDECESSOR = 5;
 }
 
 message Message {
@@ -44,8 +48,6 @@ message Message {
 message Ping {
 }
 
-// It took me a month to finally decide not to name this as Pong for naming
-// consistency
 message PingReply {
 }
 
@@ -54,6 +56,9 @@ message GetNode {
 
 message GetNodeReply {
   Node node = 1;
+}
+
+message Stop {
 }
 
 message GetSuccAndPred {

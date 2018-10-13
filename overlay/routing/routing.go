@@ -32,57 +32,59 @@ func NewRouting(localMsgChan, rxMsgChan chan *node.RemoteMessage) (*Routing, err
 func (r *Routing) Start(router Router, numWorkers int) error {
 	r.StartOnce.Do(func() {
 		for i := 0; i < numWorkers; i++ {
-			go func() {
-				var remoteMsg *node.RemoteMessage
-				var localNode *node.LocalNode
-				var remoteNode *node.RemoteNode
-				var remoteNodes []*node.RemoteNode
-				var err error
-
-				for {
-					if r.IsStopped() {
-						return
-					}
-
-					select {
-					case remoteMsg = <-r.rxMsgChan:
-						localNode, remoteNodes, err = router.GetNodeToRoute(remoteMsg)
-						if err != nil {
-							log.Warn("Get next hop error:", err)
-							continue
-						}
-
-						if localNode != nil {
-							if len(remoteMsg.Msg.ReplyToId) > 0 {
-								replyChan, ok := localNode.GetReplyChan(remoteMsg.Msg.ReplyToId)
-								if ok && replyChan != nil {
-									select {
-									case replyChan <- remoteMsg:
-									default:
-										log.Warn("Reply chan full, discarding msg")
-									}
-								}
-								continue
-							}
-
-							select {
-							case r.localMsgChan <- remoteMsg:
-							default:
-								log.Warn("Router local msg chan full, discarding msg")
-							}
-						}
-
-						for _, remoteNode = range remoteNodes {
-							err = remoteNode.SendMessageAsync(remoteMsg.Msg)
-							if err != nil {
-								log.Warn("Send message to remote node error:", err)
-							}
-						}
-					}
-				}
-			}()
+			go r.handleMsg(router)
 		}
 	})
 
 	return nil
+}
+
+func (r *Routing) handleMsg(router Router) {
+	var remoteMsg *node.RemoteMessage
+	var localNode *node.LocalNode
+	var remoteNode *node.RemoteNode
+	var remoteNodes []*node.RemoteNode
+	var err error
+
+	for {
+		if r.IsStopped() {
+			return
+		}
+
+		select {
+		case remoteMsg = <-r.rxMsgChan:
+			localNode, remoteNodes, err = router.GetNodeToRoute(remoteMsg)
+			if err != nil {
+				log.Warn("Get next hop error:", err)
+				continue
+			}
+
+			if localNode != nil {
+				if len(remoteMsg.Msg.ReplyToId) > 0 {
+					replyChan, ok := localNode.GetReplyChan(remoteMsg.Msg.ReplyToId)
+					if ok && replyChan != nil {
+						select {
+						case replyChan <- remoteMsg:
+						default:
+							log.Warn("Reply chan full, discarding msg")
+						}
+					}
+					continue
+				}
+
+				select {
+				case r.localMsgChan <- remoteMsg:
+				default:
+					log.Warn("Router local msg chan full, discarding msg")
+				}
+			}
+
+			for _, remoteNode = range remoteNodes {
+				err = remoteNode.SendMessageAsync(remoteMsg.Msg)
+				if err != nil {
+					log.Warn("Send message to remote node error:", err)
+				}
+			}
+		}
+	}
 }

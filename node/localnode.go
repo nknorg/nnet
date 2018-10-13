@@ -25,6 +25,9 @@ const (
 
 	// How often to check and delete expired reply chan
 	replyChanCleanupInterval = 1 * time.Second
+
+	// How many concurrent goroutines are handling messages
+	numWorkers = 1
 )
 
 // LocalNode is a local node
@@ -86,7 +89,9 @@ func NewLocalNode(id []byte, conf *config.Config) (*LocalNode, error) {
 // Start starts the runtime loop of the local node
 func (ln *LocalNode) Start() error {
 	ln.StartOnce.Do(func() {
-		go ln.handleMsg()
+		for i := 0; i < numWorkers; i++ {
+			go ln.handleMsg()
+		}
 		go ln.listen()
 	})
 
@@ -97,9 +102,9 @@ func (ln *LocalNode) Start() error {
 func (ln *LocalNode) Stop(err error) {
 	ln.StopOnce.Do(func() {
 		if err != nil {
-			log.Warnf("Local node %v stops because of error: %s", ln.Node, err)
+			log.Warnf("Local node %v stops because of error: %s", ln, err)
 		} else {
-			log.Infof("Local node %v stops", ln.Node)
+			log.Infof("Local node %v stops", ln)
 		}
 
 		ln.LifeCycle.Stop()

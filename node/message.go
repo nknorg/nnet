@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/gogo/protobuf/proto"
+	"github.com/nknorg/nnet/log"
 	"github.com/nknorg/nnet/message"
 	"github.com/nknorg/nnet/protobuf"
 )
@@ -115,6 +116,31 @@ func NewGetNodeReply(replyToID []byte, n *protobuf.Node) (*protobuf.Message, err
 	return msg, nil
 }
 
+// NewStopMessage creates a STOP message to notify local node to close
+// connection with remote node
+func NewStopMessage() (*protobuf.Message, error) {
+	id, err := message.GenID()
+	if err != nil {
+		return nil, err
+	}
+
+	msgBody := &protobuf.Stop{}
+
+	buf, err := proto.Marshal(msgBody)
+	if err != nil {
+		return nil, err
+	}
+
+	msg := &protobuf.Message{
+		MessageType: protobuf.STOP,
+		RoutingType: protobuf.DIRECT,
+		MessageId:   id,
+		Message:     buf,
+	}
+
+	return msg, nil
+}
+
 // handleRemoteMessage handles a remote message and returns error
 func (ln *LocalNode) handleRemoteMessage(remoteMsg *RemoteMessage) error {
 	switch remoteMsg.Msg.MessageType {
@@ -139,6 +165,10 @@ func (ln *LocalNode) handleRemoteMessage(remoteMsg *RemoteMessage) error {
 		if err != nil {
 			return err
 		}
+
+	case protobuf.STOP:
+		log.Infof("Received stop message from remote node %v", remoteMsg.RemoteNode)
+		remoteMsg.RemoteNode.Stop(nil)
 
 	default:
 		return errors.New("Unknown message type")

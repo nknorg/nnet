@@ -132,6 +132,7 @@ func main() {
 	}
 
 	for i := 0; i < *numNodesPtr-1; i++ {
+		time.Sleep(time.Second)
 		nn, err = join(createPort+uint16(i)+1, createPort)
 		if err != nil {
 			log.Error(err)

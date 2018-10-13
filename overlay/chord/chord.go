@@ -13,6 +13,11 @@ import (
 	"github.com/nknorg/nnet/protobuf"
 )
 
+const (
+	// How many concurrent goroutines are handling messages
+	numWorkers = 1
+)
+
 // Chord is the overlay network based on Chord DHT
 type Chord struct {
 	*overlay.Overlay
@@ -103,12 +108,18 @@ func NewChord(localNode *node.LocalNode, conf *config.Config) (*Chord, error) {
 		return nil, err
 	}
 
-	err = localNode.ApplyMiddleware(node.RemoteNodeReady(c.addNeighbor))
+	err = localNode.ApplyMiddleware(node.RemoteNodeReady(func(rn *node.RemoteNode) bool {
+		c.addNeighbor(rn)
+		return true
+	}))
 	if err != nil {
 		return nil, err
 	}
 
-	err = localNode.ApplyMiddleware(node.RemoteNodeDisconnected(c.removeNeighbor))
+	err = localNode.ApplyMiddleware(node.RemoteNodeDisconnected(func(rn *node.RemoteNode) bool {
+		c.removeNeighbor(rn)
+		return true
+	}))
 	if err != nil {
 		return nil, err
 	}
@@ -119,9 +130,37 @@ func NewChord(localNode *node.LocalNode, conf *config.Config) (*Chord, error) {
 // Start starts the runtime loop of the chord network
 func (c *Chord) Start() error {
 	c.StartOnce.Do(func() {
-		go c.handleMsg()
+		var joinOnce sync.Once
 
-		err := c.StartRouters()
+		err := c.ApplyMiddleware(SuccessorAdded(func(remoteNode *node.RemoteNode, index int) bool {
+			joinOnce.Do(func() {
+				// prev is used to prevent msg being routed to self
+				prev := prevID(c.LocalNode.Id, c.nodeIDBits)
+				succs, err := c.FindSuccessors(prev, c.successors.Cap())
+				if err != nil {
+					log.Error("Join failed:", err)
+				}
+
+				for _, succ := range succs {
+					if CompareID(succ.Id, c.LocalNode.Id) != 0 {
+						err = c.Connect(succ.Addr, succ.Id)
+						if err != nil {
+							log.Error(err)
+						}
+					}
+				}
+			})
+			return true
+		}))
+		if err != nil {
+			c.Stop(err)
+		}
+
+		for i := 0; i < numWorkers; i++ {
+			go c.handleMsg()
+		}
+
+		err = c.StartRouters()
 		if err != nil {
 			c.Stop(err)
 		}
@@ -148,33 +187,6 @@ func (c *Chord) Stop(err error) {
 // Join joins an existing chord network starting from the seedNodeAddr
 func (c *Chord) Join(seedNodeAddr string) error {
 	err := c.Connect(seedNodeAddr, nil)
-	if err != nil {
-		return err
-	}
-
-	var joinOnce sync.Once
-
-	err = c.ApplyMiddleware(SuccessorAdded(func(remoteNode *node.RemoteNode, index int) bool {
-		joinOnce.Do(func() {
-			var succs []*protobuf.Node
-			// prev is used to prevent msg being routed to self
-			prev := prevID(c.LocalNode.Id, c.nodeIDBits)
-			succs, err = c.FindSuccessors(prev, c.successors.Cap())
-			if err != nil {
-				log.Error("Join failed:", err)
-			}
-
-			for _, succ := range succs {
-				if CompareID(succ.Id, c.LocalNode.Id) != 0 {
-					err = c.Connect(succ.Addr, succ.Id)
-					if err != nil {
-						log.Error(err)
-					}
-				}
-			}
-		})
-		return true
-	}))
 	if err != nil {
 		return err
 	}

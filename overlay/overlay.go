@@ -91,7 +91,7 @@ func (ovl *Overlay) StartRouters() error {
 
 // SendMessage sends msg to the best next hop, returns reply chans if hasReply =
 // true and aggregated errors during message sending
-func (ovl *Overlay) SendMessage(msg *protobuf.Message, routingType protobuf.RoutingType, hasReply bool) ([]chan *node.RemoteMessage, bool, error) {
+func (ovl *Overlay) SendMessage(msg *protobuf.Message, routingType protobuf.RoutingType, hasReply bool) (chan *node.RemoteMessage, bool, error) {
 	router, err := ovl.GetRouter(routingType)
 	if err != nil {
 		return nil, false, err
@@ -106,36 +106,27 @@ func (ovl *Overlay) SendMessage(msg *protobuf.Message, routingType protobuf.Rout
 		return nil, false, errors.New("No remote node to route")
 	}
 
-	var replyChans []chan *node.RemoteMessage
+	var replyChan chan *node.RemoteMessage
 	errs := util.NewErrors()
 	success := false
-	if hasReply {
-		replyChans = make([]chan *node.RemoteMessage, 0)
-		for _, remoteNode := range remoteNodes {
-			replyChan, err := remoteNode.SendMessage(msg, true)
-			if err != nil {
-				errs = append(errs, err)
-			} else {
-				replyChans = append(replyChans, replyChan)
-				success = true
-			}
+
+	for _, remoteNode := range remoteNodes {
+		// If there are multiple next hop, we only grab the first reply channel
+		// because all msg have the same ID and will be using the same reply channel
+		if hasReply && replyChan == nil {
+			replyChan, err = remoteNode.SendMessage(msg, true)
+		} else {
+			_, err = remoteNode.SendMessage(msg, false)
 		}
-	} else {
-		for _, remoteNode := range remoteNodes {
-			_, err := remoteNode.SendMessage(msg, false)
-			if err != nil {
-				errs = append(errs, err)
-			} else {
-				success = true
-			}
+
+		if err != nil {
+			errs = append(errs, err)
+		} else {
+			success = true
 		}
 	}
 
-	if !success {
-		replyChans = nil
-	}
-
-	return replyChans, true, errs.Merged()
+	return replyChan, success, errs.Merged()
 }
 
 // SendMessageAsync sends msg to the best next hop and returns aggretated error
@@ -149,28 +140,13 @@ func (ovl *Overlay) SendMessageAsync(msg *protobuf.Message, routingType protobuf
 // aggregated error during message sending, will also returns error if haven't
 // receive reply before timeout
 func (ovl *Overlay) SendMessageSync(msg *protobuf.Message, routingType protobuf.RoutingType) (*protobuf.Message, bool, error) {
-	replyChans, success, err := ovl.SendMessage(msg, routingType, true)
+	replyChan, success, err := ovl.SendMessage(msg, routingType, true)
 	if !success {
 		return nil, success, err
 	}
 
-	raceReplyChan := make(chan *node.RemoteMessage)
-
-	for i := range replyChans {
-		go func(replyChan chan *node.RemoteMessage) {
-			select {
-			case replyMsg := <-replyChan:
-				select {
-				case raceReplyChan <- replyMsg:
-				default:
-				}
-			case <-time.After(replyTimeout):
-			}
-		}(replyChans[i])
-	}
-
 	select {
-	case replyMsg := <-raceReplyChan:
+	case replyMsg := <-replyChan:
 		return replyMsg.Msg, true, nil
 	case <-time.After(replyTimeout):
 		return nil, true, errors.New("Wait for reply timeout")

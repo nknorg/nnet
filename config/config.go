@@ -22,9 +22,9 @@ type Config struct {
 // DefaultConfig returns the default configurations
 func DefaultConfig() *Config {
 	defaultConfig := &Config{
-		Transport:            "kcp",
+		Transport:            "tcp",
 		NodeIDBytes:          32,
-		MinNumSuccessors:     16,
+		MinNumSuccessors:     8,
 		MinNumPredecessors:   1,
 		NumFingerSuccessors:  1,
 		MinStabilizeInterval: 1 * time.Second,

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
@@ -46,6 +47,8 @@ type RemoteNode struct {
 	}
 	rxMsgChan chan *protobuf.Message
 	txMsgChan chan *protobuf.Message
+	ready     bool
+	readyLock sync.RWMutex
 }
 
 // NewRemoteNode creates a remote node
@@ -74,6 +77,18 @@ func NewRemoteNode(localNode *LocalNode, conn net.Conn, isOutbound bool) (*Remot
 	return remoteNode, nil
 }
 
+func (rn *RemoteNode) String() string {
+	return rn.conn.RemoteAddr().String()
+	// return fmt.Sprintf("%v<%v>", rn.Node, rn.conn.RemoteAddr())
+}
+
+// IsReady returns if the remote node is ready
+func (rn *RemoteNode) IsReady() bool {
+	rn.readyLock.RLock()
+	defer rn.readyLock.RUnlock()
+	return rn.ready
+}
+
 // Start starts the runtime loop of the remote node
 func (rn *RemoteNode) Start() error {
 	rn.StartOnce.Do(func() {
@@ -81,9 +96,9 @@ func (rn *RemoteNode) Start() error {
 			return
 		}
 
+		go rn.handleMsg()
 		go rn.rx()
 		go rn.tx()
-		go rn.handleMsg()
 
 		go func() {
 			n, err := rn.GetNode()
@@ -114,6 +129,10 @@ func (rn *RemoteNode) Start() error {
 
 			rn.Node.Node = n
 
+			rn.readyLock.Lock()
+			rn.ready = true
+			rn.readyLock.Unlock()
+
 			for _, f := range rn.LocalNode.middlewareStore.remoteNodeReady {
 				if !f(rn) {
 					break
@@ -129,9 +148,13 @@ func (rn *RemoteNode) Start() error {
 func (rn *RemoteNode) Stop(err error) {
 	rn.StopOnce.Do(func() {
 		if err != nil {
-			log.Warnf("Remote node %v stops because of error: %s", rn.Node, err)
+			log.Warnf("Remote node %v stops because of error: %s", rn, err)
 		} else {
-			log.Infof("Remote node %v stops", rn.Node)
+			err = rn.NotifyStop()
+			if err != nil {
+				log.Warn("Notify remote node stop error:", err)
+			}
+			log.Infof("Remote node %v stops", rn)
 		}
 
 		rn.LifeCycle.Stop()
@@ -400,4 +423,20 @@ func (rn *RemoteNode) GetNode() (*protobuf.Node, error) {
 	}
 
 	return replyBody.Node, nil
+}
+
+// NotifyStop sends a Stop message to remote node to notify it that we will
+// close connection with it
+func (rn *RemoteNode) NotifyStop() error {
+	msg, err := NewStopMessage()
+	if err != nil {
+		return err
+	}
+
+	err = rn.SendMessageAsync(msg)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

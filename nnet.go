@@ -27,7 +27,7 @@ func NewNNet(userConf config.Config) (*NNet, error) {
 		return nil, err
 	}
 
-	localNode, err := node.NewLocalNode(id, conf)
+	localNode, err := node.NewLocalNode(id[:], conf)
 	if err != nil {
 		return nil, err
 	}
