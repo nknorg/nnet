@@ -116,15 +116,15 @@ func (sl *NeighborList) GetFirst() *node.RemoteNode {
 	var dist, minDist *big.Int
 
 	sl.nodes.Range(func(key, value interface{}) bool {
-		rn, ok := value.(*node.RemoteNode)
+		remoteNode, ok := value.(*node.RemoteNode)
 		if ok {
 			if sl.reversed {
-				dist = distance(rn.Id, sl.startID, sl.nodeIDBits)
+				dist = distance(remoteNode.Id, sl.startID, sl.nodeIDBits)
 			} else {
-				dist = distance(sl.startID, rn.Id, sl.nodeIDBits)
+				dist = distance(sl.startID, remoteNode.Id, sl.nodeIDBits)
 			}
 			if minDist == nil || dist.Cmp(minDist) < 0 {
-				first = rn
+				first = remoteNode
 				minDist = dist
 			}
 		}
@@ -138,26 +138,26 @@ func (sl *NeighborList) GetFirst() *node.RemoteNode {
 // distance from/to its startID. This is faster than calling ToRemoteNodeList
 // and then take the last element
 func (sl *NeighborList) GetLast() *node.RemoteNode {
-	var first *node.RemoteNode
+	var last *node.RemoteNode
 	var dist, maxDist *big.Int
 
 	sl.nodes.Range(func(key, value interface{}) bool {
-		rn, ok := value.(*node.RemoteNode)
+		remoteNode, ok := value.(*node.RemoteNode)
 		if ok {
 			if sl.reversed {
-				dist = distance(rn.Id, sl.startID, sl.nodeIDBits)
+				dist = distance(remoteNode.Id, sl.startID, sl.nodeIDBits)
 			} else {
-				dist = distance(sl.startID, rn.Id, sl.nodeIDBits)
+				dist = distance(sl.startID, remoteNode.Id, sl.nodeIDBits)
 			}
 			if maxDist == nil || dist.Cmp(maxDist) > 0 {
-				first = rn
+				last = remoteNode
 				maxDist = dist
 			}
 		}
 		return true
 	})
 
-	return first
+	return last
 }
 
 // AddOrReplace add a node to NeighborList, replace an existing one if there are
@@ -168,16 +168,12 @@ func (sl *NeighborList) AddOrReplace(remoteNode *node.RemoteNode) (bool, *node.R
 		return false, nil, nil
 	}
 
-	var length uint32
 	var replaced *node.RemoteNode
 
-	if sl.Cap() > 0 {
-		length = sl.Len()
-		if length >= sl.Cap() {
-			replaced = sl.GetLast()
-			if sl.cmp(remoteNode.Node.Node, replaced.Node.Node) >= 0 {
-				return false, nil, nil
-			}
+	if sl.Cap() > 0 && sl.Len() >= sl.Cap() {
+		replaced = sl.GetLast()
+		if replaced != nil && sl.cmp(remoteNode.Node.Node, replaced.Node.Node) >= 0 {
+			return false, nil, nil
 		}
 	}
 
@@ -225,8 +221,8 @@ func (sl *NeighborList) ToRemoteNodeList(sorted bool) []*node.RemoteNode {
 // ToProtoNodeList returns a list of protobuf.Node that are in NeighborList
 func (sl *NeighborList) ToProtoNodeList(sorted bool) []*protobuf.Node {
 	nodes := make([]*protobuf.Node, 0)
-	for _, rn := range sl.ToRemoteNodeList(sorted) {
-		nodes = append(nodes, rn.Node.Node)
+	for _, remoteNode := range sl.ToRemoteNodeList(sorted) {
+		nodes = append(nodes, remoteNode.Node.Node)
 	}
 	return nodes
 }

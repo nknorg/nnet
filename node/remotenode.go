@@ -78,8 +78,10 @@ func NewRemoteNode(localNode *LocalNode, conn net.Conn, isOutbound bool) (*Remot
 }
 
 func (rn *RemoteNode) String() string {
-	return rn.conn.RemoteAddr().String()
-	// return fmt.Sprintf("%v<%v>", rn.Node, rn.conn.RemoteAddr())
+	if !rn.IsReady() {
+		return fmt.Sprintf("<%s>", rn.conn.RemoteAddr().String())
+	}
+	return fmt.Sprintf("%v<%s>", rn.Node, rn.conn.RemoteAddr().String())
 }
 
 // IsReady returns if the remote node is ready
@@ -160,6 +162,7 @@ func (rn *RemoteNode) Stop(err error) {
 		rn.LifeCycle.Stop()
 
 		if rn.conn != nil {
+			rn.LocalNode.remoteNodes.Delete(rn.conn.RemoteAddr().String())
 			rn.conn.Close()
 		}
 

@@ -16,9 +16,9 @@ import (
 	"github.com/nknorg/nnet/overlay/chord"
 )
 
-func create(port uint16) (*nnet.NNet, error) {
+func create(transport string, port uint16) (*nnet.NNet, error) {
 	conf := config.Config{
-		Transport:            "tcp",
+		Transport:            transport,
 		Port:                 port,
 		MinNumSuccessors:     8,
 		MinStabilizeInterval: 100 * time.Millisecond,
@@ -35,8 +35,8 @@ func create(port uint16) (*nnet.NNet, error) {
 	return nn, nil
 }
 
-func join(localPort, seedPort uint16) (*nnet.NNet, error) {
-	nn, err := create(localPort)
+func join(transport string, localPort, seedPort uint16) (*nnet.NNet, error) {
+	nn, err := create(transport, localPort)
 	if err != nil {
 		return nil, err
 	}
@@ -51,6 +51,7 @@ func join(localPort, seedPort uint16) (*nnet.NNet, error) {
 
 func main() {
 	numNodesPtr := flag.Int("n", 10, "number of nodes")
+	transportPtr := flag.String("t", "tcp", "transport type, e.g. tcp or kcp")
 	flag.Parse()
 
 	if *numNodesPtr < 1 {
@@ -61,7 +62,7 @@ func main() {
 	const createPort uint16 = 23333
 	nnets := make([]*nnet.NNet, 0)
 
-	nn, err := create(createPort)
+	nn, err := create(*transportPtr, createPort)
 	if err != nil {
 		log.Error(err)
 		return
@@ -132,8 +133,9 @@ func main() {
 	}
 
 	for i := 0; i < *numNodesPtr-1; i++ {
-		time.Sleep(time.Second)
-		nn, err = join(createPort+uint16(i)+1, createPort)
+		time.Sleep(112358 * time.Microsecond)
+
+		nn, err = join(*transportPtr, createPort+uint16(i)+1, createPort)
 		if err != nil {
 			log.Error(err)
 			continue

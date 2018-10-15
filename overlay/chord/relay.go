@@ -53,25 +53,25 @@ func (dr *RelayRouting) GetNodeToRoute(remoteMsg *node.RemoteMessage) (*node.Loc
 	nextHop := succ
 	minDist := distance(succ.Id, remoteMsg.Msg.DestId, dr.chord.nodeIDBits)
 
-	for _, rn := range dr.chord.successors.ToRemoteNodeList(false) {
-		if rn == remoteMsg.RemoteNode {
+	for _, remoteNode := range dr.chord.successors.ToRemoteNodeList(false) {
+		if remoteNode == remoteMsg.RemoteNode {
 			continue
 		}
-		dist := distance(rn.Id, remoteMsg.Msg.DestId, dr.chord.nodeIDBits)
+		dist := distance(remoteNode.Id, remoteMsg.Msg.DestId, dr.chord.nodeIDBits)
 		if dist.Cmp(minDist) < 0 {
-			nextHop = rn
+			nextHop = remoteNode
 			minDist = dist
 		}
 	}
 
 	for _, finger := range dr.chord.fingerTable {
-		for _, rn := range finger.ToRemoteNodeList(false) {
-			if rn == remoteMsg.RemoteNode {
+		for _, remoteNode := range finger.ToRemoteNodeList(false) {
+			if remoteNode == remoteMsg.RemoteNode {
 				continue
 			}
-			dist := distance(rn.Id, remoteMsg.Msg.DestId, dr.chord.nodeIDBits)
+			dist := distance(remoteNode.Id, remoteMsg.Msg.DestId, dr.chord.nodeIDBits)
 			if dist.Cmp(minDist) < 0 {
-				nextHop = rn
+				nextHop = remoteNode
 				minDist = dist
 			}
 		}

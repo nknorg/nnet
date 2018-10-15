@@ -27,5 +27,5 @@ func (errs Errors) Merged() error {
 			errStrings = append(errStrings, err.Error())
 		}
 	}
-	return errors.New(strings.Join(errStrings, ", "))
+	return errors.New(strings.Join(errStrings, "; "))
 }

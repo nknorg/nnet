@@ -9,13 +9,25 @@ import (
 // Connect connects to a remote node. optionally with id info to check if
 // connection has established
 func (c *Chord) Connect(addr string, id []byte) error {
-	remoteNode := c.neighbors.GetByID(id)
-	if remoteNode != nil {
-		log.Infof("Node with id %x is already a neighbor", id)
-		c.addNeighbor(remoteNode)
-		return nil
+	if id != nil {
+		remoteNode := c.neighbors.GetByID(id)
+		if remoteNode != nil {
+			log.Infof("Node with id %x is already a neighbor", id)
+			c.addNeighbor(remoteNode)
+			return nil
+		}
 	}
-	return c.LocalNode.Connect(addr)
+
+	remoteNode, ready, err := c.LocalNode.Connect(addr)
+	if err != nil {
+		return err
+	}
+
+	if ready {
+		c.addNeighbor(remoteNode)
+	}
+
+	return nil
 }
 
 // addNeighbor adds a remote node to the neighbor lists of chord overlay
@@ -43,12 +55,12 @@ func (c *Chord) addNeighbor(remoteNode *node.RemoteNode) {
 
 		if replaced != nil {
 			for _, f := range c.middlewareStore.successorRemoved {
-				if !f(remoteNode) {
+				if !f(replaced) {
 					break
 				}
 			}
 
-			c.maybeRemove(replaced)
+			c.maybeStopRemoteNode(replaced)
 		}
 	}
 
@@ -71,12 +83,12 @@ func (c *Chord) addNeighbor(remoteNode *node.RemoteNode) {
 
 		if replaced != nil {
 			for _, f := range c.middlewareStore.predecessorRemoved {
-				if !f(remoteNode) {
+				if !f(replaced) {
 					break
 				}
 			}
 
-			c.maybeRemove(replaced)
+			c.maybeStopRemoteNode(replaced)
 		}
 	}
 
@@ -100,12 +112,12 @@ func (c *Chord) addNeighbor(remoteNode *node.RemoteNode) {
 
 			if replaced != nil {
 				for _, f := range c.middlewareStore.fingerTableRemoved {
-					if !f(remoteNode, i) {
+					if !f(replaced, i) {
 						break
 					}
 				}
 
-				c.maybeRemove(replaced)
+				c.maybeStopRemoteNode(replaced)
 			}
 		}
 	}
@@ -129,12 +141,12 @@ func (c *Chord) addNeighbor(remoteNode *node.RemoteNode) {
 
 		if replaced != nil {
 			for _, f := range c.middlewareStore.neighborRemoved {
-				if !f(remoteNode) {
+				if !f(replaced) {
 					break
 				}
 			}
 
-			c.maybeRemove(replaced)
+			c.maybeStopRemoteNode(replaced)
 		}
 	}
 }
@@ -184,28 +196,26 @@ func (c *Chord) removeNeighbor(remoteNode *node.RemoteNode) {
 	}
 }
 
-// maybeRemove removes an outbound node that is no longer in successors,
+// maybeStopRemoteNode removes an outbound node that is no longer in successors,
 // predecessor, or finger table
-func (c *Chord) maybeRemove(remoteNode *node.RemoteNode) bool {
+func (c *Chord) maybeStopRemoteNode(remoteNode *node.RemoteNode) bool {
 	if !remoteNode.IsOutbound {
 		return false
 	}
 
-	if c.successors.GetByID(remoteNode.Id) != nil {
+	if c.successors.Exists(remoteNode.Id) {
 		return false
 	}
 
-	if c.predecessors.GetByID(remoteNode.Id) != nil {
+	if c.predecessors.Exists(remoteNode.Id) {
 		return false
 	}
 
 	for _, finger := range c.fingerTable {
-		if finger.GetByID(remoteNode.Id) != nil {
+		if finger.Exists(remoteNode.Id) {
 			return false
 		}
 	}
-
-	c.removeNeighbor(remoteNode)
 
 	remoteNode.Stop(nil)
 
@@ -220,7 +230,6 @@ func (c *Chord) updateNeighborList(neighborList *NeighborList) error {
 
 	errs := util.NewErrors()
 	for _, newNode := range newNodes {
-		// TODO: check if in connecting list
 		err = c.Connect(newNode.Addr, newNode.Id)
 		if err != nil {
 			errs = append(errs, err)

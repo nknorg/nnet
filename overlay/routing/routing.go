@@ -66,7 +66,7 @@ func (r *Routing) handleMsg(router Router) {
 						select {
 						case replyChan <- remoteMsg:
 						default:
-							log.Warn("Reply chan full, discarding msg")
+							log.Warn("Reply chan unavailable or full, discarding msg")
 						}
 					}
 					continue

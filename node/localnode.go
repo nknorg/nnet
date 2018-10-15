@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/nknorg/nnet/cache"
@@ -39,6 +40,7 @@ type LocalNode struct {
 	rxMsgChan      map[protobuf.RoutingType]chan *RemoteMessage
 	handleMsgChan  chan *RemoteMessage
 	replyChanCache cache.Cache
+	remoteNodes    sync.Map
 	*middlewareStore
 }
 
@@ -160,33 +162,70 @@ func (ln *LocalNode) listen() {
 			continue
 		}
 
-		log.Infof("Remote node connect from %s to local address %s", conn.RemoteAddr(), conn.LocalAddr())
-
-		_, err = ln.StartRemoteNode(conn, false)
-		if err != nil {
-			log.Error("Error creating remote node:", err)
+		_, loaded := ln.remoteNodes.LoadOrStore(conn.RemoteAddr().String(), nil)
+		if loaded {
+			log.Errorf("Remote addr %s is already connected, reject connection", conn.RemoteAddr().String())
+			conn.Close()
 			continue
 		}
+
+		log.Infof("Remote node connect from %s to local address %s", conn.RemoteAddr().String(), conn.LocalAddr())
+
+		rn, err := ln.StartRemoteNode(conn, false)
+		if err != nil {
+			log.Error("Error creating remote node:", err)
+			ln.remoteNodes.Delete(conn.RemoteAddr().String())
+			conn.Close()
+			continue
+		}
+
+		ln.remoteNodes.Store(conn.RemoteAddr().String(), rn)
 	}
 }
 
-// Connect try to establish connection with address remoteNodeAddr
-func (ln *LocalNode) Connect(remoteNodeAddr string) error {
+// Connect try to establish connection with address remoteNodeAddr, returns the
+// remote node, if the remote node is ready, and error. The remote rode can be
+// nil if another goroutine is connecting to the same address concurrently. The
+// remote node is ready if an active connection to the remoteNodeAddr exists and
+// node info has been exchanged.
+func (ln *LocalNode) Connect(remoteNodeAddr string) (*RemoteNode, bool, error) {
 	if remoteNodeAddr == ln.Node.Addr {
-		return errors.New("trying to connect to self")
+		return nil, false, errors.New("trying to connect to self")
+	}
+
+	value, loaded := ln.remoteNodes.LoadOrStore(remoteNodeAddr, nil)
+	if loaded {
+		remoteNode, ok := value.(*RemoteNode)
+		if ok {
+			if remoteNode.IsStopped() {
+				log.Warnf("Remove stopped remote node %v from list", remoteNode)
+				ln.remoteNodes.Delete(remoteNodeAddr)
+			} else {
+				log.Infof("Load remote node %v from list", remoteNode)
+				return remoteNode, remoteNode.IsReady(), nil
+			}
+		} else {
+			log.Infof("Another goroutine is connecting to %s", remoteNodeAddr)
+			return nil, false, nil
+		}
 	}
 
 	conn, err := ln.transport.Dial(remoteNodeAddr)
 	if err != nil {
-		return err
+		ln.remoteNodes.Delete(remoteNodeAddr)
+		return nil, false, err
 	}
 
-	_, err = ln.StartRemoteNode(conn, true)
+	remoteNode, err := ln.StartRemoteNode(conn, true)
 	if err != nil {
-		return err
+		ln.remoteNodes.Delete(remoteNodeAddr)
+		conn.Close()
+		return nil, false, err
 	}
 
-	return nil
+	ln.remoteNodes.Store(remoteNodeAddr, remoteNode)
+
+	return remoteNode, false, nil
 }
 
 // StartRemoteNode creates and starts a remote node using conn

@@ -149,6 +149,8 @@ func (c *Chord) Start() error {
 						}
 					}
 				}
+
+				go c.stabilize()
 			})
 			return true
 		}))
@@ -164,8 +166,6 @@ func (c *Chord) Start() error {
 		if err != nil {
 			c.Stop(err)
 		}
-
-		go c.stabilize()
 	})
 
 	return nil
@@ -303,7 +303,7 @@ func (c *Chord) updateEmptyFinger() {
 
 			succs, err = c.FindSuccessors(c.fingerTable[i].startID, 1)
 			if err != nil {
-				// log.Error("Find successor for finger table error:", err)
+				log.Error("Find successor for finger table error:", err)
 				continue
 			}
 
@@ -315,7 +315,6 @@ func (c *Chord) updateEmptyFinger() {
 				if betweenIncl(c.fingerTable[i].startID, c.fingerTable[i].endID, succs[0].Id) {
 					existing := c.fingerTable[i].GetFirst()
 					if existing == nil || betweenLeftIncl(c.fingerTable[i].startID, existing.Id, succs[0].Id) {
-						// TODO: check if in connecting list
 						err = c.Connect(succs[0].Addr, succs[0].Id)
 						if err != nil {
 							log.Error("Connect to new node error:", err)
@@ -334,13 +333,13 @@ func (c *Chord) updateEmptyFinger() {
 
 // GetSuccAndPred sends a GetSuccAndPred message to remote node and returns its
 // successors and predecessor if no error occured
-func GetSuccAndPred(rn *node.RemoteNode, numSucc, numPred uint32) ([]*protobuf.Node, []*protobuf.Node, error) {
+func GetSuccAndPred(remoteNode *node.RemoteNode, numSucc, numPred uint32) ([]*protobuf.Node, []*protobuf.Node, error) {
 	msg, err := NewGetSuccAndPredMessage(numSucc, numPred)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	reply, err := rn.SendMessageSync(msg)
+	reply, err := remoteNode.SendMessageSync(msg)
 	if err != nil {
 		return nil, nil, err
 	}
