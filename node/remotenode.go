@@ -1,6 +1,7 @@
 package node
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -35,20 +36,22 @@ const (
 	keepAliveTimeout = 10 * time.Second
 )
 
+type rxBuf struct {
+	buf []byte
+	len int
+}
+
 // RemoteNode is a remote node
 type RemoteNode struct {
 	*Node
 	LocalNode  *LocalNode
 	IsOutbound bool
 	conn       net.Conn
-	rxBuf      struct {
-		buf []byte
-		len int
-	}
-	rxMsgChan chan *protobuf.Message
-	txMsgChan chan *protobuf.Message
-	ready     bool
-	readyLock sync.RWMutex
+	rxBuf      rxBuf
+	rxMsgChan  chan *protobuf.Message
+	txMsgChan  chan *protobuf.Message
+	ready      bool
+	readyLock  sync.RWMutex
 }
 
 // NewRemoteNode creates a remote node
@@ -109,11 +112,26 @@ func (rn *RemoteNode) Start() error {
 				return
 			}
 
+			shouldStop := false
+			rn.LocalNode.remoteNodes.Range(func(key, value interface{}) bool {
+				remoteNode, ok := value.(*RemoteNode)
+				if ok && remoteNode.IsReady() && bytes.Compare(remoteNode.Id, n.Id) == 0 {
+					rn.Stop(fmt.Errorf("Node with id %x is already connected at addr %s", remoteNode.Id, remoteNode.Addr))
+					shouldStop = true
+					return false
+				}
+				return true
+			})
+			if shouldStop {
+				return
+			}
+
 			host, port, err := net.SplitHostPort(n.Addr)
 			if err != nil {
 				rn.Stop(fmt.Errorf("Parse node addr %s error: %s", n.Addr, err))
 				return
 			}
+
 			if port == "" {
 				rn.Stop(errors.New("Node addr port is empty"))
 				return
@@ -350,12 +368,7 @@ func (rn *RemoteNode) SendMessage(msg *protobuf.Message, hasReply bool) (<-chan 
 	}
 
 	if hasReply {
-		replyChan, err := rn.LocalNode.AllocReplyChan(msg.MessageId)
-		if err != nil {
-			return nil, err
-		}
-
-		return replyChan, nil
+		return rn.LocalNode.AllocReplyChan(msg.MessageId)
 	}
 
 	return nil, nil
