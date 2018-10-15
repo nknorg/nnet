@@ -1,6 +1,9 @@
 package node
 
-import "errors"
+import (
+	"errors"
+	"sync"
+)
 
 // RemoteNodeConnected is called when a connection is established with a remote
 // node, but the remote node id is typically nil, so it's not a good time to use
@@ -21,6 +24,7 @@ type RemoteNodeDisconnected func(*RemoteNode) bool
 // middlewareStore stores the functions that will be called when certain events
 // are triggered or in some pipeline
 type middlewareStore struct {
+	sync.RWMutex
 	remoteNodeConnected    []RemoteNodeConnected
 	remoteNodeReady        []RemoteNodeReady
 	remoteNodeDisconnected []RemoteNodeDisconnected
@@ -37,6 +41,9 @@ func newMiddlewareStore() *middlewareStore {
 
 // ApplyMiddleware add a middleware to the store
 func (store *middlewareStore) ApplyMiddleware(f interface{}) error {
+	store.Lock()
+	defer store.Unlock()
+
 	switch f := f.(type) {
 	case RemoteNodeConnected:
 		if f == nil {

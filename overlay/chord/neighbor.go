@@ -45,20 +45,24 @@ func (c *Chord) addNeighbor(remoteNode *node.RemoteNode) {
 		if added {
 			index := c.successors.GetIndex(remoteNode.Id)
 			if index >= 0 {
+				c.middlewareStore.RLock()
 				for _, f := range c.middlewareStore.successorAdded {
 					if !f(remoteNode, index) {
 						break
 					}
 				}
+				c.middlewareStore.RUnlock()
 			}
 		}
 
 		if replaced != nil {
+			c.middlewareStore.RLock()
 			for _, f := range c.middlewareStore.successorRemoved {
 				if !f(replaced) {
 					break
 				}
 			}
+			c.middlewareStore.RUnlock()
 
 			c.maybeStopRemoteNode(replaced)
 		}
@@ -73,20 +77,24 @@ func (c *Chord) addNeighbor(remoteNode *node.RemoteNode) {
 		if added {
 			index := c.predecessors.GetIndex(remoteNode.Id)
 			if index >= 0 {
+				c.middlewareStore.RLock()
 				for _, f := range c.middlewareStore.predecessorAdded {
 					if !f(remoteNode, index) {
 						break
 					}
 				}
+				c.middlewareStore.RUnlock()
 			}
 		}
 
 		if replaced != nil {
+			c.middlewareStore.RLock()
 			for _, f := range c.middlewareStore.predecessorRemoved {
 				if !f(replaced) {
 					break
 				}
 			}
+			c.middlewareStore.RUnlock()
 
 			c.maybeStopRemoteNode(replaced)
 		}
@@ -102,20 +110,24 @@ func (c *Chord) addNeighbor(remoteNode *node.RemoteNode) {
 			if added {
 				index := finger.GetIndex(remoteNode.Id)
 				if index >= 0 {
+					c.middlewareStore.RLock()
 					for _, f := range c.middlewareStore.fingerTableAdded {
 						if !f(remoteNode, i, index) {
 							break
 						}
 					}
+					c.middlewareStore.RUnlock()
 				}
 			}
 
 			if replaced != nil {
+				c.middlewareStore.RLock()
 				for _, f := range c.middlewareStore.fingerTableRemoved {
 					if !f(replaced, i) {
 						break
 					}
 				}
+				c.middlewareStore.RUnlock()
 
 				c.maybeStopRemoteNode(replaced)
 			}
@@ -131,20 +143,24 @@ func (c *Chord) addNeighbor(remoteNode *node.RemoteNode) {
 		if added {
 			index := c.neighbors.GetIndex(remoteNode.Id)
 			if index >= 0 {
+				c.middlewareStore.RLock()
 				for _, f := range c.middlewareStore.neighborAdded {
 					if !f(remoteNode, index) {
 						break
 					}
 				}
+				c.middlewareStore.RUnlock()
 			}
 		}
 
 		if replaced != nil {
+			c.middlewareStore.RLock()
 			for _, f := range c.middlewareStore.neighborRemoved {
 				if !f(replaced) {
 					break
 				}
 			}
+			c.middlewareStore.RUnlock()
 
 			c.maybeStopRemoteNode(replaced)
 		}
@@ -159,40 +175,48 @@ func (c *Chord) removeNeighbor(remoteNode *node.RemoteNode) {
 
 	removed := c.successors.Remove(remoteNode)
 	if removed {
+		c.middlewareStore.RLock()
 		for _, f := range c.middlewareStore.successorRemoved {
 			if !f(remoteNode) {
 				break
 			}
 		}
+		c.middlewareStore.RUnlock()
 	}
 
 	removed = c.predecessors.Remove(remoteNode)
 	if removed {
+		c.middlewareStore.RLock()
 		for _, f := range c.middlewareStore.predecessorRemoved {
 			if !f(remoteNode) {
 				break
 			}
 		}
+		c.middlewareStore.RUnlock()
 	}
 
 	for i, finger := range c.fingerTable {
 		removed = finger.Remove(remoteNode)
 		if removed {
+			c.middlewareStore.RLock()
 			for _, f := range c.middlewareStore.fingerTableRemoved {
 				if !f(remoteNode, i) {
 					break
 				}
 			}
+			c.middlewareStore.RUnlock()
 		}
 	}
 
 	removed = c.neighbors.Remove(remoteNode)
 	if removed {
+		c.middlewareStore.RLock()
 		for _, f := range c.middlewareStore.neighborRemoved {
 			if !f(remoteNode) {
 				break
 			}
 		}
+		c.middlewareStore.RUnlock()
 	}
 }
 

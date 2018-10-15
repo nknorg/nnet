@@ -235,11 +235,13 @@ func (ln *LocalNode) StartRemoteNode(conn net.Conn, isOutbound bool) (*RemoteNod
 		return nil, err
 	}
 
+	ln.middlewareStore.RLock()
 	for _, f := range ln.middlewareStore.remoteNodeConnected {
 		if !f(remoteNode) {
 			break
 		}
 	}
+	ln.middlewareStore.RUnlock()
 
 	err = remoteNode.Start()
 	if err != nil {
