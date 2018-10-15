@@ -338,7 +338,7 @@ func (rn *RemoteNode) tx() {
 }
 
 // SendMessage marshals and sends msg, will returns a RemoteMessage chan if hasReply is true
-func (rn *RemoteNode) SendMessage(msg *protobuf.Message, hasReply bool) (chan *RemoteMessage, error) {
+func (rn *RemoteNode) SendMessage(msg *protobuf.Message, hasReply bool) (<-chan *RemoteMessage, error) {
 	select {
 	case rn.txMsgChan <- msg:
 	default:

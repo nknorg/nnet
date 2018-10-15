@@ -91,7 +91,7 @@ func (ovl *Overlay) StartRouters() error {
 
 // SendMessage sends msg to the best next hop, returns reply chans if hasReply =
 // true and aggregated errors during message sending
-func (ovl *Overlay) SendMessage(msg *protobuf.Message, routingType protobuf.RoutingType, hasReply bool) (chan *node.RemoteMessage, bool, error) {
+func (ovl *Overlay) SendMessage(msg *protobuf.Message, routingType protobuf.RoutingType, hasReply bool) (<-chan *node.RemoteMessage, bool, error) {
 	router, err := ovl.GetRouter(routingType)
 	if err != nil {
 		return nil, false, err
@@ -106,7 +106,7 @@ func (ovl *Overlay) SendMessage(msg *protobuf.Message, routingType protobuf.Rout
 		return nil, false, errors.New("No remote node to route")
 	}
 
-	var replyChan chan *node.RemoteMessage
+	var replyChan <-chan *node.RemoteMessage
 	errs := util.NewErrors()
 	success := false
 

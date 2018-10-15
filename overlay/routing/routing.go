@@ -14,13 +14,13 @@ type Router interface {
 
 // Routing is the base struct for all routing
 type Routing struct {
-	localMsgChan chan *node.RemoteMessage
-	rxMsgChan    chan *node.RemoteMessage
+	localMsgChan chan<- *node.RemoteMessage
+	rxMsgChan    <-chan *node.RemoteMessage
 	common.LifeCycle
 }
 
 // NewRouting creates a new routing
-func NewRouting(localMsgChan, rxMsgChan chan *node.RemoteMessage) (*Routing, error) {
+func NewRouting(localMsgChan chan<- *node.RemoteMessage, rxMsgChan <-chan *node.RemoteMessage) (*Routing, error) {
 	r := &Routing{
 		localMsgChan: localMsgChan,
 		rxMsgChan:    rxMsgChan,

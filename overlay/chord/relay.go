@@ -20,7 +20,7 @@ type RelayRouting struct {
 }
 
 // NewRelayRouting creates a new RelayRouting
-func NewRelayRouting(localMsgChan, rxMsgChan chan *node.RemoteMessage, chord *Chord) (*RelayRouting, error) {
+func NewRelayRouting(localMsgChan chan<- *node.RemoteMessage, rxMsgChan <-chan *node.RemoteMessage, chord *Chord) (*RelayRouting, error) {
 	r, err := routing.NewRouting(localMsgChan, rxMsgChan)
 	if err != nil {
 		return nil, err

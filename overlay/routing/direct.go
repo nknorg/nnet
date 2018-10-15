@@ -16,7 +16,7 @@ type DirectRouting struct {
 }
 
 // NewDirectRouting creates a new DirectRouting
-func NewDirectRouting(localMsgChan, rxMsgChan chan *node.RemoteMessage) (*DirectRouting, error) {
+func NewDirectRouting(localMsgChan chan<- *node.RemoteMessage, rxMsgChan <-chan *node.RemoteMessage) (*DirectRouting, error) {
 	r, err := NewRouting(localMsgChan, rxMsgChan)
 	if err != nil {
 		return nil, err
