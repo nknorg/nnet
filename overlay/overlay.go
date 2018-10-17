@@ -25,7 +25,10 @@ type Interface interface {
 	Start() error
 	Stop(error)
 	Join(string) error
+	GetRouters() []routing.Router
 	ApplyMiddleware(interface{}) error
+	SendMessageAsync(*protobuf.Message, protobuf.RoutingType) (bool, error)
+	SendMessageSync(*protobuf.Message, protobuf.RoutingType) (*protobuf.Message, bool, error)
 }
 
 // Overlay is an abstract overlay network
@@ -71,6 +74,15 @@ func (ovl *Overlay) GetRouter(routingType protobuf.RoutingType) (routing.Router,
 	return router, nil
 }
 
+// GetRouters gets a list of routers added
+func (ovl *Overlay) GetRouters() []routing.Router {
+	routers := make([]routing.Router, 0)
+	for _, router := range ovl.routers {
+		routers = append(routers, router)
+	}
+	return routers
+}
+
 // SetRouter sets a router for a routingType regardless of whether a router has
 // been set up for this type or not
 func (ovl *Overlay) SetRouter(routingType protobuf.RoutingType, router routing.Router) {
@@ -89,8 +101,10 @@ func (ovl *Overlay) StartRouters() error {
 	return nil
 }
 
-// SendMessage sends msg to the best next hop, returns reply chans if hasReply =
-// true and aggregated errors during message sending
+// SendMessage sends msg to the best next hop, returns reply chan (nil if if
+// hasReply is false), if send success (which is true if successfully send
+// message to at least one next hop), and aggregated errors during message
+// sending
 func (ovl *Overlay) SendMessage(msg *protobuf.Message, routingType protobuf.RoutingType, hasReply bool) (<-chan *node.RemoteMessage, bool, error) {
 	router, err := ovl.GetRouter(routingType)
 	if err != nil {
@@ -129,16 +143,18 @@ func (ovl *Overlay) SendMessage(msg *protobuf.Message, routingType protobuf.Rout
 	return replyChan, success, errs.Merged()
 }
 
-// SendMessageAsync sends msg to the best next hop and returns aggretated error
-// during message sending
+// SendMessageAsync sends msg to the best next hop, returns if send success
+// (which is true if successfully send message to at least one next hop), and
+// aggretated error during message sending
 func (ovl *Overlay) SendMessageAsync(msg *protobuf.Message, routingType protobuf.RoutingType) (bool, error) {
 	_, success, err := ovl.SendMessage(msg, routingType, false)
 	return success, err
 }
 
-// SendMessageSync sends msg to the best next hop, returns reply message and
-// aggregated error during message sending, will also returns error if haven't
-// receive reply before timeout
+// SendMessageSync sends msg to the best next hop, returns reply message, if
+// send success (which is true if successfully send message to at least one next
+// hop), and aggregated error during message sending, will also returns error if
+// haven't receive reply before timeout
 func (ovl *Overlay) SendMessageSync(msg *protobuf.Message, routingType protobuf.RoutingType) (*protobuf.Message, bool, error) {
 	replyChan, success, err := ovl.SendMessage(msg, routingType, true)
 	if !success {

@@ -33,6 +33,9 @@ enum MessageType {
   GET_SUCC_AND_PRED = 3;
   FIND_SUCCESSORS = 4;
   FIND_PREDECESSOR = 5;
+
+  // Message that contains any bytes
+  BYTES = 6;
 }
 
 message Message {
@@ -86,4 +89,8 @@ message FindPredecessor {
 
 message FindPredecessorReply {
   Node predecessor = 1;
+}
+
+message Bytes {
+  bytes data = 1;
 }

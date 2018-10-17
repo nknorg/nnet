@@ -6,29 +6,32 @@ import (
 	"github.com/nknorg/nnet/node"
 )
 
-// Router is an abstract routing layer that determines how to route a msg
+// Router is an abstract routing layer that determines how to route a message
 type Router interface {
-	GetNodeToRoute(*node.RemoteMessage) (*node.LocalNode, []*node.RemoteNode, error)
 	Start() error
+	ApplyMiddleware(interface{}) error
+	GetNodeToRoute(*node.RemoteMessage) (*node.LocalNode, []*node.RemoteNode, error)
 }
 
 // Routing is the base struct for all routing
 type Routing struct {
 	localMsgChan chan<- *node.RemoteMessage
 	rxMsgChan    <-chan *node.RemoteMessage
+	*middlewareStore
 	common.LifeCycle
 }
 
 // NewRouting creates a new routing
 func NewRouting(localMsgChan chan<- *node.RemoteMessage, rxMsgChan <-chan *node.RemoteMessage) (*Routing, error) {
 	r := &Routing{
-		localMsgChan: localMsgChan,
-		rxMsgChan:    rxMsgChan,
+		localMsgChan:    localMsgChan,
+		rxMsgChan:       rxMsgChan,
+		middlewareStore: newMiddlewareStore(),
 	}
 	return r, nil
 }
 
-// Start starts the msg handling process
+// Start starts the message handling process
 func (r *Routing) Start(router Router, numWorkers int) error {
 	r.StartOnce.Do(func() {
 		for i := 0; i < numWorkers; i++ {
@@ -39,11 +42,14 @@ func (r *Routing) Start(router Router, numWorkers int) error {
 	return nil
 }
 
+// handleMsg starts to read received message from rxMsgChan, compute the route
+// and dispatch message to local or remote nodes
 func (r *Routing) handleMsg(router Router) {
 	var remoteMsg *node.RemoteMessage
 	var localNode *node.LocalNode
 	var remoteNode *node.RemoteNode
 	var remoteNodes []*node.RemoteNode
+	var shouldCallNextMiddleware bool
 	var err error
 
 	for {
@@ -53,9 +59,35 @@ func (r *Routing) handleMsg(router Router) {
 
 		select {
 		case remoteMsg = <-r.rxMsgChan:
+			r.middlewareStore.RLock()
+			for _, f := range r.middlewareStore.remoteMessageReceived {
+				remoteMsg, shouldCallNextMiddleware = f(remoteMsg)
+				if remoteMsg == nil || !shouldCallNextMiddleware {
+					break
+				}
+			}
+			r.middlewareStore.RUnlock()
+
+			if remoteMsg == nil {
+				continue
+			}
+
 			localNode, remoteNodes, err = router.GetNodeToRoute(remoteMsg)
 			if err != nil {
 				log.Warn("Get next hop error:", err)
+				continue
+			}
+
+			r.middlewareStore.RLock()
+			for _, f := range r.middlewareStore.remoteMessageRouted {
+				remoteMsg, localNode, remoteNodes, shouldCallNextMiddleware = f(remoteMsg, localNode, remoteNodes)
+				if remoteMsg == nil || !shouldCallNextMiddleware {
+					break
+				}
+			}
+			r.middlewareStore.RUnlock()
+
+			if remoteMsg == nil {
 				continue
 			}
 

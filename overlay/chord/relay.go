@@ -13,7 +13,8 @@ const (
 	RelayRoutingNumWorkers = 1
 )
 
-// RelayRouting is for msg from a remote node to another remote node or local node
+// RelayRouting is for message from a remote node to another remote node or
+// local node
 type RelayRouting struct {
 	*routing.Routing
 	chord *Chord
@@ -34,12 +35,12 @@ func NewRelayRouting(localMsgChan chan<- *node.RemoteMessage, rxMsgChan <-chan *
 	return dr, nil
 }
 
-// Start starts handling relay msg from rxChan
+// Start starts handling relay message from rxChan
 func (dr *RelayRouting) Start() error {
 	return dr.Routing.Start(dr, RelayRoutingNumWorkers)
 }
 
-// GetNodeToRoute returns the local node and remote nodes to route msg to
+// GetNodeToRoute returns the local node and remote nodes to route message to
 func (dr *RelayRouting) GetNodeToRoute(remoteMsg *node.RemoteMessage) (*node.LocalNode, []*node.RemoteNode, error) {
 	succ := dr.chord.successors.GetFirst()
 	if succ == nil {

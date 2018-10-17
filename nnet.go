@@ -16,15 +16,17 @@ type NNet struct {
 }
 
 // NewNNet creates a new nnet using the userConf provided
-func NewNNet(userConf config.Config) (*NNet, error) {
+func NewNNet(id []byte, userConf config.Config) (*NNet, error) {
 	conf, err := config.MergedConfig(userConf)
 	if err != nil {
 		return nil, err
 	}
 
-	id, err := util.RandBytes(int(conf.NodeIDBytes))
-	if err != nil {
-		return nil, err
+	if id == nil || len(id) == 0 {
+		id, err = util.RandBytes(int(conf.NodeIDBytes))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	localNode, err := node.NewLocalNode(id[:], conf)

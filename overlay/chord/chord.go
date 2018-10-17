@@ -108,6 +108,19 @@ func NewChord(localNode *node.LocalNode, conf *config.Config) (*Chord, error) {
 		return nil, err
 	}
 
+	broadcastRxMsgChan, err := localNode.GetRxMsgChan(protobuf.BROADCAST)
+	if err != nil {
+		return nil, err
+	}
+	broadcastRouting, err := routing.NewBroadcastRouting(ovl.LocalMsgChan, broadcastRxMsgChan, localNode)
+	if err != nil {
+		return nil, err
+	}
+	err = ovl.AddRouter(protobuf.BROADCAST, broadcastRouting)
+	if err != nil {
+		return nil, err
+	}
+
 	err = localNode.ApplyMiddleware(node.RemoteNodeReady(func(rn *node.RemoteNode) bool {
 		c.addNeighbor(rn)
 		return true

@@ -30,22 +30,6 @@ func create(transport string, port uint16) (*nnet.NNet, error) {
 		return nil, err
 	}
 
-	nn.Start()
-
-	return nn, nil
-}
-
-func join(transport string, localPort, seedPort uint16) (*nnet.NNet, error) {
-	nn, err := create(transport, localPort)
-	if err != nil {
-		return nil, err
-	}
-
-	err = nn.Join(fmt.Sprintf("127.0.0.1:%d", seedPort))
-	if err != nil {
-		return nil, err
-	}
-
 	return nn, nil
 }
 
@@ -67,7 +51,6 @@ func main() {
 		log.Error(err)
 		return
 	}
-	nnets = append(nnets, nn)
 
 	err = nn.ApplyMiddleware(node.RemoteNodeConnected(func(remoteNode *node.RemoteNode) bool {
 		log.Infof("Remote node connected: %v", remoteNode)
@@ -132,15 +115,22 @@ func main() {
 		return
 	}
 
+	err = nn.Start()
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	nnets = append(nnets, nn)
+
 	for i := 0; i < *numNodesPtr-1; i++ {
 		time.Sleep(112358 * time.Microsecond)
 
-		nn, err = join(*transportPtr, createPort+uint16(i)+1, createPort)
+		nn, err := create(*transportPtr, createPort+uint16(i)+1)
 		if err != nil {
 			log.Error(err)
-			continue
+			return
 		}
-		nnets = append(nnets, nn)
 
 		err = nn.ApplyMiddleware(node.RemoteNodeConnected(func(remoteNode *node.RemoteNode) bool {
 			if rand.Float64() < 0.5 {
@@ -163,6 +153,20 @@ func main() {
 			log.Error(err)
 			return
 		}
+
+		err = nn.Start()
+		if err != nil {
+			log.Error(err)
+			return
+		}
+
+		err = nn.Join(fmt.Sprintf("127.0.0.1:%d", createPort))
+		if err != nil {
+			log.Error(err)
+			return
+		}
+
+		nnets = append(nnets, nn)
 	}
 
 	signalChan := make(chan os.Signal, 1)

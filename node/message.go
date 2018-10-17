@@ -55,6 +55,11 @@ func NewPingMessage() (*protobuf.Message, error) {
 
 // NewPingReply creates a PING reply for heartbeat
 func NewPingReply(replyToID []byte) (*protobuf.Message, error) {
+	id, err := message.GenID()
+	if err != nil {
+		return nil, err
+	}
+
 	msgBody := &protobuf.PingReply{}
 
 	buf, err := proto.Marshal(msgBody)
@@ -66,6 +71,7 @@ func NewPingReply(replyToID []byte) (*protobuf.Message, error) {
 		MessageType: protobuf.PING,
 		RoutingType: protobuf.DIRECT,
 		ReplyToId:   replyToID,
+		MessageId:   id,
 		Message:     buf,
 	}
 	return msg, nil
@@ -97,6 +103,11 @@ func NewGetNodeMessage() (*protobuf.Message, error) {
 
 // NewGetNodeReply creates a GET_NODE reply to send node info
 func NewGetNodeReply(replyToID []byte, n *protobuf.Node) (*protobuf.Message, error) {
+	id, err := message.GenID()
+	if err != nil {
+		return nil, err
+	}
+
 	msgBody := &protobuf.GetNodeReply{
 		Node: n,
 	}
@@ -110,6 +121,7 @@ func NewGetNodeReply(replyToID []byte, n *protobuf.Node) (*protobuf.Message, err
 		MessageType: protobuf.GET_NODE,
 		RoutingType: protobuf.DIRECT,
 		ReplyToId:   replyToID,
+		MessageId:   id,
 		Message:     buf,
 	}
 

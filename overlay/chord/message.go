@@ -38,6 +38,11 @@ func NewGetSuccAndPredMessage(numSucc, numPred uint32) (*protobuf.Message, error
 // NewGetSuccAndPredReply creates a GET_SUCC_AND_PRED reply to send successors
 // and predecessor
 func NewGetSuccAndPredReply(replyToID []byte, successors, predecessors []*protobuf.Node) (*protobuf.Message, error) {
+	id, err := message.GenID()
+	if err != nil {
+		return nil, err
+	}
+
 	msgBody := &protobuf.GetSuccAndPredReply{
 		Successors:   successors,
 		Predecessors: predecessors,
@@ -52,6 +57,7 @@ func NewGetSuccAndPredReply(replyToID []byte, successors, predecessors []*protob
 		MessageType: protobuf.GET_SUCC_AND_PRED,
 		RoutingType: protobuf.DIRECT,
 		ReplyToId:   replyToID,
+		MessageId:   id,
 		Message:     buf,
 	}
 
@@ -89,6 +95,11 @@ func NewFindSuccessorsMessage(key []byte, numSucc uint32) (*protobuf.Message, er
 
 // NewFindSuccessorsReply creates a FIND_SUCCESSORS reply to send successors
 func NewFindSuccessorsReply(replyToID []byte, successors []*protobuf.Node) (*protobuf.Message, error) {
+	id, err := message.GenID()
+	if err != nil {
+		return nil, err
+	}
+
 	msgBody := &protobuf.FindSuccessorsReply{
 		Successors: successors,
 	}
@@ -102,6 +113,7 @@ func NewFindSuccessorsReply(replyToID []byte, successors []*protobuf.Node) (*pro
 		MessageType: protobuf.FIND_SUCCESSORS,
 		RoutingType: protobuf.DIRECT,
 		ReplyToId:   replyToID,
+		MessageId:   id,
 		Message:     buf,
 	}
 
@@ -162,6 +174,7 @@ func (c *Chord) handleRemoteMessage(remoteMsg *node.RemoteMessage) (bool, error)
 		}
 
 	case protobuf.FIND_PREDECESSOR:
+	case protobuf.BYTES:
 	default:
 		return true, nil
 	}

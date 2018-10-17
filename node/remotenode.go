@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
+	"github.com/nknorg/nnet/cache"
 	"github.com/nknorg/nnet/log"
 	"github.com/nknorg/nnet/protobuf"
 	"github.com/nknorg/nnet/util"
@@ -34,6 +35,12 @@ const (
 
 	// Max idle time before considering node dead and closing connection
 	keepAliveTimeout = 10 * time.Second
+
+	// How long a sent message stays in cache before expiration
+	txMsgCacheExpiration = 60 * time.Second
+
+	// How often to check and delete expired sent message
+	txMsgCacheCleanupInterval = 1 * time.Second
 )
 
 type rxBuf struct {
@@ -50,6 +57,7 @@ type RemoteNode struct {
 	rxBuf      rxBuf
 	rxMsgChan  chan *protobuf.Message
 	txMsgChan  chan *protobuf.Message
+	txMsgCache cache.Cache
 	ready      bool
 	readyLock  sync.RWMutex
 }
@@ -68,6 +76,8 @@ func NewRemoteNode(localNode *LocalNode, conn net.Conn, isOutbound bool) (*Remot
 		return nil, err
 	}
 
+	txMsgCache := cache.NewGoCache(txMsgCacheExpiration, txMsgCacheCleanupInterval)
+
 	remoteNode := &RemoteNode{
 		Node:       node,
 		LocalNode:  localNode,
@@ -75,6 +85,7 @@ func NewRemoteNode(localNode *LocalNode, conn net.Conn, isOutbound bool) (*Remot
 		IsOutbound: isOutbound,
 		rxMsgChan:  make(chan *protobuf.Message, remoteRxMsgChanLen),
 		txMsgChan:  make(chan *protobuf.Message, remoteTxMsgChanLen),
+		txMsgCache: txMsgCache,
 	}
 
 	return remoteNode, nil
@@ -113,7 +124,7 @@ func (rn *RemoteNode) Start() error {
 			}
 
 			shouldStop := false
-			rn.LocalNode.remoteNodes.Range(func(key, value interface{}) bool {
+			rn.LocalNode.neighbors.Range(func(key, value interface{}) bool {
 				remoteNode, ok := value.(*RemoteNode)
 				if ok && remoteNode.IsReady() && bytes.Compare(remoteNode.Id, n.Id) == 0 {
 					rn.Stop(fmt.Errorf("Node with id %x is already connected at addr %s", remoteNode.Id, remoteNode.Addr))
@@ -182,7 +193,7 @@ func (rn *RemoteNode) Stop(err error) {
 		rn.LifeCycle.Stop()
 
 		if rn.conn != nil {
-			rn.LocalNode.remoteNodes.Delete(rn.conn.RemoteAddr().String())
+			rn.LocalNode.neighbors.Delete(rn.conn.RemoteAddr().String())
 			rn.conn.Close()
 		}
 
@@ -361,6 +372,16 @@ func (rn *RemoteNode) tx() {
 
 // SendMessage marshals and sends msg, will returns a RemoteMessage chan if hasReply is true
 func (rn *RemoteNode) SendMessage(msg *protobuf.Message, hasReply bool) (<-chan *RemoteMessage, error) {
+	_, found := rn.txMsgCache.Get(msg.MessageId)
+	if found {
+		return nil, nil
+	}
+
+	err := rn.txMsgCache.Add(msg.MessageId, struct{}{})
+	if err != nil {
+		return nil, err
+	}
+
 	select {
 	case rn.txMsgChan <- msg:
 	default:

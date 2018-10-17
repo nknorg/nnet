@@ -40,7 +40,7 @@ type LocalNode struct {
 	rxMsgChan      map[protobuf.RoutingType]chan *RemoteMessage
 	handleMsgChan  chan *RemoteMessage
 	replyChanCache cache.Cache
-	remoteNodes    sync.Map
+	neighbors      sync.Map
 	*middlewareStore
 }
 
@@ -162,7 +162,7 @@ func (ln *LocalNode) listen() {
 			continue
 		}
 
-		_, loaded := ln.remoteNodes.LoadOrStore(conn.RemoteAddr().String(), nil)
+		_, loaded := ln.neighbors.LoadOrStore(conn.RemoteAddr().String(), nil)
 		if loaded {
 			log.Errorf("Remote addr %s is already connected, reject connection", conn.RemoteAddr().String())
 			conn.Close()
@@ -174,12 +174,12 @@ func (ln *LocalNode) listen() {
 		rn, err := ln.StartRemoteNode(conn, false)
 		if err != nil {
 			log.Error("Error creating remote node:", err)
-			ln.remoteNodes.Delete(conn.RemoteAddr().String())
+			ln.neighbors.Delete(conn.RemoteAddr().String())
 			conn.Close()
 			continue
 		}
 
-		ln.remoteNodes.Store(conn.RemoteAddr().String(), rn)
+		ln.neighbors.Store(conn.RemoteAddr().String(), rn)
 	}
 }
 
@@ -193,13 +193,13 @@ func (ln *LocalNode) Connect(remoteNodeAddr string) (*RemoteNode, bool, error) {
 		return nil, false, errors.New("trying to connect to self")
 	}
 
-	value, loaded := ln.remoteNodes.LoadOrStore(remoteNodeAddr, nil)
+	value, loaded := ln.neighbors.LoadOrStore(remoteNodeAddr, nil)
 	if loaded {
 		remoteNode, ok := value.(*RemoteNode)
 		if ok {
 			if remoteNode.IsStopped() {
 				log.Warnf("Remove stopped remote node %v from list", remoteNode)
-				ln.remoteNodes.Delete(remoteNodeAddr)
+				ln.neighbors.Delete(remoteNodeAddr)
 			} else {
 				log.Infof("Load remote node %v from list", remoteNode)
 				return remoteNode, remoteNode.IsReady(), nil
@@ -212,18 +212,18 @@ func (ln *LocalNode) Connect(remoteNodeAddr string) (*RemoteNode, bool, error) {
 
 	conn, err := ln.transport.Dial(remoteNodeAddr)
 	if err != nil {
-		ln.remoteNodes.Delete(remoteNodeAddr)
+		ln.neighbors.Delete(remoteNodeAddr)
 		return nil, false, err
 	}
 
 	remoteNode, err := ln.StartRemoteNode(conn, true)
 	if err != nil {
-		ln.remoteNodes.Delete(remoteNodeAddr)
+		ln.neighbors.Delete(remoteNodeAddr)
 		conn.Close()
 		return nil, false, err
 	}
 
-	ln.remoteNodes.Store(remoteNodeAddr, remoteNode)
+	ln.neighbors.Store(remoteNodeAddr, remoteNode)
 
 	return remoteNode, false, nil
 }
@@ -300,4 +300,21 @@ func (ln *LocalNode) HandleRemoteMessage(remoteMsg *RemoteMessage) error {
 		log.Warnf("Local node handle msg chan full, discarding msg")
 	}
 	return nil
+}
+
+// GetNeighbors returns a list of remote nodes that are connected to local nodes
+// where the filter function returns true. Pass nil filter to return all
+// neighbors.
+func (ln *LocalNode) GetNeighbors(filter func(*RemoteNode) bool) ([]*RemoteNode, error) {
+	nodes := make([]*RemoteNode, 0)
+	ln.neighbors.Range(func(key, value interface{}) bool {
+		remoteNode, ok := value.(*RemoteNode)
+		if ok && remoteNode.IsReady() && !remoteNode.IsStopped() {
+			if filter == nil || filter(remoteNode) == true {
+				nodes = append(nodes, remoteNode)
+			}
+		}
+		return true
+	})
+	return nodes, nil
 }

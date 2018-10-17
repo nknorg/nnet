@@ -10,7 +10,7 @@ const (
 	DirectRoutingNumWorkers = 1
 )
 
-// DirectRouting is for msg to local node directly from remote node
+// DirectRouting is for message to local node directly from remote node
 type DirectRouting struct {
 	*Routing
 }
@@ -29,12 +29,12 @@ func NewDirectRouting(localMsgChan chan<- *node.RemoteMessage, rxMsgChan <-chan 
 	return dr, nil
 }
 
-// Start starts handling direct msg from rxChan
+// Start starts handling direct message from rxChan
 func (dr *DirectRouting) Start() error {
 	return dr.Routing.Start(dr, DirectRoutingNumWorkers)
 }
 
-// GetNodeToRoute returns the local node and remote nodes to route msg to
+// GetNodeToRoute returns the local node and remote nodes to route message to
 func (dr *DirectRouting) GetNodeToRoute(remoteMsg *node.RemoteMessage) (*node.LocalNode, []*node.RemoteNode, error) {
 	return remoteMsg.RemoteNode.LocalNode, nil, nil
 }
