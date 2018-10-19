@@ -12,6 +12,7 @@ import (
 	"github.com/nknorg/nnet/config"
 	"github.com/nknorg/nnet/log"
 	"github.com/nknorg/nnet/node"
+	"github.com/nknorg/nnet/overlay/chord"
 	"github.com/nknorg/nnet/overlay/routing"
 	"github.com/nknorg/nnet/protobuf"
 	"github.com/nknorg/nnet/util"
@@ -46,12 +47,11 @@ func main() {
 
 	const createPort uint16 = 23333
 	var id []byte
-	var err error
 
 	nnets := make([]*nnet.NNet, 0)
 
 	for i := 0; i < *numNodesPtr; i++ {
-		id, err = util.RandBytes(32)
+		id, err := util.RandBytes(32)
 		if err != nil {
 			log.Error(err)
 			return
@@ -63,25 +63,26 @@ func main() {
 			return
 		}
 
-		err = nn.ApplyMiddleware(routing.RemoteMessageRouted(func(remoteMessage *node.RemoteMessage, localNode *node.LocalNode, remoteNodes []*node.RemoteNode) (*node.RemoteMessage, *node.LocalNode, []*node.RemoteNode, bool) {
+		err = nn.ApplyMiddleware(routing.RemoteMessageReceived(func(remoteMessage *node.RemoteMessage) (*node.RemoteMessage, bool) {
 			if remoteMessage.Msg.MessageType == protobuf.BYTES {
 				msgBody := &protobuf.Bytes{}
 				err = proto.Unmarshal(remoteMessage.Msg.Message, msgBody)
 				if err != nil {
 					log.Error(err)
 				}
-				if localNode != nil {
-					switch remoteMessage.Msg.RoutingType {
-					case protobuf.RELAY:
-						log.Infof("Receive relay message \"%s\" from %x", string(msgBody.Data), remoteMessage.Msg.SrcId)
-					case protobuf.BROADCAST:
-						log.Infof("Receive broadcast message \"%s\" from %x", string(msgBody.Data), remoteMessage.Msg.SrcId)
-					}
+
+				switch remoteMessage.Msg.RoutingType {
+				case protobuf.DIRECT:
+					log.Infof("Receive direct message \"%s\" from %x", string(msgBody.Data), remoteMessage.RemoteNode.Id)
+				case protobuf.RELAY:
+					log.Infof("Receive relay message \"%s\" from %x", string(msgBody.Data), remoteMessage.Msg.SrcId)
+				case protobuf.BROADCAST:
+					log.Infof("Receive broadcast message \"%s\" from %x", string(msgBody.Data), remoteMessage.Msg.SrcId)
 				}
-				// message will not be handle by local node, but will be routed to other remote nodes
-				return remoteMessage, nil, remoteNodes, true
+
+				return nil, false
 			}
-			return remoteMessage, localNode, remoteNodes, true
+			return remoteMessage, true
 		}))
 		if err != nil {
 			log.Error(err)
@@ -89,6 +90,15 @@ func main() {
 		}
 
 		nnets = append(nnets, nn)
+	}
+
+	err := nnets[0].ApplyMiddleware(chord.FingerTableAdded(func(remoteNode *node.RemoteNode, fingerIndex, nodeIndex int) bool {
+		nnets[0].SendBytesDirectAsync([]byte("Hello my finger!"), remoteNode)
+		return true
+	}))
+	if err != nil {
+		log.Error(err)
+		return
 	}
 
 	for i := 0; i < len(nnets); i++ {
@@ -114,14 +124,14 @@ func main() {
 		log.Infof("Sending broadcast message in %d seconds", i)
 		time.Sleep(time.Second)
 	}
-	nnets[0].SendBytesBroadcastAsync([]byte("Hello world!"))
+	nnets[0].SendBytesBroadcastAsync([]byte("This message should be received by EVERYONE!"))
 
 	time.Sleep(time.Second)
 	for i := 3; i > 0; i-- {
 		log.Infof("Sending relay message in %d seconds", i)
 		time.Sleep(time.Second)
 	}
-	nnets[0].SendBytesRelayAsync([]byte("Hello world!"), id)
+	nnets[0].SendBytesRelayAsync([]byte("This message should only be received by SOMEONE!"), id)
 
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)

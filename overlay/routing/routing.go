@@ -60,7 +60,7 @@ func (r *Routing) handleMsg(router Router) {
 		select {
 		case remoteMsg = <-r.rxMsgChan:
 			r.middlewareStore.RLock()
-			for _, f := range r.middlewareStore.remoteMessageReceived {
+			for _, f := range r.middlewareStore.remoteMessageArrived {
 				remoteMsg, shouldCallNextMiddleware = f(remoteMsg)
 				if remoteMsg == nil || !shouldCallNextMiddleware {
 					break
@@ -92,6 +92,19 @@ func (r *Routing) handleMsg(router Router) {
 			}
 
 			if localNode != nil {
+				r.middlewareStore.RLock()
+				for _, f := range r.middlewareStore.remoteMessageReceived {
+					remoteMsg, shouldCallNextMiddleware = f(remoteMsg)
+					if remoteMsg == nil || !shouldCallNextMiddleware {
+						break
+					}
+				}
+				r.middlewareStore.RUnlock()
+
+				if remoteMsg == nil {
+					continue
+				}
+
 				if len(remoteMsg.Msg.ReplyToId) > 0 {
 					replyChan, ok := localNode.GetReplyChan(remoteMsg.Msg.ReplyToId)
 					if ok && replyChan != nil {

@@ -25,7 +25,7 @@ func create(transport string, port uint16) (*nnet.NNet, error) {
 		MaxStabilizeInterval: 200 * time.Millisecond,
 	}
 
-	nn, err := nnet.NewNNet(conf)
+	nn, err := nnet.NewNNet(nil, conf)
 	if err != nil {
 		return nil, err
 	}
