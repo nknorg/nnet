@@ -7,21 +7,21 @@ func (nn *NNet) ApplyMiddleware(f interface{}) error {
 	applied := false
 	errs := util.NewErrors()
 
-	err := nn.localNode.ApplyMiddleware(f)
+	err := nn.LocalNode.ApplyMiddleware(f)
 	if err == nil {
 		applied = true
 	} else {
 		errs = append(errs, err)
 	}
 
-	err = nn.overlay.ApplyMiddleware(f)
+	err = nn.Overlay.ApplyMiddleware(f)
 	if err == nil {
 		applied = true
 	} else {
 		errs = append(errs, err)
 	}
 
-	for _, router := range nn.overlay.GetRouters() {
+	for _, router := range nn.Overlay.GetRouters() {
 		err = router.ApplyMiddleware(f)
 		if err == nil {
 			applied = true

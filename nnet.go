@@ -10,9 +10,9 @@ import (
 
 // NNet is is a peer to peer network
 type NNet struct {
-	localNode *node.LocalNode
-	overlay   overlay.Interface
-	config    *config.Config
+	LocalNode *node.LocalNode
+	Overlay   overlay.Interface
+	Config    *config.Config
 }
 
 // NewNNet creates a new nnet using the userConf provided
@@ -40,9 +40,9 @@ func NewNNet(id []byte, userConf config.Config) (*NNet, error) {
 	}
 
 	nn := &NNet{
-		localNode: localNode,
-		overlay:   ovl,
-		config:    conf,
+		LocalNode: localNode,
+		Overlay:   ovl,
+		Config:    conf,
 	}
 
 	return nn, nil
@@ -50,12 +50,12 @@ func NewNNet(id []byte, userConf config.Config) (*NNet, error) {
 
 // Start starts the lifecycle methods of nnet
 func (nn *NNet) Start() error {
-	err := nn.localNode.Start()
+	err := nn.LocalNode.Start()
 	if err != nil {
 		return err
 	}
 
-	err = nn.overlay.Start()
+	err = nn.Overlay.Start()
 	if err != nil {
 		return err
 	}
@@ -65,11 +65,11 @@ func (nn *NNet) Start() error {
 
 // Stop stops the lifecycle methods of nnet
 func (nn *NNet) Stop(err error) {
-	nn.overlay.Stop(err)
-	nn.localNode.Stop(err)
+	nn.Overlay.Stop(err)
+	nn.LocalNode.Stop(err)
 }
 
 // Join joins a seed node with address of the form ip:port
 func (nn *NNet) Join(seedNodeAddr string) error {
-	return nn.overlay.Join(seedNodeAddr)
+	return nn.Overlay.Join(seedNodeAddr)
 }
