@@ -117,6 +117,19 @@ func (nn *NNet) SendBytesDirectSync(data []byte, remoteNode *node.RemoteNode) (*
 	return reply.Msg, nil
 }
 
+// SendBytesDirectReply is the same as SendBytesDirectAsync but with the
+// replyToId field of the message set
+func (nn *NNet) SendBytesDirectReply(replyToID, data []byte, remoteNode *node.RemoteNode) error {
+	msg, err := NewDirectBytesMessage(data)
+	if err != nil {
+		return err
+	}
+
+	msg.ReplyToId = replyToID
+
+	return remoteNode.SendMessageAsync(msg)
+}
+
 // SendBytesRelayAsync sends bytes data to the remote node that has smallest
 // distance to the key, returns if send success (which is true if successfully
 // send message to at least one next hop), and aggregated error during message
@@ -144,6 +157,19 @@ func (nn *NNet) SendBytesRelaySync(data, key []byte) (*protobuf.Message, bool, e
 	return nn.Overlay.SendMessageSync(msg, protobuf.RELAY)
 }
 
+// SendBytesRelayReply is the same as SendBytesRelayAsync but with the
+// replyToId field of the message set
+func (nn *NNet) SendBytesRelayReply(replyToID, data, key []byte) (bool, error) {
+	msg, err := NewRelayBytesMessage(data, nn.LocalNode.Id, key)
+	if err != nil {
+		return false, err
+	}
+
+	msg.ReplyToId = replyToID
+
+	return nn.Overlay.SendMessageAsync(msg, protobuf.RELAY)
+}
+
 // SendBytesBroadcastAsync sends bytes data to EVERY remote node in the network
 // (not just neighbors), returns if send success (which is true if successfully
 // send message to at least one next hop), and aggregated error during message
@@ -169,4 +195,17 @@ func (nn *NNet) SendBytesBroadcastSync(data []byte) (*protobuf.Message, bool, er
 	}
 
 	return nn.Overlay.SendMessageSync(msg, protobuf.BROADCAST)
+}
+
+// SendBytesBroadcastReply is the same as SendBytesBroadcastAsync but with the
+// replyToId field of the message set
+func (nn *NNet) SendBytesBroadcastReply(replyToID, data []byte) (bool, error) {
+	msg, err := NewBroadcastBytesMessage(data, nn.LocalNode.Id)
+	if err != nil {
+		return false, err
+	}
+
+	msg.ReplyToId = replyToID
+
+	return nn.Overlay.SendMessageAsync(msg, protobuf.BROADCAST)
 }

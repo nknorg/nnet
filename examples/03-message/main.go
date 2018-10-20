@@ -46,6 +46,7 @@ func main() {
 	}
 
 	const createPort uint16 = 23333
+	var nn *nnet.NNet
 	var id []byte
 	var err error
 
@@ -58,14 +59,14 @@ func main() {
 			return
 		}
 
-		nn, err := create(*transportPtr, createPort+uint16(i), id)
+		nn, err = create(*transportPtr, createPort+uint16(i), id)
 		if err != nil {
 			log.Error(err)
 			return
 		}
 
 		err = nn.ApplyMiddleware(routing.RemoteMessageReceived(func(remoteMessage *node.RemoteMessage) (*node.RemoteMessage, bool) {
-			if remoteMessage.Msg.MessageType == protobuf.BYTES {
+			if remoteMessage.Msg.MessageType == protobuf.BYTES && remoteMessage.Msg.ReplyToId == nil {
 				msgBody := &protobuf.Bytes{}
 				err = proto.Unmarshal(remoteMessage.Msg.Message, msgBody)
 				if err != nil {
@@ -75,8 +76,14 @@ func main() {
 				switch remoteMessage.Msg.RoutingType {
 				case protobuf.DIRECT:
 					log.Infof("Receive direct message \"%s\" from %x", string(msgBody.Data), remoteMessage.RemoteNode.Id)
+
 				case protobuf.RELAY:
 					log.Infof("Receive relay message \"%s\" from %x", string(msgBody.Data), remoteMessage.Msg.SrcId)
+					ok, err := nn.SendBytesRelayReply(remoteMessage.Msg.MessageId, []byte("Well received!"), remoteMessage.Msg.SrcId)
+					if !ok || err != nil {
+						log.Error(err)
+					}
+
 				case protobuf.BROADCAST:
 					log.Infof("Receive broadcast message \"%s\" from %x", string(msgBody.Data), remoteMessage.Msg.SrcId)
 				}
@@ -94,7 +101,10 @@ func main() {
 	}
 
 	err = nnets[0].ApplyMiddleware(chord.FingerTableAdded(func(remoteNode *node.RemoteNode, fingerIndex, nodeIndex int) bool {
-		nnets[0].SendBytesDirectAsync([]byte("Hello my finger!"), remoteNode)
+		err := nnets[0].SendBytesDirectAsync([]byte("Hello my finger!"), remoteNode)
+		if err != nil {
+			log.Error(err)
+		}
 		return true
 	}))
 	if err != nil {
@@ -125,14 +135,28 @@ func main() {
 		log.Infof("Sending broadcast message in %d seconds", i)
 		time.Sleep(time.Second)
 	}
-	nnets[0].SendBytesBroadcastAsync([]byte("This message should be received by EVERYONE!"))
+	ok, err := nnets[0].SendBytesBroadcastAsync([]byte("This message should be received by EVERYONE!"))
+	if !ok || err != nil {
+		log.Error(err)
+		return
+	}
 
 	time.Sleep(time.Second)
 	for i := 3; i > 0; i-- {
 		log.Infof("Sending relay message in %d seconds", i)
 		time.Sleep(time.Second)
 	}
-	nnets[0].SendBytesRelayAsync([]byte("This message should only be received by SOMEONE!"), id)
+	reply, ok, err := nnets[0].SendBytesRelaySync([]byte("This message should only be received by SOMEONE!"), id)
+	if !ok || err != nil {
+		log.Error(err)
+		return
+	}
+	msgBody := &protobuf.Bytes{}
+	err = proto.Unmarshal(reply.Message, msgBody)
+	if err != nil {
+		log.Error(err)
+	}
+	log.Infof("Receive reply message \"%s\" from %x", string(msgBody.Data), reply.SrcId)
 
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)
