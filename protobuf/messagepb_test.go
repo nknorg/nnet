@@ -579,15 +579,15 @@ func TestFindSuccessorsReplyMarshalTo(t *testing.T) {
 	}
 }
 
-func TestFindPredecessorProto(t *testing.T) {
+func TestFindPredecessorsProto(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedFindPredecessor(popr, false)
+	p := NewPopulatedFindPredecessors(popr, false)
 	dAtA, err := github_com_gogo_protobuf_proto.Marshal(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &FindPredecessor{}
+	msg := &FindPredecessors{}
 	if err := github_com_gogo_protobuf_proto.Unmarshal(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -610,10 +610,10 @@ func TestFindPredecessorProto(t *testing.T) {
 	}
 }
 
-func TestFindPredecessorMarshalTo(t *testing.T) {
+func TestFindPredecessorsMarshalTo(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedFindPredecessor(popr, false)
+	p := NewPopulatedFindPredecessors(popr, false)
 	size := p.Size()
 	dAtA := make([]byte, size)
 	for i := range dAtA {
@@ -623,7 +623,7 @@ func TestFindPredecessorMarshalTo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &FindPredecessor{}
+	msg := &FindPredecessors{}
 	if err := github_com_gogo_protobuf_proto.Unmarshal(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -635,15 +635,15 @@ func TestFindPredecessorMarshalTo(t *testing.T) {
 	}
 }
 
-func TestFindPredecessorReplyProto(t *testing.T) {
+func TestFindPredecessorsReplyProto(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedFindPredecessorReply(popr, false)
+	p := NewPopulatedFindPredecessorsReply(popr, false)
 	dAtA, err := github_com_gogo_protobuf_proto.Marshal(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &FindPredecessorReply{}
+	msg := &FindPredecessorsReply{}
 	if err := github_com_gogo_protobuf_proto.Unmarshal(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -666,10 +666,10 @@ func TestFindPredecessorReplyProto(t *testing.T) {
 	}
 }
 
-func TestFindPredecessorReplyMarshalTo(t *testing.T) {
+func TestFindPredecessorsReplyMarshalTo(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedFindPredecessorReply(popr, false)
+	p := NewPopulatedFindPredecessorsReply(popr, false)
 	size := p.Size()
 	dAtA := make([]byte, size)
 	for i := range dAtA {
@@ -679,7 +679,7 @@ func TestFindPredecessorReplyMarshalTo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &FindPredecessorReply{}
+	msg := &FindPredecessorsReply{}
 	if err := github_com_gogo_protobuf_proto.Unmarshal(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -927,16 +927,16 @@ func TestFindSuccessorsReplyJSON(t *testing.T) {
 		t.Fatalf("seed = %d, %#v !Json Equal %#v", seed, msg, p)
 	}
 }
-func TestFindPredecessorJSON(t *testing.T) {
+func TestFindPredecessorsJSON(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedFindPredecessor(popr, true)
+	p := NewPopulatedFindPredecessors(popr, true)
 	marshaler := github_com_gogo_protobuf_jsonpb.Marshaler{}
 	jsondata, err := marshaler.MarshalToString(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &FindPredecessor{}
+	msg := &FindPredecessors{}
 	err = github_com_gogo_protobuf_jsonpb.UnmarshalString(jsondata, msg)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
@@ -945,16 +945,16 @@ func TestFindPredecessorJSON(t *testing.T) {
 		t.Fatalf("seed = %d, %#v !Json Equal %#v", seed, msg, p)
 	}
 }
-func TestFindPredecessorReplyJSON(t *testing.T) {
+func TestFindPredecessorsReplyJSON(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedFindPredecessorReply(popr, true)
+	p := NewPopulatedFindPredecessorsReply(popr, true)
 	marshaler := github_com_gogo_protobuf_jsonpb.Marshaler{}
 	jsondata, err := marshaler.MarshalToString(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &FindPredecessorReply{}
+	msg := &FindPredecessorsReply{}
 	err = github_com_gogo_protobuf_jsonpb.UnmarshalString(jsondata, msg)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
@@ -1261,12 +1261,12 @@ func TestFindSuccessorsReplyProtoCompactText(t *testing.T) {
 	}
 }
 
-func TestFindPredecessorProtoText(t *testing.T) {
+func TestFindPredecessorsProtoText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedFindPredecessor(popr, true)
+	p := NewPopulatedFindPredecessors(popr, true)
 	dAtA := github_com_gogo_protobuf_proto.MarshalTextString(p)
-	msg := &FindPredecessor{}
+	msg := &FindPredecessors{}
 	if err := github_com_gogo_protobuf_proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -1275,12 +1275,12 @@ func TestFindPredecessorProtoText(t *testing.T) {
 	}
 }
 
-func TestFindPredecessorProtoCompactText(t *testing.T) {
+func TestFindPredecessorsProtoCompactText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedFindPredecessor(popr, true)
+	p := NewPopulatedFindPredecessors(popr, true)
 	dAtA := github_com_gogo_protobuf_proto.CompactTextString(p)
-	msg := &FindPredecessor{}
+	msg := &FindPredecessors{}
 	if err := github_com_gogo_protobuf_proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -1289,12 +1289,12 @@ func TestFindPredecessorProtoCompactText(t *testing.T) {
 	}
 }
 
-func TestFindPredecessorReplyProtoText(t *testing.T) {
+func TestFindPredecessorsReplyProtoText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedFindPredecessorReply(popr, true)
+	p := NewPopulatedFindPredecessorsReply(popr, true)
 	dAtA := github_com_gogo_protobuf_proto.MarshalTextString(p)
-	msg := &FindPredecessorReply{}
+	msg := &FindPredecessorsReply{}
 	if err := github_com_gogo_protobuf_proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -1303,12 +1303,12 @@ func TestFindPredecessorReplyProtoText(t *testing.T) {
 	}
 }
 
-func TestFindPredecessorReplyProtoCompactText(t *testing.T) {
+func TestFindPredecessorsReplyProtoCompactText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedFindPredecessorReply(popr, true)
+	p := NewPopulatedFindPredecessorsReply(popr, true)
 	dAtA := github_com_gogo_protobuf_proto.CompactTextString(p)
-	msg := &FindPredecessorReply{}
+	msg := &FindPredecessorsReply{}
 	if err := github_com_gogo_protobuf_proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -1475,9 +1475,9 @@ func TestFindSuccessorsReplyGoString(t *testing.T) {
 		t.Fatal(err)
 	}
 }
-func TestFindPredecessorGoString(t *testing.T) {
+func TestFindPredecessorsGoString(t *testing.T) {
 	popr := math_rand.New(math_rand.NewSource(time.Now().UnixNano()))
-	p := NewPopulatedFindPredecessor(popr, false)
+	p := NewPopulatedFindPredecessors(popr, false)
 	s1 := p.GoString()
 	s2 := fmt.Sprintf("%#v", p)
 	if s1 != s2 {
@@ -1488,9 +1488,9 @@ func TestFindPredecessorGoString(t *testing.T) {
 		t.Fatal(err)
 	}
 }
-func TestFindPredecessorReplyGoString(t *testing.T) {
+func TestFindPredecessorsReplyGoString(t *testing.T) {
 	popr := math_rand.New(math_rand.NewSource(time.Now().UnixNano()))
-	p := NewPopulatedFindPredecessorReply(popr, false)
+	p := NewPopulatedFindPredecessorsReply(popr, false)
 	s1 := p.GoString()
 	s2 := fmt.Sprintf("%#v", p)
 	if s1 != s2 {
@@ -1734,10 +1734,10 @@ func TestFindSuccessorsReplySize(t *testing.T) {
 	}
 }
 
-func TestFindPredecessorSize(t *testing.T) {
+func TestFindPredecessorsSize(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedFindPredecessor(popr, true)
+	p := NewPopulatedFindPredecessors(popr, true)
 	size2 := github_com_gogo_protobuf_proto.Size(p)
 	dAtA, err := github_com_gogo_protobuf_proto.Marshal(p)
 	if err != nil {
@@ -1756,10 +1756,10 @@ func TestFindPredecessorSize(t *testing.T) {
 	}
 }
 
-func TestFindPredecessorReplySize(t *testing.T) {
+func TestFindPredecessorsReplySize(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedFindPredecessorReply(popr, true)
+	p := NewPopulatedFindPredecessorsReply(popr, true)
 	size2 := github_com_gogo_protobuf_proto.Size(p)
 	dAtA, err := github_com_gogo_protobuf_proto.Marshal(p)
 	if err != nil {
@@ -1890,18 +1890,18 @@ func TestFindSuccessorsReplyStringer(t *testing.T) {
 		t.Fatalf("String want %v got %v", s1, s2)
 	}
 }
-func TestFindPredecessorStringer(t *testing.T) {
+func TestFindPredecessorsStringer(t *testing.T) {
 	popr := math_rand.New(math_rand.NewSource(time.Now().UnixNano()))
-	p := NewPopulatedFindPredecessor(popr, false)
+	p := NewPopulatedFindPredecessors(popr, false)
 	s1 := p.String()
 	s2 := fmt.Sprintf("%v", p)
 	if s1 != s2 {
 		t.Fatalf("String want %v got %v", s1, s2)
 	}
 }
-func TestFindPredecessorReplyStringer(t *testing.T) {
+func TestFindPredecessorsReplyStringer(t *testing.T) {
 	popr := math_rand.New(math_rand.NewSource(time.Now().UnixNano()))
-	p := NewPopulatedFindPredecessorReply(popr, false)
+	p := NewPopulatedFindPredecessorsReply(popr, false)
 	s1 := p.String()
 	s2 := fmt.Sprintf("%v", p)
 	if s1 != s2 {

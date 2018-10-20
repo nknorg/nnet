@@ -32,7 +32,7 @@ enum MessageType {
   // Chord message
   GET_SUCC_AND_PRED = 3;
   FIND_SUCCESSORS = 4;
-  FIND_PREDECESSOR = 5;
+  FIND_PREDECESSORS = 5;
 
   // Message that contains any bytes
   BYTES = 6;
@@ -83,12 +83,13 @@ message FindSuccessorsReply {
   repeated Node successors = 1;
 }
 
-message FindPredecessor {
+message FindPredecessors {
   bytes key = 1;
+  uint32 num_pred = 2;
 }
 
-message FindPredecessorReply {
-  Node predecessor = 1;
+message FindPredecessorsReply {
+  repeated Node predecessors = 1;
 }
 
 message Bytes {

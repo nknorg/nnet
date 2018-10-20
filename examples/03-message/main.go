@@ -47,11 +47,12 @@ func main() {
 
 	const createPort uint16 = 23333
 	var id []byte
+	var err error
 
 	nnets := make([]*nnet.NNet, 0)
 
 	for i := 0; i < *numNodesPtr; i++ {
-		id, err := util.RandBytes(32)
+		id, err = util.RandBytes(32)
 		if err != nil {
 			log.Error(err)
 			return
@@ -92,7 +93,7 @@ func main() {
 		nnets = append(nnets, nn)
 	}
 
-	err := nnets[0].ApplyMiddleware(chord.FingerTableAdded(func(remoteNode *node.RemoteNode, fingerIndex, nodeIndex int) bool {
+	err = nnets[0].ApplyMiddleware(chord.FingerTableAdded(func(remoteNode *node.RemoteNode, fingerIndex, nodeIndex int) bool {
 		nnets[0].SendBytesDirectAsync([]byte("Hello my finger!"), remoteNode)
 		return true
 	}))

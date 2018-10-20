@@ -48,7 +48,7 @@ var RoutingType_value = map[string]int32{
 }
 
 func (RoutingType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_message_c184533843d9f39e, []int{0}
+	return fileDescriptor_message_a06e308272441dab, []int{0}
 }
 
 type MessageType int32
@@ -61,7 +61,7 @@ const (
 	// Chord message
 	GET_SUCC_AND_PRED MessageType = 3
 	FIND_SUCCESSORS   MessageType = 4
-	FIND_PREDECESSOR  MessageType = 5
+	FIND_PREDECESSORS MessageType = 5
 	// Message that contains any bytes
 	BYTES MessageType = 6
 )
@@ -72,7 +72,7 @@ var MessageType_name = map[int32]string{
 	2: "STOP",
 	3: "GET_SUCC_AND_PRED",
 	4: "FIND_SUCCESSORS",
-	5: "FIND_PREDECESSOR",
+	5: "FIND_PREDECESSORS",
 	6: "BYTES",
 }
 var MessageType_value = map[string]int32{
@@ -81,12 +81,12 @@ var MessageType_value = map[string]int32{
 	"STOP":              2,
 	"GET_SUCC_AND_PRED": 3,
 	"FIND_SUCCESSORS":   4,
-	"FIND_PREDECESSOR":  5,
+	"FIND_PREDECESSORS": 5,
 	"BYTES":             6,
 }
 
 func (MessageType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_message_c184533843d9f39e, []int{1}
+	return fileDescriptor_message_a06e308272441dab, []int{1}
 }
 
 type Message struct {
@@ -102,7 +102,7 @@ type Message struct {
 func (m *Message) Reset()      { *m = Message{} }
 func (*Message) ProtoMessage() {}
 func (*Message) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_c184533843d9f39e, []int{0}
+	return fileDescriptor_message_a06e308272441dab, []int{0}
 }
 func (m *Message) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -186,7 +186,7 @@ type Ping struct {
 func (m *Ping) Reset()      { *m = Ping{} }
 func (*Ping) ProtoMessage() {}
 func (*Ping) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_c184533843d9f39e, []int{1}
+	return fileDescriptor_message_a06e308272441dab, []int{1}
 }
 func (m *Ping) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -221,7 +221,7 @@ type PingReply struct {
 func (m *PingReply) Reset()      { *m = PingReply{} }
 func (*PingReply) ProtoMessage() {}
 func (*PingReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_c184533843d9f39e, []int{2}
+	return fileDescriptor_message_a06e308272441dab, []int{2}
 }
 func (m *PingReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -256,7 +256,7 @@ type GetNode struct {
 func (m *GetNode) Reset()      { *m = GetNode{} }
 func (*GetNode) ProtoMessage() {}
 func (*GetNode) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_c184533843d9f39e, []int{3}
+	return fileDescriptor_message_a06e308272441dab, []int{3}
 }
 func (m *GetNode) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -292,7 +292,7 @@ type GetNodeReply struct {
 func (m *GetNodeReply) Reset()      { *m = GetNodeReply{} }
 func (*GetNodeReply) ProtoMessage() {}
 func (*GetNodeReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_c184533843d9f39e, []int{4}
+	return fileDescriptor_message_a06e308272441dab, []int{4}
 }
 func (m *GetNodeReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -334,7 +334,7 @@ type Stop struct {
 func (m *Stop) Reset()      { *m = Stop{} }
 func (*Stop) ProtoMessage() {}
 func (*Stop) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_c184533843d9f39e, []int{5}
+	return fileDescriptor_message_a06e308272441dab, []int{5}
 }
 func (m *Stop) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -371,7 +371,7 @@ type GetSuccAndPred struct {
 func (m *GetSuccAndPred) Reset()      { *m = GetSuccAndPred{} }
 func (*GetSuccAndPred) ProtoMessage() {}
 func (*GetSuccAndPred) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_c184533843d9f39e, []int{6}
+	return fileDescriptor_message_a06e308272441dab, []int{6}
 }
 func (m *GetSuccAndPred) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -422,7 +422,7 @@ type GetSuccAndPredReply struct {
 func (m *GetSuccAndPredReply) Reset()      { *m = GetSuccAndPredReply{} }
 func (*GetSuccAndPredReply) ProtoMessage() {}
 func (*GetSuccAndPredReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_c184533843d9f39e, []int{7}
+	return fileDescriptor_message_a06e308272441dab, []int{7}
 }
 func (m *GetSuccAndPredReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -473,7 +473,7 @@ type FindSuccessors struct {
 func (m *FindSuccessors) Reset()      { *m = FindSuccessors{} }
 func (*FindSuccessors) ProtoMessage() {}
 func (*FindSuccessors) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_c184533843d9f39e, []int{8}
+	return fileDescriptor_message_a06e308272441dab, []int{8}
 }
 func (m *FindSuccessors) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -523,7 +523,7 @@ type FindSuccessorsReply struct {
 func (m *FindSuccessorsReply) Reset()      { *m = FindSuccessorsReply{} }
 func (*FindSuccessorsReply) ProtoMessage() {}
 func (*FindSuccessorsReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_c184533843d9f39e, []int{9}
+	return fileDescriptor_message_a06e308272441dab, []int{9}
 }
 func (m *FindSuccessorsReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -559,21 +559,22 @@ func (m *FindSuccessorsReply) GetSuccessors() []*Node {
 	return nil
 }
 
-type FindPredecessor struct {
-	Key []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+type FindPredecessors struct {
+	Key     []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	NumPred uint32 `protobuf:"varint,2,opt,name=num_pred,json=numPred,proto3" json:"num_pred,omitempty"`
 }
 
-func (m *FindPredecessor) Reset()      { *m = FindPredecessor{} }
-func (*FindPredecessor) ProtoMessage() {}
-func (*FindPredecessor) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_c184533843d9f39e, []int{10}
+func (m *FindPredecessors) Reset()      { *m = FindPredecessors{} }
+func (*FindPredecessors) ProtoMessage() {}
+func (*FindPredecessors) Descriptor() ([]byte, []int) {
+	return fileDescriptor_message_a06e308272441dab, []int{10}
 }
-func (m *FindPredecessor) XXX_Unmarshal(b []byte) error {
+func (m *FindPredecessors) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *FindPredecessor) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *FindPredecessors) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_FindPredecessor.Marshal(b, m, deterministic)
+		return xxx_messageInfo_FindPredecessors.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalTo(b)
@@ -583,40 +584,47 @@ func (m *FindPredecessor) XXX_Marshal(b []byte, deterministic bool) ([]byte, err
 		return b[:n], nil
 	}
 }
-func (dst *FindPredecessor) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FindPredecessor.Merge(dst, src)
+func (dst *FindPredecessors) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FindPredecessors.Merge(dst, src)
 }
-func (m *FindPredecessor) XXX_Size() int {
+func (m *FindPredecessors) XXX_Size() int {
 	return m.Size()
 }
-func (m *FindPredecessor) XXX_DiscardUnknown() {
-	xxx_messageInfo_FindPredecessor.DiscardUnknown(m)
+func (m *FindPredecessors) XXX_DiscardUnknown() {
+	xxx_messageInfo_FindPredecessors.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_FindPredecessor proto.InternalMessageInfo
+var xxx_messageInfo_FindPredecessors proto.InternalMessageInfo
 
-func (m *FindPredecessor) GetKey() []byte {
+func (m *FindPredecessors) GetKey() []byte {
 	if m != nil {
 		return m.Key
 	}
 	return nil
 }
 
-type FindPredecessorReply struct {
-	Predecessor *Node `protobuf:"bytes,1,opt,name=predecessor" json:"predecessor,omitempty"`
+func (m *FindPredecessors) GetNumPred() uint32 {
+	if m != nil {
+		return m.NumPred
+	}
+	return 0
 }
 
-func (m *FindPredecessorReply) Reset()      { *m = FindPredecessorReply{} }
-func (*FindPredecessorReply) ProtoMessage() {}
-func (*FindPredecessorReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_c184533843d9f39e, []int{11}
+type FindPredecessorsReply struct {
+	Predecessors []*Node `protobuf:"bytes,1,rep,name=predecessors" json:"predecessors,omitempty"`
 }
-func (m *FindPredecessorReply) XXX_Unmarshal(b []byte) error {
+
+func (m *FindPredecessorsReply) Reset()      { *m = FindPredecessorsReply{} }
+func (*FindPredecessorsReply) ProtoMessage() {}
+func (*FindPredecessorsReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_message_a06e308272441dab, []int{11}
+}
+func (m *FindPredecessorsReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *FindPredecessorReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *FindPredecessorsReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_FindPredecessorReply.Marshal(b, m, deterministic)
+		return xxx_messageInfo_FindPredecessorsReply.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalTo(b)
@@ -626,21 +634,21 @@ func (m *FindPredecessorReply) XXX_Marshal(b []byte, deterministic bool) ([]byte
 		return b[:n], nil
 	}
 }
-func (dst *FindPredecessorReply) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FindPredecessorReply.Merge(dst, src)
+func (dst *FindPredecessorsReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FindPredecessorsReply.Merge(dst, src)
 }
-func (m *FindPredecessorReply) XXX_Size() int {
+func (m *FindPredecessorsReply) XXX_Size() int {
 	return m.Size()
 }
-func (m *FindPredecessorReply) XXX_DiscardUnknown() {
-	xxx_messageInfo_FindPredecessorReply.DiscardUnknown(m)
+func (m *FindPredecessorsReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_FindPredecessorsReply.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_FindPredecessorReply proto.InternalMessageInfo
+var xxx_messageInfo_FindPredecessorsReply proto.InternalMessageInfo
 
-func (m *FindPredecessorReply) GetPredecessor() *Node {
+func (m *FindPredecessorsReply) GetPredecessors() []*Node {
 	if m != nil {
-		return m.Predecessor
+		return m.Predecessors
 	}
 	return nil
 }
@@ -652,7 +660,7 @@ type Bytes struct {
 func (m *Bytes) Reset()      { *m = Bytes{} }
 func (*Bytes) ProtoMessage() {}
 func (*Bytes) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_c184533843d9f39e, []int{12}
+	return fileDescriptor_message_a06e308272441dab, []int{12}
 }
 func (m *Bytes) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -699,8 +707,8 @@ func init() {
 	proto.RegisterType((*GetSuccAndPredReply)(nil), "protobuf.GetSuccAndPredReply")
 	proto.RegisterType((*FindSuccessors)(nil), "protobuf.FindSuccessors")
 	proto.RegisterType((*FindSuccessorsReply)(nil), "protobuf.FindSuccessorsReply")
-	proto.RegisterType((*FindPredecessor)(nil), "protobuf.FindPredecessor")
-	proto.RegisterType((*FindPredecessorReply)(nil), "protobuf.FindPredecessorReply")
+	proto.RegisterType((*FindPredecessors)(nil), "protobuf.FindPredecessors")
+	proto.RegisterType((*FindPredecessorsReply)(nil), "protobuf.FindPredecessorsReply")
 	proto.RegisterType((*Bytes)(nil), "protobuf.Bytes")
 	proto.RegisterEnum("protobuf.RoutingType", RoutingType_name, RoutingType_value)
 	proto.RegisterEnum("protobuf.MessageType", MessageType_name, MessageType_value)
@@ -989,14 +997,14 @@ func (this *FindSuccessorsReply) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *FindPredecessor) Equal(that interface{}) bool {
+func (this *FindPredecessors) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*FindPredecessor)
+	that1, ok := that.(*FindPredecessors)
 	if !ok {
-		that2, ok := that.(FindPredecessor)
+		that2, ok := that.(FindPredecessors)
 		if ok {
 			that1 = &that2
 		} else {
@@ -1011,16 +1019,19 @@ func (this *FindPredecessor) Equal(that interface{}) bool {
 	if !bytes.Equal(this.Key, that1.Key) {
 		return false
 	}
+	if this.NumPred != that1.NumPred {
+		return false
+	}
 	return true
 }
-func (this *FindPredecessorReply) Equal(that interface{}) bool {
+func (this *FindPredecessorsReply) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*FindPredecessorReply)
+	that1, ok := that.(*FindPredecessorsReply)
 	if !ok {
-		that2, ok := that.(FindPredecessorReply)
+		that2, ok := that.(FindPredecessorsReply)
 		if ok {
 			that1 = &that2
 		} else {
@@ -1032,8 +1043,13 @@ func (this *FindPredecessorReply) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if !this.Predecessor.Equal(that1.Predecessor) {
+	if len(this.Predecessors) != len(that1.Predecessors) {
 		return false
+	}
+	for i := range this.Predecessors {
+		if !this.Predecessors[i].Equal(that1.Predecessors[i]) {
+			return false
+		}
 	}
 	return true
 }
@@ -1174,24 +1190,25 @@ func (this *FindSuccessorsReply) GoString() string {
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
-func (this *FindPredecessor) GoString() string {
+func (this *FindPredecessors) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := make([]string, 0, 5)
-	s = append(s, "&protobuf.FindPredecessor{")
+	s := make([]string, 0, 6)
+	s = append(s, "&protobuf.FindPredecessors{")
 	s = append(s, "Key: "+fmt.Sprintf("%#v", this.Key)+",\n")
+	s = append(s, "NumPred: "+fmt.Sprintf("%#v", this.NumPred)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
-func (this *FindPredecessorReply) GoString() string {
+func (this *FindPredecessorsReply) GoString() string {
 	if this == nil {
 		return "nil"
 	}
 	s := make([]string, 0, 5)
-	s = append(s, "&protobuf.FindPredecessorReply{")
-	if this.Predecessor != nil {
-		s = append(s, "Predecessor: "+fmt.Sprintf("%#v", this.Predecessor)+",\n")
+	s = append(s, "&protobuf.FindPredecessorsReply{")
+	if this.Predecessors != nil {
+		s = append(s, "Predecessors: "+fmt.Sprintf("%#v", this.Predecessors)+",\n")
 	}
 	s = append(s, "}")
 	return strings.Join(s, "")
@@ -1501,7 +1518,7 @@ func (m *FindSuccessorsReply) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *FindPredecessor) Marshal() (dAtA []byte, err error) {
+func (m *FindPredecessors) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -1511,7 +1528,7 @@ func (m *FindPredecessor) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *FindPredecessor) MarshalTo(dAtA []byte) (int, error) {
+func (m *FindPredecessors) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -1522,10 +1539,15 @@ func (m *FindPredecessor) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintMessage(dAtA, i, uint64(len(m.Key)))
 		i += copy(dAtA[i:], m.Key)
 	}
+	if m.NumPred != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintMessage(dAtA, i, uint64(m.NumPred))
+	}
 	return i, nil
 }
 
-func (m *FindPredecessorReply) Marshal() (dAtA []byte, err error) {
+func (m *FindPredecessorsReply) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -1535,20 +1557,22 @@ func (m *FindPredecessorReply) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *FindPredecessorReply) MarshalTo(dAtA []byte) (int, error) {
+func (m *FindPredecessorsReply) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	if m.Predecessor != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintMessage(dAtA, i, uint64(m.Predecessor.Size()))
-		n2, err := m.Predecessor.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
+	if len(m.Predecessors) > 0 {
+		for _, msg := range m.Predecessors {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintMessage(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
 		}
-		i += n2
 	}
 	return i, nil
 }
@@ -1715,22 +1739,27 @@ func NewPopulatedFindSuccessorsReply(r randyMessage, easy bool) *FindSuccessorsR
 	return this
 }
 
-func NewPopulatedFindPredecessor(r randyMessage, easy bool) *FindPredecessor {
-	this := &FindPredecessor{}
+func NewPopulatedFindPredecessors(r randyMessage, easy bool) *FindPredecessors {
+	this := &FindPredecessors{}
 	v10 := r.Intn(100)
 	this.Key = make([]byte, v10)
 	for i := 0; i < v10; i++ {
 		this.Key[i] = byte(r.Intn(256))
 	}
+	this.NumPred = uint32(r.Uint32())
 	if !easy && r.Intn(10) != 0 {
 	}
 	return this
 }
 
-func NewPopulatedFindPredecessorReply(r randyMessage, easy bool) *FindPredecessorReply {
-	this := &FindPredecessorReply{}
+func NewPopulatedFindPredecessorsReply(r randyMessage, easy bool) *FindPredecessorsReply {
+	this := &FindPredecessorsReply{}
 	if r.Intn(10) != 0 {
-		this.Predecessor = NewPopulatedNode(r, easy)
+		v11 := r.Intn(5)
+		this.Predecessors = make([]*Node, v11)
+		for i := 0; i < v11; i++ {
+			this.Predecessors[i] = NewPopulatedNode(r, easy)
+		}
 	}
 	if !easy && r.Intn(10) != 0 {
 	}
@@ -1739,9 +1768,9 @@ func NewPopulatedFindPredecessorReply(r randyMessage, easy bool) *FindPredecesso
 
 func NewPopulatedBytes(r randyMessage, easy bool) *Bytes {
 	this := &Bytes{}
-	v11 := r.Intn(100)
-	this.Data = make([]byte, v11)
-	for i := 0; i < v11; i++ {
+	v12 := r.Intn(100)
+	this.Data = make([]byte, v12)
+	for i := 0; i < v12; i++ {
 		this.Data[i] = byte(r.Intn(256))
 	}
 	if !easy && r.Intn(10) != 0 {
@@ -1768,9 +1797,9 @@ func randUTF8RuneMessage(r randyMessage) rune {
 	return rune(ru + 61)
 }
 func randStringMessage(r randyMessage) string {
-	v12 := r.Intn(100)
-	tmps := make([]rune, v12)
-	for i := 0; i < v12; i++ {
+	v13 := r.Intn(100)
+	tmps := make([]rune, v13)
+	for i := 0; i < v13; i++ {
 		tmps[i] = randUTF8RuneMessage(r)
 	}
 	return string(tmps)
@@ -1792,11 +1821,11 @@ func randFieldMessage(dAtA []byte, r randyMessage, fieldNumber int, wire int) []
 	switch wire {
 	case 0:
 		dAtA = encodeVarintPopulateMessage(dAtA, uint64(key))
-		v13 := r.Int63()
+		v14 := r.Int63()
 		if r.Intn(2) == 0 {
-			v13 *= -1
+			v14 *= -1
 		}
-		dAtA = encodeVarintPopulateMessage(dAtA, uint64(v13))
+		dAtA = encodeVarintPopulateMessage(dAtA, uint64(v14))
 	case 1:
 		dAtA = encodeVarintPopulateMessage(dAtA, uint64(key))
 		dAtA = append(dAtA, byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)))
@@ -1972,7 +2001,7 @@ func (m *FindSuccessorsReply) Size() (n int) {
 	return n
 }
 
-func (m *FindPredecessor) Size() (n int) {
+func (m *FindPredecessors) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1982,18 +2011,23 @@ func (m *FindPredecessor) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovMessage(uint64(l))
 	}
+	if m.NumPred != 0 {
+		n += 1 + sovMessage(uint64(m.NumPred))
+	}
 	return n
 }
 
-func (m *FindPredecessorReply) Size() (n int) {
+func (m *FindPredecessorsReply) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.Predecessor != nil {
-		l = m.Predecessor.Size()
-		n += 1 + l + sovMessage(uint64(l))
+	if len(m.Predecessors) > 0 {
+		for _, e := range m.Predecessors {
+			l = e.Size()
+			n += 1 + l + sovMessage(uint64(l))
+		}
 	}
 	return n
 }
@@ -2129,22 +2163,23 @@ func (this *FindSuccessorsReply) String() string {
 	}, "")
 	return s
 }
-func (this *FindPredecessor) String() string {
+func (this *FindPredecessors) String() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&FindPredecessor{`,
+	s := strings.Join([]string{`&FindPredecessors{`,
 		`Key:` + fmt.Sprintf("%v", this.Key) + `,`,
+		`NumPred:` + fmt.Sprintf("%v", this.NumPred) + `,`,
 		`}`,
 	}, "")
 	return s
 }
-func (this *FindPredecessorReply) String() string {
+func (this *FindPredecessorsReply) String() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&FindPredecessorReply{`,
-		`Predecessor:` + strings.Replace(fmt.Sprintf("%v", this.Predecessor), "Node", "Node", 1) + `,`,
+	s := strings.Join([]string{`&FindPredecessorsReply{`,
+		`Predecessors:` + strings.Replace(fmt.Sprintf("%v", this.Predecessors), "Node", "Node", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -3074,7 +3109,7 @@ func (m *FindSuccessorsReply) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *FindPredecessor) Unmarshal(dAtA []byte) error {
+func (m *FindPredecessors) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3097,10 +3132,10 @@ func (m *FindPredecessor) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: FindPredecessor: wiretype end group for non-group")
+			return fmt.Errorf("proto: FindPredecessors: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: FindPredecessor: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: FindPredecessors: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3134,6 +3169,25 @@ func (m *FindPredecessor) Unmarshal(dAtA []byte) error {
 				m.Key = []byte{}
 			}
 			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NumPred", wireType)
+			}
+			m.NumPred = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMessage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NumPred |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipMessage(dAtA[iNdEx:])
@@ -3155,7 +3209,7 @@ func (m *FindPredecessor) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *FindPredecessorReply) Unmarshal(dAtA []byte) error {
+func (m *FindPredecessorsReply) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3178,15 +3232,15 @@ func (m *FindPredecessorReply) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: FindPredecessorReply: wiretype end group for non-group")
+			return fmt.Errorf("proto: FindPredecessorsReply: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: FindPredecessorReply: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: FindPredecessorsReply: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Predecessor", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Predecessors", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -3210,10 +3264,8 @@ func (m *FindPredecessorReply) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Predecessor == nil {
-				m.Predecessor = &Node{}
-			}
-			if err := m.Predecessor.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Predecessors = append(m.Predecessors, &Node{})
+			if err := m.Predecessors[len(m.Predecessors)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3424,49 +3476,48 @@ var (
 	ErrIntOverflowMessage   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("protobuf/message.proto", fileDescriptor_message_c184533843d9f39e) }
+func init() { proto.RegisterFile("protobuf/message.proto", fileDescriptor_message_a06e308272441dab) }
 
-var fileDescriptor_message_c184533843d9f39e = []byte{
-	// 643 bytes of a gzipped FileDescriptorProto
+var fileDescriptor_message_a06e308272441dab = []byte{
+	// 639 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x53, 0x3d, 0x6f, 0xd3, 0x50,
-	0x14, 0xf5, 0xcb, 0x77, 0xae, 0xd3, 0xd4, 0xbc, 0xb4, 0x10, 0x8a, 0x78, 0xaa, 0x1e, 0x4b, 0x55,
-	0x89, 0x14, 0xa5, 0x0b, 0x03, 0x0c, 0xf9, 0x70, 0x83, 0x25, 0x48, 0x22, 0xdb, 0x0c, 0x9d, 0xa2,
-	0xd6, 0xef, 0x11, 0x22, 0x88, 0x1d, 0xf9, 0x63, 0x88, 0xc4, 0xc0, 0xc4, 0xcc, 0xcf, 0xe0, 0x27,
-	0xf0, 0x13, 0x18, 0x3b, 0x76, 0x24, 0xee, 0xc2, 0xd8, 0x91, 0x11, 0xbd, 0x67, 0xa7, 0x49, 0x4a,
-	0x59, 0x98, 0x72, 0xef, 0x39, 0xf7, 0x9c, 0x77, 0xee, 0x8d, 0x0c, 0xf7, 0x67, 0xbe, 0x17, 0x7a,
-	0xe7, 0xd1, 0xbb, 0xa3, 0x29, 0x0f, 0x82, 0xb3, 0x31, 0x6f, 0x48, 0x00, 0x97, 0x96, 0xf8, 0xde,
-	0xd3, 0xf1, 0x24, 0x7c, 0x1f, 0x9d, 0x37, 0x1c, 0x6f, 0x7a, 0x34, 0xf6, 0xc6, 0xde, 0xd1, 0x8d,
-	0x42, 0x74, 0xb2, 0x91, 0x55, 0x22, 0xdc, 0xab, 0xdd, 0xd0, 0xae, 0xc7, 0x52, 0x37, 0xfa, 0x25,
-	0x03, 0xc5, 0x37, 0x89, 0x3f, 0x7e, 0x0e, 0x15, 0xdf, 0x8b, 0xc2, 0x89, 0x3b, 0x1e, 0x85, 0xf3,
-	0x19, 0xaf, 0xa3, 0x7d, 0x74, 0x50, 0x6d, 0xee, 0x36, 0x96, 0xba, 0x86, 0x99, 0xb0, 0xf6, 0x7c,
-	0xc6, 0x4d, 0xd5, 0x5f, 0x35, 0x42, 0x99, 0x86, 0x4c, 0x94, 0x99, 0xdb, 0xca, 0xf4, 0x89, 0x44,
-	0x39, 0x5d, 0x35, 0xb8, 0x0e, 0xc5, 0xb4, 0xad, 0x67, 0xf7, 0xd1, 0x41, 0xc5, 0x5c, 0xb6, 0xf8,
-	0x31, 0xc0, 0xd2, 0x73, 0xc2, 0xea, 0x39, 0x49, 0x96, 0x53, 0xc4, 0x60, 0x98, 0x80, 0xea, 0xf3,
-	0xd9, 0xc7, 0xf9, 0x28, 0xf4, 0x04, 0x9f, 0x4f, 0x78, 0x09, 0xd9, 0x9e, 0xc1, 0xf0, 0x2e, 0x14,
-	0x02, 0xdf, 0x11, 0x54, 0x41, 0x52, 0xf9, 0xc0, 0x77, 0x0c, 0x86, 0x1f, 0x40, 0x91, 0xf1, 0x20,
-	0x14, 0x78, 0x51, 0xe2, 0x05, 0xd1, 0x1a, 0x8c, 0x16, 0x20, 0x37, 0x9c, 0xb8, 0x63, 0xaa, 0x42,
-	0x59, 0xfc, 0x9a, 0xc2, 0x88, 0x96, 0xa1, 0xd8, 0xe3, 0x61, 0xdf, 0x63, 0x9c, 0x36, 0xa1, 0x92,
-	0x96, 0x92, 0xc2, 0x14, 0x72, 0xe2, 0x8c, 0xf2, 0x48, 0x6a, 0xb3, 0xba, 0x5a, 0x55, 0x8e, 0x48,
-	0x4e, 0x78, 0x5a, 0xa1, 0x37, 0xa3, 0x27, 0x50, 0xed, 0xf1, 0xd0, 0x8a, 0x1c, 0xa7, 0xe5, 0xb2,
-	0xa1, 0xcf, 0x19, 0x7e, 0x08, 0x25, 0x37, 0x9a, 0x8e, 0x82, 0xc8, 0x71, 0xa4, 0xc3, 0x96, 0x59,
-	0x74, 0xa3, 0xa9, 0x98, 0x58, 0x52, 0x33, 0x9f, 0x33, 0x79, 0xc7, 0x84, 0x12, 0x2a, 0x3a, 0x87,
-	0xda, 0xa6, 0x4f, 0x12, 0xa5, 0x01, 0x20, 0x8c, 0x78, 0x10, 0x78, 0x7e, 0x50, 0x47, 0xfb, 0xd9,
-	0x3b, 0x02, 0xad, 0x4d, 0xe0, 0x26, 0x54, 0x84, 0x3b, 0x5f, 0x2a, 0x32, 0x77, 0x2a, 0x36, 0x66,
-	0xe8, 0x4b, 0xa8, 0x9e, 0x4c, 0x5c, 0x66, 0xad, 0x5c, 0x34, 0xc8, 0x7e, 0xe0, 0x73, 0x99, 0xbe,
-	0x62, 0x8a, 0x72, 0x63, 0xa9, 0xcc, 0xc6, 0x52, 0x54, 0x87, 0xda, 0xa6, 0xfc, 0xbf, 0x92, 0xd3,
-	0x27, 0xb0, 0x2d, 0x6c, 0x86, 0xab, 0x64, 0x7f, 0xc7, 0xa0, 0xaf, 0x60, 0xe7, 0xd6, 0x50, 0xf2,
-	0xd8, 0x33, 0x50, 0xd7, 0x56, 0xfa, 0xc7, 0x1f, 0xb7, 0x3e, 0x42, 0x1f, 0x41, 0xbe, 0x3d, 0x0f,
-	0x79, 0x80, 0x31, 0xe4, 0xd8, 0x59, 0x78, 0x96, 0xbe, 0x22, 0xeb, 0xc3, 0x63, 0x50, 0xd7, 0xbe,
-	0x07, 0x0c, 0x50, 0xe8, 0x1a, 0xa6, 0xde, 0xb1, 0x35, 0x05, 0x97, 0x21, 0x6f, 0xea, 0xaf, 0x5b,
-	0xa7, 0x1a, 0xc2, 0x5b, 0x50, 0x6e, 0x9b, 0x83, 0x56, 0xb7, 0xd3, 0xb2, 0x6c, 0x2d, 0x73, 0xf8,
-	0x09, 0xd4, 0xb5, 0x4f, 0x01, 0x97, 0x20, 0x37, 0x34, 0xfa, 0x3d, 0x4d, 0xc1, 0x15, 0x28, 0xf5,
-	0x74, 0x7b, 0xd4, 0x1f, 0x74, 0x75, 0x0d, 0x09, 0xdc, 0xb2, 0x07, 0x43, 0x2d, 0x83, 0x77, 0xe1,
-	0x9e, 0xc0, 0xad, 0xb7, 0x9d, 0xce, 0xa8, 0xd5, 0xef, 0x8e, 0x86, 0xa6, 0xde, 0xd5, 0xb2, 0xb8,
-	0x06, 0xdb, 0x27, 0x46, 0xbf, 0x2b, 0x71, 0xdd, 0xb2, 0x06, 0xa6, 0xa5, 0xe5, 0xf0, 0x0e, 0x68,
-	0x12, 0x14, 0x33, 0x7a, 0x02, 0x6b, 0x79, 0x11, 0xa6, 0x7d, 0x6a, 0xeb, 0x96, 0x56, 0x68, 0xbf,
-	0xb8, 0x58, 0x10, 0xe5, 0x72, 0x41, 0x94, 0xeb, 0x05, 0x41, 0xbf, 0x17, 0x04, 0x7d, 0x8e, 0x09,
-	0xfa, 0x16, 0x13, 0xf4, 0x3d, 0x26, 0xe8, 0x47, 0x4c, 0xd0, 0x45, 0x4c, 0xd0, 0xcf, 0x98, 0xa0,
-	0x5f, 0x31, 0x51, 0xae, 0x63, 0x82, 0xbe, 0x5e, 0x11, 0xe5, 0xe2, 0x8a, 0x28, 0x97, 0x57, 0x44,
-	0x39, 0x2f, 0xc8, 0x4b, 0x1d, 0xff, 0x09, 0x00, 0x00, 0xff, 0xff, 0xcf, 0x34, 0xe1, 0x9d, 0x99,
-	0x04, 0x00, 0x00,
+	0x14, 0xf5, 0xcb, 0x87, 0x93, 0xdc, 0xa4, 0xc1, 0xbc, 0x28, 0x10, 0x8a, 0x78, 0xaa, 0x3c, 0x55,
+	0x95, 0x48, 0xa5, 0x74, 0x61, 0x00, 0xa1, 0x7c, 0xb8, 0x91, 0x05, 0x24, 0x91, 0x6d, 0x86, 0x4e,
+	0x51, 0xeb, 0xf7, 0x08, 0x11, 0xc4, 0x8e, 0xfc, 0x31, 0x78, 0x40, 0x62, 0x62, 0xe6, 0x67, 0xf0,
+	0x13, 0xf8, 0x09, 0x8c, 0x1d, 0x3b, 0x12, 0x77, 0x61, 0xec, 0xc8, 0x88, 0xde, 0xb3, 0xdd, 0x24,
+	0x55, 0x90, 0x10, 0x53, 0xee, 0x3d, 0xe7, 0x9e, 0x93, 0xf3, 0x8e, 0x64, 0x78, 0xb0, 0xf4, 0xdc,
+	0xc0, 0xbd, 0x08, 0xdf, 0x1d, 0x2f, 0x98, 0xef, 0x9f, 0xcf, 0x58, 0x5b, 0x00, 0xb8, 0x9c, 0xe1,
+	0xfb, 0x4f, 0x67, 0xf3, 0xe0, 0x7d, 0x78, 0xd1, 0xb6, 0xdd, 0xc5, 0xf1, 0xcc, 0x9d, 0xb9, 0xc7,
+	0xb7, 0x0a, 0xbe, 0x89, 0x45, 0x4c, 0x89, 0x70, 0xbf, 0x71, 0x4b, 0x3b, 0x2e, 0x4d, 0xdd, 0xd4,
+	0x2f, 0x39, 0x28, 0xbd, 0x49, 0xfc, 0xf1, 0x33, 0xa8, 0x79, 0x6e, 0x18, 0xcc, 0x9d, 0xd9, 0x34,
+	0x88, 0x96, 0xac, 0x85, 0x0e, 0xd0, 0x61, 0xbd, 0xd3, 0x6c, 0x67, 0xba, 0xb6, 0x91, 0xb0, 0x56,
+	0xb4, 0x64, 0x46, 0xd5, 0x5b, 0x2f, 0x5c, 0x99, 0x86, 0x4c, 0x94, 0xb9, 0xbb, 0xca, 0xf4, 0x2f,
+	0x12, 0xe5, 0x62, 0xbd, 0xe0, 0x16, 0x94, 0xd2, 0xb5, 0x95, 0x3f, 0x40, 0x87, 0x35, 0x23, 0x5b,
+	0xf1, 0x13, 0x80, 0xcc, 0x73, 0x4e, 0x5b, 0x05, 0x41, 0x56, 0x52, 0x44, 0xa7, 0x98, 0x40, 0xd5,
+	0x63, 0xcb, 0x8f, 0xd1, 0x34, 0x70, 0x39, 0x5f, 0x4c, 0x78, 0x01, 0x59, 0xae, 0x4e, 0x71, 0x13,
+	0x64, 0xdf, 0xb3, 0x39, 0x25, 0x0b, 0xaa, 0xe8, 0x7b, 0xb6, 0x4e, 0xf1, 0x43, 0x28, 0x51, 0xe6,
+	0x07, 0x1c, 0x2f, 0x09, 0x5c, 0xe6, 0xab, 0x4e, 0x55, 0x19, 0x0a, 0x93, 0xb9, 0x33, 0x53, 0xab,
+	0x50, 0xe1, 0xbf, 0x06, 0x37, 0x52, 0x2b, 0x50, 0x1a, 0xb2, 0x60, 0xe4, 0x52, 0xa6, 0x76, 0xa0,
+	0x96, 0x8e, 0x82, 0xc2, 0x2a, 0x14, 0x78, 0x8d, 0xa2, 0xa4, 0x6a, 0xa7, 0xbe, 0x7e, 0xaa, 0x38,
+	0x11, 0x1c, 0xf7, 0x34, 0x03, 0x77, 0xa9, 0x9e, 0x42, 0x7d, 0xc8, 0x02, 0x33, 0xb4, 0xed, 0xae,
+	0x43, 0x27, 0x1e, 0xa3, 0xf8, 0x11, 0x94, 0x9d, 0x70, 0x31, 0xf5, 0x43, 0xdb, 0x16, 0x0e, 0x7b,
+	0x46, 0xc9, 0x09, 0x17, 0xfc, 0x22, 0xa3, 0x96, 0x1e, 0xa3, 0xa2, 0xc7, 0x84, 0xe2, 0x2a, 0x35,
+	0x82, 0xc6, 0xb6, 0x4f, 0x12, 0xa5, 0x0d, 0xc0, 0x8d, 0x98, 0xef, 0xbb, 0x9e, 0xdf, 0x42, 0x07,
+	0xf9, 0x1d, 0x81, 0x36, 0x2e, 0x70, 0x07, 0x6a, 0xdc, 0x9d, 0x65, 0x8a, 0xdc, 0x4e, 0xc5, 0xd6,
+	0x8d, 0xfa, 0x02, 0xea, 0xa7, 0x73, 0x87, 0x9a, 0x6b, 0x17, 0x05, 0xf2, 0x1f, 0x58, 0x24, 0xd2,
+	0xd7, 0x0c, 0x3e, 0x6e, 0x3d, 0x2a, 0xb7, 0xf5, 0x28, 0x55, 0x83, 0xc6, 0xb6, 0xfc, 0xbf, 0x92,
+	0xab, 0x2f, 0x41, 0xe1, 0x36, 0x93, 0x8d, 0x64, 0x7f, 0xcf, 0xb1, 0xab, 0xc1, 0x57, 0xd0, 0xbc,
+	0x6b, 0x90, 0x24, 0xb9, 0xdb, 0x09, 0xfa, 0x87, 0x4e, 0x1e, 0x43, 0xb1, 0x17, 0x05, 0xcc, 0xc7,
+	0x18, 0x0a, 0xf4, 0x3c, 0x38, 0x4f, 0x33, 0x88, 0xf9, 0xe8, 0x04, 0xaa, 0x1b, 0x9f, 0x0b, 0x06,
+	0x90, 0x07, 0xba, 0xa1, 0xf5, 0x2d, 0x45, 0xc2, 0x15, 0x28, 0x1a, 0xda, 0xeb, 0xee, 0x99, 0x82,
+	0xf0, 0x1e, 0x54, 0x7a, 0xc6, 0xb8, 0x3b, 0xe8, 0x77, 0x4d, 0x4b, 0xc9, 0x1d, 0x7d, 0x82, 0xea,
+	0xc6, 0x97, 0x82, 0xcb, 0x50, 0x98, 0xe8, 0xa3, 0xa1, 0x22, 0xe1, 0x1a, 0x94, 0x87, 0x9a, 0x35,
+	0x1d, 0x8d, 0x07, 0x9a, 0x82, 0x38, 0x6e, 0x5a, 0xe3, 0x89, 0x92, 0xc3, 0x4d, 0xb8, 0xcf, 0x71,
+	0xf3, 0x6d, 0xbf, 0x3f, 0xed, 0x8e, 0x06, 0xd3, 0x89, 0xa1, 0x0d, 0x94, 0x3c, 0x6e, 0xc0, 0xbd,
+	0x53, 0x7d, 0x34, 0x10, 0xb8, 0x66, 0x9a, 0x63, 0xc3, 0x54, 0x0a, 0xfc, 0x56, 0x80, 0xfc, 0x46,
+	0xcb, 0xe0, 0x22, 0x4f, 0xd3, 0x3b, 0xb3, 0x34, 0x53, 0x91, 0x7b, 0xcf, 0x2f, 0x57, 0x44, 0xba,
+	0x5a, 0x11, 0xe9, 0x66, 0x45, 0xd0, 0xef, 0x15, 0x41, 0x9f, 0x63, 0x82, 0xbe, 0xc5, 0x04, 0x7d,
+	0x8f, 0x09, 0xfa, 0x11, 0x13, 0x74, 0x19, 0x13, 0xf4, 0x33, 0x26, 0xe8, 0x57, 0x4c, 0xa4, 0x9b,
+	0x98, 0xa0, 0xaf, 0xd7, 0x44, 0xba, 0xbc, 0x26, 0xd2, 0xd5, 0x35, 0x91, 0x2e, 0x64, 0xd1, 0xd5,
+	0xc9, 0x9f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x20, 0xf6, 0xa4, 0x40, 0xb9, 0x04, 0x00, 0x00,
 }

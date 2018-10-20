@@ -370,11 +370,18 @@ func GetSuccAndPred(remoteNode *node.RemoteNode, numSucc, numPred uint32) ([]*pr
 // of a given key id
 func (c *Chord) FindSuccessors(key []byte, numSucc uint32) ([]*protobuf.Node, error) {
 	succ := c.successors.GetFirst()
-	if succ != nil && between(c.LocalNode.Id, succ.Id, key) {
-		succs := c.successors.ToProtoNodeList(true)
-		if succs != nil && uint32(len(succs)) > numSucc {
+	if CompareID(key, c.LocalNode.Id) == 0 || (succ != nil && betweenLeftIncl(c.LocalNode.Id, succ.Id, key)) {
+		var succs []*protobuf.Node
+		if CompareID(key, c.LocalNode.Id) == 0 {
+			succs = append(succs, c.LocalNode.Node.Node)
+		}
+
+		succs = append(succs, c.successors.ToProtoNodeList(true)...)
+
+		if succs != nil && len(succs) > int(numSucc) {
 			succs = succs[:numSucc]
 		}
+
 		return succs, nil
 	}
 
@@ -397,5 +404,50 @@ func (c *Chord) FindSuccessors(key []byte, numSucc uint32) ([]*protobuf.Node, er
 		return nil, err
 	}
 
+	if len(replyBody.Successors) > int(numSucc) {
+		return replyBody.Successors[:numSucc], nil
+	}
+
 	return replyBody.Successors, nil
+}
+
+// FindPredecessors sends a FindPredecessors message and returns numPred
+// predecessors of a given key id
+func (c *Chord) FindPredecessors(key []byte, numPred uint32) ([]*protobuf.Node, error) {
+	succ := c.successors.GetFirst()
+	if CompareID(key, c.LocalNode.Id) == 0 || (succ != nil && between(c.LocalNode.Id, succ.Id, key)) {
+		preds := []*protobuf.Node{c.LocalNode.Node.Node}
+		preds = append(preds, c.predecessors.ToProtoNodeList(true)...)
+
+		if preds != nil && len(preds) > int(numPred) {
+			preds = preds[:numPred]
+		}
+
+		return preds, nil
+	}
+
+	msg, err := NewFindPredecessorsMessage(key, numPred)
+	if err != nil {
+		return nil, err
+	}
+
+	reply, success, err := c.SendMessageSync(msg, protobuf.RELAY)
+	if !success {
+		return nil, err
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	replyBody := &protobuf.FindPredecessorsReply{}
+	err = proto.Unmarshal(reply.Message, replyBody)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(replyBody.Predecessors) > int(numPred) {
+		return replyBody.Predecessors[:numPred], nil
+	}
+
+	return replyBody.Predecessors, nil
 }
