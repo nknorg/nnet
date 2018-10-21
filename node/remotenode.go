@@ -183,11 +183,12 @@ func (rn *RemoteNode) Stop(err error) {
 		if err != nil {
 			log.Warnf("Remote node %v stops because of error: %s", rn, err)
 		} else {
-			err = rn.NotifyStop()
-			if err != nil {
-				log.Warn("Notify remote node stop error:", err)
-			}
 			log.Infof("Remote node %v stops", rn)
+		}
+
+		err = rn.NotifyStop()
+		if err != nil {
+			log.Warn("Notify remote node stop error:", err)
 		}
 
 		rn.LifeCycle.Stop()
