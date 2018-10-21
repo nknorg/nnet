@@ -22,7 +22,7 @@ func NewNNet(id []byte, userConf config.Config) (*NNet, error) {
 		return nil, err
 	}
 
-	if id == nil || len(id) == 0 {
+	if len(id) == 0 {
 		id, err = util.RandBytes(int(conf.NodeIDBytes))
 		if err != nil {
 			return nil, err

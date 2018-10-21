@@ -126,7 +126,7 @@ func (rn *RemoteNode) Start() error {
 			shouldStop := false
 			rn.LocalNode.neighbors.Range(func(key, value interface{}) bool {
 				remoteNode, ok := value.(*RemoteNode)
-				if ok && remoteNode.IsReady() && bytes.Compare(remoteNode.Id, n.Id) == 0 {
+				if ok && remoteNode.IsReady() && bytes.Equal(remoteNode.Id, n.Id) {
 					rn.Stop(fmt.Errorf("Node with id %x is already connected at addr %s", remoteNode.Id, remoteNode.Addr))
 					shouldStop = true
 					return false

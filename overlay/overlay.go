@@ -116,7 +116,7 @@ func (ovl *Overlay) SendMessage(msg *protobuf.Message, routingType protobuf.Rout
 		return nil, false, err
 	}
 
-	if remoteNodes == nil || len(remoteNodes) == 0 {
+	if len(remoteNodes) == 0 {
 		return nil, false, errors.New("No remote node to route")
 	}
 

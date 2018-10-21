@@ -49,7 +49,6 @@ const (
 	callDepth         = 2
 	defaultMaxLogSize = 20
 	byteToMb          = 1024 * 1024
-	byteToKb          = 1024
 	Path              = "./Log/"
 )
 

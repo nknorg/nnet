@@ -65,17 +65,6 @@ func betweenLeftIncl(id1, id2, key []byte) bool {
 		CompareID(id2, key) == 1
 }
 
-// Checks if a key is between two ID's, right inclusive
-func betweenRightIncl(id1, id2, key []byte) bool {
-	if CompareID(id1, id2) == 1 {
-		return CompareID(id1, key) == -1 ||
-			CompareID(id2, key) >= 0
-	}
-
-	return CompareID(id1, key) == -1 &&
-		CompareID(id2, key) >= 0
-}
-
 // Checks if a key is between two ID's, both inclusive
 func betweenIncl(id1, id2, key []byte) bool {
 	if CompareID(id1, id2) == 1 {

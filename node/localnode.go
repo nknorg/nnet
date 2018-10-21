@@ -145,14 +145,14 @@ func (ln *LocalNode) handleMsg() {
 			return
 		}
 
-		select {
-		case remoteMsg = <-ln.handleMsgChan:
-			err = ln.handleRemoteMessage(remoteMsg)
-			if err != nil {
-				log.Error(err)
-				continue
-			}
+		remoteMsg = <-ln.handleMsgChan
+
+		err = ln.handleRemoteMessage(remoteMsg)
+		if err != nil {
+			log.Error(err)
+			continue
 		}
+
 	}
 }
 
@@ -281,7 +281,7 @@ func (ln *LocalNode) GetRxMsgChan(routingType protobuf.RoutingType) (chan *Remot
 
 // AllocReplyChan creates a reply chan for msg with id msgID
 func (ln *LocalNode) AllocReplyChan(msgID []byte) (chan *RemoteMessage, error) {
-	if msgID == nil || len(msgID) == 0 {
+	if len(msgID) == 0 {
 		return nil, errors.New("Message id is empty")
 	}
 
@@ -328,7 +328,7 @@ func (ln *LocalNode) GetNeighbors(filter func(*RemoteNode) bool) ([]*RemoteNode,
 	ln.neighbors.Range(func(key, value interface{}) bool {
 		remoteNode, ok := value.(*RemoteNode)
 		if ok && remoteNode.IsReady() && !remoteNode.IsStopped() {
-			if filter == nil || filter(remoteNode) == true {
+			if filter == nil || filter(remoteNode) {
 				nodes = append(nodes, remoteNode)
 			}
 		}

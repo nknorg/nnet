@@ -218,20 +218,19 @@ func (c *Chord) handleMsg() {
 			return
 		}
 
-		select {
-		case remoteMsg = <-c.LocalMsgChan:
-			shouldLocalNodeHandleMsg, err = c.handleRemoteMessage(remoteMsg)
+		remoteMsg = <-c.LocalMsgChan
+
+		shouldLocalNodeHandleMsg, err = c.handleRemoteMessage(remoteMsg)
+		if err != nil {
+			log.Error(err)
+			continue
+		}
+
+		if shouldLocalNodeHandleMsg {
+			err = c.LocalNode.HandleRemoteMessage(remoteMsg)
 			if err != nil {
 				log.Error(err)
 				continue
-			}
-
-			if shouldLocalNodeHandleMsg {
-				err = c.LocalNode.HandleRemoteMessage(remoteMsg)
-				if err != nil {
-					log.Error(err)
-					continue
-				}
 			}
 		}
 	}
@@ -320,7 +319,7 @@ func (c *Chord) updateEmptyFinger() {
 				continue
 			}
 
-			if succs == nil || len(succs) == 0 {
+			if len(succs) == 0 {
 				continue
 			}
 

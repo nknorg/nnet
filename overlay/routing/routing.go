@@ -57,10 +57,43 @@ func (r *Routing) handleMsg(router Router) {
 			return
 		}
 
-		select {
-		case remoteMsg = <-r.rxMsgChan:
+		remoteMsg = <-r.rxMsgChan
+
+		r.middlewareStore.RLock()
+		for _, f := range r.middlewareStore.remoteMessageArrived {
+			remoteMsg, shouldCallNextMiddleware = f(remoteMsg)
+			if remoteMsg == nil || !shouldCallNextMiddleware {
+				break
+			}
+		}
+		r.middlewareStore.RUnlock()
+
+		if remoteMsg == nil {
+			continue
+		}
+
+		localNode, remoteNodes, err = router.GetNodeToRoute(remoteMsg)
+		if err != nil {
+			log.Warn("Get next hop error:", err)
+			continue
+		}
+
+		r.middlewareStore.RLock()
+		for _, f := range r.middlewareStore.remoteMessageRouted {
+			remoteMsg, localNode, remoteNodes, shouldCallNextMiddleware = f(remoteMsg, localNode, remoteNodes)
+			if remoteMsg == nil || !shouldCallNextMiddleware {
+				break
+			}
+		}
+		r.middlewareStore.RUnlock()
+
+		if remoteMsg == nil {
+			continue
+		}
+
+		if localNode != nil {
 			r.middlewareStore.RLock()
-			for _, f := range r.middlewareStore.remoteMessageArrived {
+			for _, f := range r.middlewareStore.remoteMessageReceived {
 				remoteMsg, shouldCallNextMiddleware = f(remoteMsg)
 				if remoteMsg == nil || !shouldCallNextMiddleware {
 					break
@@ -72,63 +105,29 @@ func (r *Routing) handleMsg(router Router) {
 				continue
 			}
 
-			localNode, remoteNodes, err = router.GetNodeToRoute(remoteMsg)
+			if len(remoteMsg.Msg.ReplyToId) > 0 {
+				replyChan, ok := localNode.GetReplyChan(remoteMsg.Msg.ReplyToId)
+				if ok && replyChan != nil {
+					select {
+					case replyChan <- remoteMsg:
+					default:
+						log.Warn("Reply chan unavailable or full, discarding msg")
+					}
+				}
+				continue
+			}
+
+			select {
+			case r.localMsgChan <- remoteMsg:
+			default:
+				log.Warn("Router local msg chan full, discarding msg")
+			}
+		}
+
+		for _, remoteNode = range remoteNodes {
+			err = remoteNode.SendMessageAsync(remoteMsg.Msg)
 			if err != nil {
-				log.Warn("Get next hop error:", err)
-				continue
-			}
-
-			r.middlewareStore.RLock()
-			for _, f := range r.middlewareStore.remoteMessageRouted {
-				remoteMsg, localNode, remoteNodes, shouldCallNextMiddleware = f(remoteMsg, localNode, remoteNodes)
-				if remoteMsg == nil || !shouldCallNextMiddleware {
-					break
-				}
-			}
-			r.middlewareStore.RUnlock()
-
-			if remoteMsg == nil {
-				continue
-			}
-
-			if localNode != nil {
-				r.middlewareStore.RLock()
-				for _, f := range r.middlewareStore.remoteMessageReceived {
-					remoteMsg, shouldCallNextMiddleware = f(remoteMsg)
-					if remoteMsg == nil || !shouldCallNextMiddleware {
-						break
-					}
-				}
-				r.middlewareStore.RUnlock()
-
-				if remoteMsg == nil {
-					continue
-				}
-
-				if len(remoteMsg.Msg.ReplyToId) > 0 {
-					replyChan, ok := localNode.GetReplyChan(remoteMsg.Msg.ReplyToId)
-					if ok && replyChan != nil {
-						select {
-						case replyChan <- remoteMsg:
-						default:
-							log.Warn("Reply chan unavailable or full, discarding msg")
-						}
-					}
-					continue
-				}
-
-				select {
-				case r.localMsgChan <- remoteMsg:
-				default:
-					log.Warn("Router local msg chan full, discarding msg")
-				}
-			}
-
-			for _, remoteNode = range remoteNodes {
-				err = remoteNode.SendMessageAsync(remoteMsg.Msg)
-				if err != nil {
-					log.Warn("Send message to remote node error:", err)
-				}
+				log.Warn("Send message to remote node error:", err)
 			}
 		}
 	}
