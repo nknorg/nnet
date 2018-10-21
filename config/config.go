@@ -9,6 +9,7 @@ import (
 // Config is the exposed configurations
 type Config struct {
 	Transport            string        // which transport to use, e.g. tcp, udp, kcp
+	Hostname             string        // IP or domain name for remote node to connect to, e.g. 127.0.0.1, nkn.org. Empty string means remote nodes will fill it with your address they saw, which works if all nodes are not in the same local network or are all in the local network, but will cause problem if some nodes are in the same local network
 	Port                 uint16        // port to listen to incoming connections
 	NodeIDBytes          uint32        // length of node id in bytes
 	MinNumSuccessors     uint32        // minimal number of successors of each chord node

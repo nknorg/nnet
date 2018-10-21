@@ -55,9 +55,10 @@ func NewLocalNode(id []byte, conf *config.Config) (*LocalNode, error) {
 		return nil, err
 	}
 
+	host := conf.Hostname
 	port := conf.Port
 
-	addr := fmt.Sprintf(":%d", port)
+	addr := fmt.Sprintf("%s:%d", host, port)
 
 	node, err := NewNode(id, addr)
 	if err != nil {
