@@ -91,10 +91,27 @@ func NewLocalNode(id []byte, conf *config.Config) (*LocalNode, error) {
 // Start starts the runtime loop of the local node
 func (ln *LocalNode) Start() error {
 	ln.StartOnce.Do(func() {
+		ln.middlewareStore.RLock()
+		for _, f := range ln.middlewareStore.localNodeWillStart {
+			if !f(ln) {
+				break
+			}
+		}
+		ln.middlewareStore.RUnlock()
+
 		for i := 0; i < numWorkers; i++ {
 			go ln.handleMsg()
 		}
+
 		go ln.listen()
+
+		ln.middlewareStore.RLock()
+		for _, f := range ln.middlewareStore.localNodeStarted {
+			if !f(ln) {
+				break
+			}
+		}
+		ln.middlewareStore.RUnlock()
 	})
 
 	return nil

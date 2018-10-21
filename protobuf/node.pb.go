@@ -29,12 +29,13 @@ const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 type Node struct {
 	Id   []byte `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Addr string `protobuf:"bytes,2,opt,name=addr,proto3" json:"addr,omitempty"`
+	Data []byte `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
 }
 
 func (m *Node) Reset()      { *m = Node{} }
 func (*Node) ProtoMessage() {}
 func (*Node) Descriptor() ([]byte, []int) {
-	return fileDescriptor_node_e0718ac1cc9c1478, []int{0}
+	return fileDescriptor_node_5ac078e24f8773e1, []int{0}
 }
 func (m *Node) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -77,6 +78,13 @@ func (m *Node) GetAddr() string {
 	return ""
 }
 
+func (m *Node) GetData() []byte {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*Node)(nil), "protobuf.Node")
 }
@@ -105,16 +113,20 @@ func (this *Node) Equal(that interface{}) bool {
 	if this.Addr != that1.Addr {
 		return false
 	}
+	if !bytes.Equal(this.Data, that1.Data) {
+		return false
+	}
 	return true
 }
 func (this *Node) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 7)
 	s = append(s, "&protobuf.Node{")
 	s = append(s, "Id: "+fmt.Sprintf("%#v", this.Id)+",\n")
 	s = append(s, "Addr: "+fmt.Sprintf("%#v", this.Addr)+",\n")
+	s = append(s, "Data: "+fmt.Sprintf("%#v", this.Data)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -153,6 +165,12 @@ func (m *Node) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintNode(dAtA, i, uint64(len(m.Addr)))
 		i += copy(dAtA[i:], m.Addr)
 	}
+	if len(m.Data) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintNode(dAtA, i, uint64(len(m.Data)))
+		i += copy(dAtA[i:], m.Data)
+	}
 	return i, nil
 }
 
@@ -173,6 +191,11 @@ func NewPopulatedNode(r randyNode, easy bool) *Node {
 		this.Id[i] = byte(r.Intn(256))
 	}
 	this.Addr = string(randStringNode(r))
+	v2 := r.Intn(100)
+	this.Data = make([]byte, v2)
+	for i := 0; i < v2; i++ {
+		this.Data[i] = byte(r.Intn(256))
+	}
 	if !easy && r.Intn(10) != 0 {
 	}
 	return this
@@ -197,9 +220,9 @@ func randUTF8RuneNode(r randyNode) rune {
 	return rune(ru + 61)
 }
 func randStringNode(r randyNode) string {
-	v2 := r.Intn(100)
-	tmps := make([]rune, v2)
-	for i := 0; i < v2; i++ {
+	v3 := r.Intn(100)
+	tmps := make([]rune, v3)
+	for i := 0; i < v3; i++ {
 		tmps[i] = randUTF8RuneNode(r)
 	}
 	return string(tmps)
@@ -221,11 +244,11 @@ func randFieldNode(dAtA []byte, r randyNode, fieldNumber int, wire int) []byte {
 	switch wire {
 	case 0:
 		dAtA = encodeVarintPopulateNode(dAtA, uint64(key))
-		v3 := r.Int63()
+		v4 := r.Int63()
 		if r.Intn(2) == 0 {
-			v3 *= -1
+			v4 *= -1
 		}
-		dAtA = encodeVarintPopulateNode(dAtA, uint64(v3))
+		dAtA = encodeVarintPopulateNode(dAtA, uint64(v4))
 	case 1:
 		dAtA = encodeVarintPopulateNode(dAtA, uint64(key))
 		dAtA = append(dAtA, byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)), byte(r.Intn(256)))
@@ -264,6 +287,10 @@ func (m *Node) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovNode(uint64(l))
 	}
+	l = len(m.Data)
+	if l > 0 {
+		n += 1 + l + sovNode(uint64(l))
+	}
 	return n
 }
 
@@ -287,6 +314,7 @@ func (this *Node) String() string {
 	s := strings.Join([]string{`&Node{`,
 		`Id:` + fmt.Sprintf("%v", this.Id) + `,`,
 		`Addr:` + fmt.Sprintf("%v", this.Addr) + `,`,
+		`Data:` + fmt.Sprintf("%v", this.Data) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -387,6 +415,37 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Addr = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Data", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNode
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthNode
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Data = append(m.Data[:0], dAtA[iNdEx:postIndex]...)
+			if m.Data == nil {
+				m.Data = []byte{}
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -514,20 +573,21 @@ var (
 	ErrIntOverflowNode   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("protobuf/node.proto", fileDescriptor_node_e0718ac1cc9c1478) }
+func init() { proto.RegisterFile("protobuf/node.proto", fileDescriptor_node_5ac078e24f8773e1) }
 
-var fileDescriptor_node_e0718ac1cc9c1478 = []byte{
-	// 184 bytes of a gzipped FileDescriptorProto
+var fileDescriptor_node_5ac078e24f8773e1 = []byte{
+	// 196 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x2e, 0x28, 0xca, 0x2f,
 	0xc9, 0x4f, 0x2a, 0x4d, 0xd3, 0xcf, 0xcb, 0x4f, 0x49, 0xd5, 0x03, 0xf3, 0x84, 0x38, 0x60, 0x82,
 	0x52, 0xba, 0xe9, 0x99, 0x25, 0x19, 0xa5, 0x49, 0x7a, 0xc9, 0xf9, 0xb9, 0xfa, 0xe9, 0xf9, 0xe9,
-	0xf9, 0xfa, 0x70, 0xe5, 0x20, 0x1e, 0x98, 0x03, 0x66, 0x41, 0x34, 0x2a, 0x69, 0x71, 0xb1, 0xf8,
+	0xf9, 0xfa, 0x70, 0xe5, 0x20, 0x1e, 0x98, 0x03, 0x66, 0x41, 0x34, 0x2a, 0xd9, 0x71, 0xb1, 0xf8,
 	0xe5, 0xa7, 0xa4, 0x0a, 0xf1, 0x71, 0x31, 0x65, 0xa6, 0x48, 0x30, 0x2a, 0x30, 0x6a, 0xf0, 0x04,
 	0x31, 0x65, 0xa6, 0x08, 0x09, 0x71, 0xb1, 0x24, 0xa6, 0xa4, 0x14, 0x49, 0x30, 0x29, 0x30, 0x6a,
-	0x70, 0x06, 0x81, 0xd9, 0x4e, 0x36, 0x17, 0x1e, 0xca, 0x31, 0xdc, 0x78, 0x28, 0xc7, 0xf0, 0xe1,
-	0xa1, 0x1c, 0xe3, 0x8f, 0x87, 0x72, 0x8c, 0x0d, 0x8f, 0xe4, 0x18, 0x57, 0x3c, 0x92, 0x63, 0xdc,
-	0xf1, 0x48, 0x8e, 0xf1, 0xc4, 0x23, 0x39, 0xc6, 0x0b, 0x8f, 0xe4, 0x18, 0x1f, 0x3c, 0x92, 0x63,
-	0x7c, 0xf1, 0x48, 0x8e, 0xe1, 0xc3, 0x23, 0x39, 0xc6, 0x09, 0x8f, 0xe5, 0x18, 0x2e, 0x3c, 0x96,
-	0x63, 0xb8, 0xf1, 0x58, 0x8e, 0x21, 0x89, 0x0d, 0x6c, 0xa1, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff,
-	0x8d, 0x07, 0xac, 0x01, 0xc0, 0x00, 0x00, 0x00,
+	0x70, 0x06, 0x81, 0xd9, 0x20, 0xb1, 0x94, 0xc4, 0x92, 0x44, 0x09, 0x66, 0xb0, 0x2a, 0x30, 0xdb,
+	0xc9, 0xe6, 0xc2, 0x43, 0x39, 0x86, 0x1b, 0x0f, 0xe5, 0x18, 0x3e, 0x3c, 0x94, 0x63, 0xfc, 0xf1,
+	0x50, 0x8e, 0xb1, 0xe1, 0x91, 0x1c, 0xe3, 0x8a, 0x47, 0x72, 0x8c, 0x3b, 0x1e, 0xc9, 0x31, 0x9e,
+	0x78, 0x24, 0xc7, 0x78, 0xe1, 0x91, 0x1c, 0xe3, 0x83, 0x47, 0x72, 0x8c, 0x2f, 0x1e, 0xc9, 0x31,
+	0x7c, 0x78, 0x24, 0xc7, 0x38, 0xe1, 0xb1, 0x1c, 0xc3, 0x85, 0xc7, 0x72, 0x0c, 0x37, 0x1e, 0xcb,
+	0x31, 0x24, 0xb1, 0x81, 0x1d, 0x61, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0xdd, 0x89, 0xa1, 0xd7,
+	0xd4, 0x00, 0x00, 0x00,
 }

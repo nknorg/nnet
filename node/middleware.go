@@ -5,6 +5,15 @@ import (
 	"sync"
 )
 
+// LocalNodeWillStart is called right before local node start listening and
+// handling messages. It can be used to add additional data to local node, set
+// up NAT port mapping, etc.
+type LocalNodeWillStart func(*LocalNode) bool
+
+// LocalNodeStarted is called right after local node start listening and
+// handling messages.
+type LocalNodeStarted func(*LocalNode) bool
+
 // RemoteNodeConnected is called when a connection is established with a remote
 // node, but the remote node id is typically nil, so it's not a good time to use
 // the node yet, but can be used to stop the connection to remote node. Returns
@@ -25,6 +34,8 @@ type RemoteNodeDisconnected func(*RemoteNode) bool
 // are triggered or in some pipeline
 type middlewareStore struct {
 	sync.RWMutex
+	localNodeWillStart     []LocalNodeWillStart
+	localNodeStarted       []LocalNodeStarted
 	remoteNodeConnected    []RemoteNodeConnected
 	remoteNodeReady        []RemoteNodeReady
 	remoteNodeDisconnected []RemoteNodeDisconnected
@@ -33,6 +44,8 @@ type middlewareStore struct {
 // newMiddlewareStore creates a middlewareStore
 func newMiddlewareStore() *middlewareStore {
 	return &middlewareStore{
+		localNodeWillStart:     make([]LocalNodeWillStart, 0),
+		localNodeStarted:       make([]LocalNodeStarted, 0),
 		remoteNodeConnected:    make([]RemoteNodeConnected, 0),
 		remoteNodeReady:        make([]RemoteNodeReady, 0),
 		remoteNodeDisconnected: make([]RemoteNodeDisconnected, 0),
@@ -45,6 +58,16 @@ func (store *middlewareStore) ApplyMiddleware(f interface{}) error {
 	defer store.Unlock()
 
 	switch f := f.(type) {
+	case LocalNodeWillStart:
+		if f == nil {
+			return errors.New("middleware is nil")
+		}
+		store.localNodeWillStart = append(store.localNodeWillStart, f)
+	case LocalNodeStarted:
+		if f == nil {
+			return errors.New("middleware is nil")
+		}
+		store.localNodeStarted = append(store.localNodeStarted, f)
 	case RemoteNodeConnected:
 		if f == nil {
 			return errors.New("middleware is nil")
