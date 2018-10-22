@@ -1,6 +1,7 @@
 package chord
 
 import (
+	"errors"
 	"sync"
 	"time"
 
@@ -369,7 +370,11 @@ func GetSuccAndPred(remoteNode *node.RemoteNode, numSucc, numPred uint32) ([]*pr
 // of a given key id
 func (c *Chord) FindSuccessors(key []byte, numSucc uint32) ([]*protobuf.Node, error) {
 	succ := c.successors.GetFirst()
-	if CompareID(key, c.LocalNode.Id) == 0 || (succ != nil && betweenLeftIncl(c.LocalNode.Id, succ.Id, key)) {
+	if succ == nil {
+		return nil, errors.New("Local node has no successor yet")
+	}
+
+	if CompareID(key, c.LocalNode.Id) == 0 || betweenLeftIncl(c.LocalNode.Id, succ.Id, key) {
 		var succs []*protobuf.Node
 		if CompareID(key, c.LocalNode.Id) == 0 {
 			succs = append(succs, c.LocalNode.Node.Node)
@@ -414,7 +419,11 @@ func (c *Chord) FindSuccessors(key []byte, numSucc uint32) ([]*protobuf.Node, er
 // predecessors of a given key id
 func (c *Chord) FindPredecessors(key []byte, numPred uint32) ([]*protobuf.Node, error) {
 	succ := c.successors.GetFirst()
-	if CompareID(key, c.LocalNode.Id) == 0 || (succ != nil && between(c.LocalNode.Id, succ.Id, key)) {
+	if succ == nil {
+		return nil, errors.New("Local node has no successor yet")
+	}
+
+	if CompareID(key, c.LocalNode.Id) == 0 || between(c.LocalNode.Id, succ.Id, key) {
 		preds := []*protobuf.Node{c.LocalNode.Node.Node}
 		preds = append(preds, c.predecessors.ToProtoNodeList(true)...)
 

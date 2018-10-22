@@ -155,6 +155,10 @@ func NewStopMessage() (*protobuf.Message, error) {
 
 // handleRemoteMessage handles a remote message and returns error
 func (ln *LocalNode) handleRemoteMessage(remoteMsg *RemoteMessage) error {
+	if remoteMsg.RemoteNode == nil {
+		return errors.New("Message is sent by local node")
+	}
+
 	switch remoteMsg.Msg.MessageType {
 	case protobuf.PING:
 		replyMsg, err := NewPingReply(remoteMsg.Msg.MessageId)

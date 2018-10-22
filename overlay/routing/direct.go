@@ -1,6 +1,8 @@
 package routing
 
 import (
+	"errors"
+
 	"github.com/nknorg/nnet/node"
 )
 
@@ -36,5 +38,9 @@ func (dr *DirectRouting) Start() error {
 
 // GetNodeToRoute returns the local node and remote nodes to route message to
 func (dr *DirectRouting) GetNodeToRoute(remoteMsg *node.RemoteMessage) (*node.LocalNode, []*node.RemoteNode, error) {
+	if remoteMsg.RemoteNode == nil {
+		return nil, nil, errors.New("Message is sent by local node")
+	}
+
 	return remoteMsg.RemoteNode.LocalNode, nil, nil
 }

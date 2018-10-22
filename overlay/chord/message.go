@@ -180,6 +180,10 @@ func NewFindPredecessorsReply(replyToID []byte, predecessors []*protobuf.Node) (
 // handleRemoteMessage handles a remote message and returns if it should be
 // passed through to local node and error
 func (c *Chord) handleRemoteMessage(remoteMsg *node.RemoteMessage) (bool, error) {
+	if remoteMsg.RemoteNode == nil {
+		return true, nil
+	}
+
 	switch remoteMsg.Msg.MessageType {
 	case protobuf.GET_SUCC_AND_PRED:
 		msgBody := &protobuf.GetSuccAndPred{}
