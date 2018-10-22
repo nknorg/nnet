@@ -143,7 +143,7 @@ func (rn *RemoteNode) Start() error {
 						break
 					}
 				}
-				rn.LocalNode.middlewareStore.RLock()
+				rn.LocalNode.middlewareStore.RUnlock()
 				return
 			}
 
@@ -180,7 +180,7 @@ func (rn *RemoteNode) Start() error {
 					break
 				}
 			}
-			rn.LocalNode.middlewareStore.RLock()
+			rn.LocalNode.middlewareStore.RUnlock()
 		}()
 	})
 
