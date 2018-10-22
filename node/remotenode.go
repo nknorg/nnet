@@ -137,13 +137,11 @@ func (rn *RemoteNode) Start() error {
 				return true
 			})
 			if existingRemoteNode != nil {
-				rn.LocalNode.middlewareStore.RLock()
 				for _, f := range rn.LocalNode.middlewareStore.remoteNodeReady {
 					if !f(existingRemoteNode) {
 						break
 					}
 				}
-				rn.LocalNode.middlewareStore.RUnlock()
 				return
 			}
 
@@ -174,13 +172,11 @@ func (rn *RemoteNode) Start() error {
 			rn.ready = true
 			rn.readyLock.Unlock()
 
-			rn.LocalNode.middlewareStore.RLock()
 			for _, f := range rn.LocalNode.middlewareStore.remoteNodeReady {
 				if !f(rn) {
 					break
 				}
 			}
-			rn.LocalNode.middlewareStore.RUnlock()
 		}()
 	})
 
@@ -209,13 +205,11 @@ func (rn *RemoteNode) Stop(err error) {
 				rn.conn.Close()
 			}
 
-			rn.LocalNode.middlewareStore.RLock()
 			for _, f := range rn.LocalNode.middlewareStore.remoteNodeDisconnected {
 				if !f(rn) {
 					break
 				}
 			}
-			rn.LocalNode.middlewareStore.RUnlock()
 		})
 	})
 }

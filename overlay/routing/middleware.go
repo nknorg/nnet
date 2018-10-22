@@ -2,7 +2,6 @@ package routing
 
 import (
 	"errors"
-	"sync"
 
 	"github.com/nknorg/nnet/node"
 )
@@ -31,7 +30,6 @@ type RemoteMessageReceived func(*node.RemoteMessage) (*node.RemoteMessage, bool)
 // middlewareStore stores the functions that will be called when certain events
 // are triggered or in some pipeline
 type middlewareStore struct {
-	sync.RWMutex
 	remoteMessageArrived  []RemoteMessageArrived
 	remoteMessageRouted   []RemoteMessageRouted
 	remoteMessageReceived []RemoteMessageReceived
@@ -48,9 +46,6 @@ func newMiddlewareStore() *middlewareStore {
 
 // ApplyMiddleware add a middleware to the store
 func (store *middlewareStore) ApplyMiddleware(f interface{}) error {
-	store.Lock()
-	defer store.Unlock()
-
 	switch f := f.(type) {
 	case RemoteMessageArrived:
 		if f == nil {

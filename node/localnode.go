@@ -92,13 +92,11 @@ func NewLocalNode(id []byte, conf *config.Config) (*LocalNode, error) {
 // Start starts the runtime loop of the local node
 func (ln *LocalNode) Start() error {
 	ln.StartOnce.Do(func() {
-		ln.middlewareStore.RLock()
 		for _, f := range ln.middlewareStore.localNodeWillStart {
 			if !f(ln) {
 				break
 			}
 		}
-		ln.middlewareStore.RUnlock()
 
 		for i := 0; i < numWorkers; i++ {
 			go ln.handleMsg()
@@ -106,13 +104,11 @@ func (ln *LocalNode) Start() error {
 
 		go ln.listen()
 
-		ln.middlewareStore.RLock()
 		for _, f := range ln.middlewareStore.localNodeStarted {
 			if !f(ln) {
 				break
 			}
 		}
-		ln.middlewareStore.RUnlock()
 	})
 
 	return nil
@@ -253,13 +249,11 @@ func (ln *LocalNode) StartRemoteNode(conn net.Conn, isOutbound bool) (*RemoteNod
 		return nil, err
 	}
 
-	ln.middlewareStore.RLock()
 	for _, f := range ln.middlewareStore.remoteNodeConnected {
 		if !f(remoteNode) {
 			break
 		}
 	}
-	ln.middlewareStore.RUnlock()
 
 	err = remoteNode.Start()
 	if err != nil {

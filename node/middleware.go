@@ -2,7 +2,6 @@ package node
 
 import (
 	"errors"
-	"sync"
 )
 
 // LocalNodeWillStart is called right before local node start listening and
@@ -33,7 +32,6 @@ type RemoteNodeDisconnected func(*RemoteNode) bool
 // middlewareStore stores the functions that will be called when certain events
 // are triggered or in some pipeline
 type middlewareStore struct {
-	sync.RWMutex
 	localNodeWillStart     []LocalNodeWillStart
 	localNodeStarted       []LocalNodeStarted
 	remoteNodeConnected    []RemoteNodeConnected
@@ -54,9 +52,6 @@ func newMiddlewareStore() *middlewareStore {
 
 // ApplyMiddleware add a middleware to the store
 func (store *middlewareStore) ApplyMiddleware(f interface{}) error {
-	store.Lock()
-	defer store.Unlock()
-
 	switch f := f.(type) {
 	case LocalNodeWillStart:
 		if f == nil {

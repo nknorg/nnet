@@ -58,14 +58,12 @@ func (r *Routing) SendMessage(router Router, remoteMsg *node.RemoteMessage, hasR
 		return nil, false, err
 	}
 
-	r.middlewareStore.RLock()
 	for _, f := range r.middlewareStore.remoteMessageRouted {
 		remoteMsg, localNode, remoteNodes, shouldCallNextMiddleware = f(remoteMsg, localNode, remoteNodes)
 		if remoteMsg == nil || !shouldCallNextMiddleware {
 			break
 		}
 	}
-	r.middlewareStore.RUnlock()
 
 	if remoteMsg == nil {
 		return nil, false, nil
@@ -76,14 +74,12 @@ func (r *Routing) SendMessage(router Router, remoteMsg *node.RemoteMessage, hasR
 	}
 
 	if localNode != nil {
-		r.middlewareStore.RLock()
 		for _, f := range r.middlewareStore.remoteMessageReceived {
 			remoteMsg, shouldCallNextMiddleware = f(remoteMsg)
 			if remoteMsg == nil || !shouldCallNextMiddleware {
 				break
 			}
 		}
-		r.middlewareStore.RUnlock()
 
 		if remoteMsg == nil {
 			return nil, true, nil
@@ -145,14 +141,12 @@ func (r *Routing) handleMsg(router Router) {
 
 		remoteMsg = <-r.rxMsgChan
 
-		r.middlewareStore.RLock()
 		for _, f := range r.middlewareStore.remoteMessageArrived {
 			remoteMsg, shouldCallNextMiddleware = f(remoteMsg)
 			if remoteMsg == nil || !shouldCallNextMiddleware {
 				break
 			}
 		}
-		r.middlewareStore.RUnlock()
 
 		if remoteMsg == nil {
 			continue

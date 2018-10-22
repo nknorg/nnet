@@ -2,7 +2,6 @@ package chord
 
 import (
 	"errors"
-	"sync"
 
 	"github.com/nknorg/nnet/node"
 )
@@ -66,7 +65,6 @@ type NeighborRemoved func(*node.RemoteNode) bool
 // middlewareStore stores the functions that will be called when certain events
 // are triggered or in some pipeline
 type middlewareStore struct {
-	sync.RWMutex
 	successorAdded     []SuccessorAdded
 	successorRemoved   []SuccessorRemoved
 	predecessorAdded   []PredecessorAdded
@@ -93,9 +91,6 @@ func newMiddlewareStore() *middlewareStore {
 
 // ApplyMiddleware add a middleware to the store
 func (store *middlewareStore) ApplyMiddleware(f interface{}) error {
-	store.Lock()
-	defer store.Unlock()
-
 	switch f := f.(type) {
 	case SuccessorAdded:
 		if f == nil {
