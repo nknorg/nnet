@@ -135,7 +135,7 @@ func main() {
 		log.Infof("Sending broadcast message in %d seconds", i)
 		time.Sleep(time.Second)
 	}
-	ok, err := nnets[0].SendBytesBroadcastAsync([]byte("This message should be received by EVERYONE!"))
+	ok, err := nnets[0].SendBytesBroadcastAsync([]byte("This message should be received by EVERYONE multiple times!"))
 	if !ok || err != nil {
 		log.Error(err)
 		return

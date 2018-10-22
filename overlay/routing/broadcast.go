@@ -44,7 +44,7 @@ func (br *BroadcastRouting) GetNodeToRoute(remoteMsg *node.RemoteMessage) (*node
 	}
 
 	nonSenderNeighbors, err := br.localNode.GetNeighbors(func(rn *node.RemoteNode) bool {
-		return remoteMsg.RemoteNode == nil || rn != remoteMsg.RemoteNode
+		return rn != remoteMsg.RemoteNode
 	})
 	if err != nil {
 		return nil, nil, err

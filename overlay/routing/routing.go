@@ -52,6 +52,7 @@ func (r *Routing) Start(router Router, numWorkers int) error {
 // sending
 func (r *Routing) SendMessage(router Router, remoteMsg *node.RemoteMessage, hasReply bool) (<-chan *node.RemoteMessage, bool, error) {
 	var shouldCallNextMiddleware bool
+	success := false
 
 	localNode, remoteNodes, err := router.GetNodeToRoute(remoteMsg)
 	if err != nil {
@@ -74,39 +75,15 @@ func (r *Routing) SendMessage(router Router, remoteMsg *node.RemoteMessage, hasR
 	}
 
 	if localNode != nil {
-		for _, f := range r.middlewareStore.remoteMessageReceived {
-			remoteMsg, shouldCallNextMiddleware = f(remoteMsg)
-			if remoteMsg == nil || !shouldCallNextMiddleware {
-				break
-			}
+		err = r.sendMessageToLocalNode(remoteMsg, localNode)
+		if err != nil {
+			return nil, false, err
 		}
-
-		if remoteMsg == nil {
-			return nil, true, nil
-		}
-
-		if len(remoteMsg.Msg.ReplyToId) > 0 {
-			replyChan, ok := localNode.GetReplyChan(remoteMsg.Msg.ReplyToId)
-			if ok && replyChan != nil {
-				select {
-				case replyChan <- remoteMsg:
-				default:
-					log.Warn("Reply chan unavailable or full, discarding msg")
-				}
-			}
-			return nil, true, nil
-		}
-
-		select {
-		case r.localMsgChan <- remoteMsg:
-		default:
-			log.Warn("Router local msg chan full, discarding msg")
-		}
+		success = true
 	}
 
 	var replyChan <-chan *node.RemoteMessage
 	errs := util.NewErrors()
-	success := false
 
 	for _, remoteNode := range remoteNodes {
 		// If there are multiple next hop, we only grab the first reply channel
@@ -124,7 +101,47 @@ func (r *Routing) SendMessage(router Router, remoteMsg *node.RemoteMessage, hasR
 		}
 	}
 
-	return replyChan, success, errs.Merged()
+	if !success {
+		return nil, false, errs.Merged()
+	}
+
+	return replyChan, success, nil
+}
+
+// handleLocalMsg handles msg sent to local node
+func (r *Routing) sendMessageToLocalNode(remoteMsg *node.RemoteMessage, localNode *node.LocalNode) error {
+	var shouldCallNextMiddleware bool
+
+	for _, f := range r.middlewareStore.remoteMessageReceived {
+		remoteMsg, shouldCallNextMiddleware = f(remoteMsg)
+		if remoteMsg == nil || !shouldCallNextMiddleware {
+			break
+		}
+	}
+
+	if remoteMsg == nil {
+		return nil
+	}
+
+	if len(remoteMsg.Msg.ReplyToId) > 0 {
+		replyChan, ok := localNode.GetReplyChan(remoteMsg.Msg.ReplyToId)
+		if ok && replyChan != nil {
+			select {
+			case replyChan <- remoteMsg:
+			default:
+				log.Warn("Reply chan unavailable or full, discarding msg")
+			}
+		}
+		return nil
+	}
+
+	select {
+	case r.localMsgChan <- remoteMsg:
+	default:
+		log.Warn("Router local msg chan full, discarding msg")
+	}
+
+	return nil
 }
 
 // handleMsg starts to read received message from rxMsgChan, compute the route
