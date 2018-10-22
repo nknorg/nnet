@@ -140,5 +140,6 @@ func (store *middlewareStore) ApplyMiddleware(f interface{}) error {
 	default:
 		return errors.New("unknown middleware type")
 	}
+
 	return nil
 }

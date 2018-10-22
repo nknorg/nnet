@@ -38,11 +38,17 @@ func (br *BroadcastRouting) Start() error {
 
 // GetNodeToRoute returns the local node and remote nodes to route message to
 func (br *BroadcastRouting) GetNodeToRoute(remoteMsg *node.RemoteMessage) (*node.LocalNode, []*node.RemoteNode, error) {
+	localNode := br.localNode
+	if remoteMsg.RemoteNode == nil {
+		localNode = nil
+	}
+
 	nonSenderNeighbors, err := br.localNode.GetNeighbors(func(rn *node.RemoteNode) bool {
 		return remoteMsg.RemoteNode == nil || rn != remoteMsg.RemoteNode
 	})
 	if err != nil {
 		return nil, nil, err
 	}
-	return br.localNode, nonSenderNeighbors, nil
+
+	return localNode, nonSenderNeighbors, nil
 }

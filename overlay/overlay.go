@@ -9,7 +9,6 @@ import (
 	"github.com/nknorg/nnet/node"
 	"github.com/nknorg/nnet/overlay/routing"
 	"github.com/nknorg/nnet/protobuf"
-	"github.com/nknorg/nnet/util"
 )
 
 const (
@@ -111,36 +110,7 @@ func (ovl *Overlay) SendMessage(msg *protobuf.Message, routingType protobuf.Rout
 		return nil, false, err
 	}
 
-	_, remoteNodes, err := router.GetNodeToRoute(&node.RemoteMessage{Msg: msg})
-	if err != nil {
-		return nil, false, err
-	}
-
-	if len(remoteNodes) == 0 {
-		return nil, false, errors.New("No remote node to route")
-	}
-
-	var replyChan <-chan *node.RemoteMessage
-	errs := util.NewErrors()
-	success := false
-
-	for _, remoteNode := range remoteNodes {
-		// If there are multiple next hop, we only grab the first reply channel
-		// because all msg have the same ID and will be using the same reply channel
-		if hasReply && replyChan == nil {
-			replyChan, err = remoteNode.SendMessage(msg, true)
-		} else {
-			_, err = remoteNode.SendMessage(msg, false)
-		}
-
-		if err != nil {
-			errs = append(errs, err)
-		} else {
-			success = true
-		}
-	}
-
-	return replyChan, success, errs.Merged()
+	return router.SendMessage(router, &node.RemoteMessage{Msg: msg}, hasReply)
 }
 
 // SendMessageAsync sends msg to the best next hop, returns if send success

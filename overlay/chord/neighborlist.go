@@ -7,6 +7,7 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/nknorg/nnet/log"
 	"github.com/nknorg/nnet/node"
 	"github.com/nknorg/nnet/protobuf"
 )
@@ -179,7 +180,8 @@ func (sl *NeighborList) AddOrReplace(remoteNode *node.RemoteNode) (bool, *node.R
 
 	_, loaded := sl.nodes.LoadOrStore(string(remoteNode.Id), remoteNode)
 	if loaded {
-		return false, nil, errors.New("Node already in neighbor list")
+		log.Info("Node already in neighbor list")
+		return false, nil, nil
 	}
 
 	if replaced != nil {

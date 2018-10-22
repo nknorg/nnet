@@ -385,6 +385,10 @@ func (rn *RemoteNode) tx() {
 
 // SendMessage marshals and sends msg, will returns a RemoteMessage chan if hasReply is true
 func (rn *RemoteNode) SendMessage(msg *protobuf.Message, hasReply bool) (<-chan *RemoteMessage, error) {
+	if len(msg.MessageId) == 0 {
+		return nil, errors.New("Message ID is empty")
+	}
+
 	_, found := rn.txMsgCache.Get(msg.MessageId)
 	if found {
 		return nil, nil
