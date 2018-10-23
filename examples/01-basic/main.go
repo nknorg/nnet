@@ -1,3 +1,6 @@
+// This example shows how to create and join a nnet with multiple nodes.
+// Run with default options: go run main.go
+// Show usage: go run main.go -h
 package main
 
 import (
@@ -48,7 +51,7 @@ func join(transport string, localPort, seedPort uint16) (*nnet.NNet, error) {
 
 func main() {
 	numNodesPtr := flag.Int("n", 10, "number of nodes")
-	transportPtr := flag.String("t", "tcp", "transport type, e.g. tcp or kcp")
+	transportPtr := flag.String("t", "tcp", "transport type, tcp or kcp")
 	flag.Parse()
 
 	if *numNodesPtr < 1 {

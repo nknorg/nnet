@@ -1,3 +1,6 @@
+// This example shows how to send and receive messages of different routing types
+// Run with default options: go run main.go
+// Show usage: go run main.go -h
 package main
 
 import (
@@ -35,7 +38,7 @@ func create(transport string, port uint16, id []byte) (*nnet.NNet, error) {
 
 func main() {
 	numNodesPtr := flag.Int("n", 10, "number of nodes")
-	transportPtr := flag.String("t", "tcp", "transport type, e.g. tcp or kcp")
+	transportPtr := flag.String("t", "tcp", "transport type, tcp or kcp")
 	flag.Parse()
 
 	if *numNodesPtr < 1 {
