@@ -133,7 +133,7 @@ func main() {
 		}
 
 		err = nn.ApplyMiddleware(node.RemoteNodeConnected(func(remoteNode *node.RemoteNode) bool {
-			if rand.Float64() < 0.5 {
+			if rand.Float64() < 0.23333 {
 				remoteNode.Stop(errors.New("YOU ARE UNLUCKY"))
 				// stop propagate to the next middleware
 				return false

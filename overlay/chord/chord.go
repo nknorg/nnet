@@ -123,7 +123,7 @@ func NewChord(localNode *node.LocalNode, conf *config.Config) (*Chord, error) {
 	}
 
 	err = localNode.ApplyMiddleware(node.RemoteNodeReady(func(rn *node.RemoteNode) bool {
-		c.addNeighbor(rn)
+		c.addRemoteNode(rn)
 		return true
 	}))
 	if err != nil {
