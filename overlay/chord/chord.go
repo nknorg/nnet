@@ -22,13 +22,12 @@ const (
 // Chord is the overlay network based on Chord DHT
 type Chord struct {
 	*overlay.Overlay
-	nodeIDBits           uint32
-	minStabilizeInterval time.Duration
-	maxStabilizeInterval time.Duration
-	successors           *NeighborList
-	predecessors         *NeighborList
-	fingerTable          []*NeighborList
-	neighbors            *NeighborList
+	nodeIDBits            uint32
+	baseStabilizeInterval time.Duration
+	successors            *NeighborList
+	predecessors          *NeighborList
+	fingerTable           []*NeighborList
+	neighbors             *NeighborList
 	*middlewareStore
 }
 
@@ -72,15 +71,14 @@ func NewChord(localNode *node.LocalNode, conf *config.Config) (*Chord, error) {
 	middlewareStore := newMiddlewareStore()
 
 	c := &Chord{
-		Overlay:              ovl,
-		nodeIDBits:           nodeIDBits,
-		minStabilizeInterval: conf.MinStabilizeInterval,
-		maxStabilizeInterval: conf.MaxStabilizeInterval,
-		successors:           successors,
-		predecessors:         predecessors,
-		fingerTable:          fingerTable,
-		neighbors:            neighbors,
-		middlewareStore:      middlewareStore,
+		Overlay:               ovl,
+		nodeIDBits:            nodeIDBits,
+		baseStabilizeInterval: conf.BaseStabilizeInterval,
+		successors:            successors,
+		predecessors:          predecessors,
+		fingerTable:           fingerTable,
+		neighbors:             neighbors,
+		middlewareStore:       middlewareStore,
 	}
 
 	directRxMsgChan, err := localNode.GetRxMsgChan(protobuf.DIRECT)
@@ -240,14 +238,15 @@ func (c *Chord) handleMsg() {
 // stabilize periodically updates successors and fingerTable to keep topology
 // correct
 func (c *Chord) stabilize() {
-	go c.updateSuccAndPred()
+	go c.updateSuccessors()
+	go c.updatePredecessors()
 	go c.updateFinger()
 	go c.findNewPredecessors()
 	go c.findNewFinger()
 }
 
-// updateSuccAndPred periodically updates successors and predecessors
-func (c *Chord) updateSuccAndPred() {
+// updateSuccessors periodically updates successors
+func (c *Chord) updateSuccessors() {
 	var err error
 
 	for {
@@ -255,12 +254,25 @@ func (c *Chord) updateSuccAndPred() {
 			return
 		}
 
-		time.Sleep(randDuration(c.minStabilizeInterval, c.maxStabilizeInterval))
+		time.Sleep(randDuration(c.baseStabilizeInterval))
 
 		err = c.updateNeighborList(c.successors)
 		if err != nil {
 			log.Error("Update successors error:", err)
 		}
+	}
+}
+
+// updatePredecessors periodically updates predecessors
+func (c *Chord) updatePredecessors() {
+	var err error
+
+	for {
+		if c.IsStopped() {
+			return
+		}
+
+		time.Sleep(3 * randDuration(c.baseStabilizeInterval))
 
 		err = c.updateNeighborList(c.predecessors)
 		if err != nil {
@@ -280,7 +292,7 @@ func (c *Chord) findNewPredecessors() {
 			return
 		}
 
-		time.Sleep(randDuration(c.minStabilizeInterval, c.maxStabilizeInterval))
+		time.Sleep(3 * randDuration(c.baseStabilizeInterval))
 
 		maybeNewNodes, err = c.FindPredecessors(c.predecessors.startID, 1)
 		if err != nil {
@@ -317,7 +329,7 @@ func (c *Chord) updateFinger() {
 				return
 			}
 
-			time.Sleep(randDuration(c.minStabilizeInterval, c.maxStabilizeInterval))
+			time.Sleep(randDuration(c.baseStabilizeInterval))
 
 			err = c.updateNeighborList(finger)
 			if err != nil {
@@ -326,7 +338,7 @@ func (c *Chord) updateFinger() {
 		}
 
 		// to prevent endless looping when fingerTable is all empty
-		time.Sleep(randDuration(c.minStabilizeInterval, c.maxStabilizeInterval))
+		time.Sleep(randDuration(c.baseStabilizeInterval))
 	}
 }
 
@@ -343,7 +355,7 @@ func (c *Chord) findNewFinger() {
 				return
 			}
 
-			time.Sleep(randDuration(c.minStabilizeInterval, c.maxStabilizeInterval))
+			time.Sleep(randDuration(c.baseStabilizeInterval))
 
 			succs, err = c.FindSuccessors(c.fingerTable[i].startID, 1)
 			if err != nil {

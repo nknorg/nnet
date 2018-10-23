@@ -20,11 +20,9 @@ import (
 
 func create(transport string, port uint16, id []byte) (*nnet.NNet, error) {
 	conf := config.Config{
-		Transport:            transport,
-		Port:                 port,
-		MinNumSuccessors:     8,
-		MinStabilizeInterval: 100 * time.Millisecond,
-		MaxStabilizeInterval: 200 * time.Millisecond,
+		Port:                  port,
+		Transport:             transport,
+		BaseStabilizeInterval: 233 * time.Millisecond,
 	}
 
 	nn, err := nnet.NewNNet(id, conf)

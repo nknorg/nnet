@@ -141,6 +141,7 @@ func distance(a, b []byte, bits uint32) *big.Int {
 }
 
 // Generates a random stabilization time
-func randDuration(min, max time.Duration) time.Duration {
-	return time.Duration(float64(min) + rand.Float64()*float64(max-min))
+func randDuration(average time.Duration) time.Duration {
+	// uniform random number between 2/3 * average to 4/3 * average
+	return time.Duration(2.0 / 3.0 * (1 + rand.Float64()) * float64(average))
 }
