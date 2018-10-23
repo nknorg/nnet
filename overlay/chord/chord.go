@@ -164,7 +164,7 @@ func (c *Chord) Start() error {
 					}
 				}
 
-				go c.stabilize()
+				c.stabilize()
 			})
 			return true
 		}))
@@ -241,8 +241,9 @@ func (c *Chord) handleMsg() {
 // correct
 func (c *Chord) stabilize() {
 	go c.updateSuccAndPred()
-	go c.updateNonEmptyFinger()
-	go c.updateEmptyFinger()
+	go c.updateFinger()
+	go c.findNewPredecessors()
+	go c.findNewFinger()
 }
 
 // updateSuccAndPred periodically updates successors and predecessors
@@ -268,8 +269,41 @@ func (c *Chord) updateSuccAndPred() {
 	}
 }
 
+// findNewPredecessors periodically find new predecessors
+func (c *Chord) findNewPredecessors() {
+	var err error
+	var existing *node.RemoteNode
+	var maybeNewNodes []*protobuf.Node
+
+	for {
+		if c.IsStopped() {
+			return
+		}
+
+		time.Sleep(randDuration(c.minStabilizeInterval, c.maxStabilizeInterval))
+
+		maybeNewNodes, err = c.FindPredecessors(c.predecessors.startID, 1)
+		if err != nil {
+			log.Error("Find predecessors error:", err)
+			continue
+		}
+
+		for _, n := range maybeNewNodes {
+			if c.predecessors.IsIDInRange(n.Id) && !c.predecessors.Exists(n.Id) {
+				existing = c.predecessors.GetFirst()
+				if existing == nil || c.predecessors.cmp(n, existing.Node.Node) < 0 {
+					err = c.Connect(n.Addr, n.Id)
+					if err != nil {
+						log.Error("Connect to new predecessor error:", err)
+					}
+				}
+			}
+		}
+	}
+}
+
 // updateSuccAndPred periodically updates non-empty finger table items
-func (c *Chord) updateNonEmptyFinger() {
+func (c *Chord) updateFinger() {
 	var err error
 	var finger *NeighborList
 
@@ -297,17 +331,14 @@ func (c *Chord) updateNonEmptyFinger() {
 }
 
 // updateSuccAndPred periodically updates empty finger table items
-func (c *Chord) updateEmptyFinger() {
+func (c *Chord) findNewFinger() {
 	var err error
 	var i int
+	var existing *node.RemoteNode
 	var succs []*protobuf.Node
 
 	for {
 		for i = 0; i < len(c.fingerTable); i++ {
-			if !c.fingerTable[i].IsEmpty() {
-				continue
-			}
-
 			if c.IsStopped() {
 				return
 			}
@@ -325,12 +356,12 @@ func (c *Chord) updateEmptyFinger() {
 			}
 
 			for i < len(c.fingerTable) {
-				if betweenIncl(c.fingerTable[i].startID, c.fingerTable[i].endID, succs[0].Id) {
-					existing := c.fingerTable[i].GetFirst()
-					if existing == nil || betweenLeftIncl(c.fingerTable[i].startID, existing.Id, succs[0].Id) {
+				if c.fingerTable[i].IsIDInRange(succs[0].Id) && !c.fingerTable[i].Exists(succs[0].Id) {
+					existing = c.fingerTable[i].GetFirst()
+					if existing == nil || c.fingerTable[i].cmp(succs[0], existing.Node.Node) < 0 {
 						err = c.Connect(succs[0].Addr, succs[0].Id)
 						if err != nil {
-							log.Error("Connect to new node error:", err)
+							log.Error("Connect to new successor error:", err)
 						}
 					}
 					break
@@ -338,9 +369,6 @@ func (c *Chord) updateEmptyFinger() {
 				i++
 			}
 		}
-
-		// to prevent endless looping when fingerTable is all non-empty
-		time.Sleep(randDuration(c.minStabilizeInterval, c.maxStabilizeInterval))
 	}
 }
 
@@ -394,10 +422,7 @@ func (c *Chord) FindSuccessors(key []byte, numSucc uint32) ([]*protobuf.Node, er
 		return nil, err
 	}
 
-	reply, success, err := c.SendMessageSync(msg, protobuf.RELAY)
-	if !success {
-		return nil, err
-	}
+	reply, _, err := c.SendMessageSync(msg, protobuf.RELAY)
 	if err != nil {
 		return nil, err
 	}
@@ -439,10 +464,7 @@ func (c *Chord) FindPredecessors(key []byte, numPred uint32) ([]*protobuf.Node, 
 		return nil, err
 	}
 
-	reply, success, err := c.SendMessageSync(msg, protobuf.RELAY)
-	if !success {
-		return nil, err
-	}
+	reply, _, err := c.SendMessageSync(msg, protobuf.RELAY)
 	if err != nil {
 		return nil, err
 	}

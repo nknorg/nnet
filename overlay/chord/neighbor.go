@@ -298,7 +298,7 @@ func (c *Chord) maybeStopRemoteNode(remoteNode *node.RemoteNode) bool {
 func (c *Chord) updateNeighborList(neighborList *NeighborList) error {
 	newNodes, err := neighborList.getNewNodesToConnect()
 	if err != nil {
-		return nil
+		return err
 	}
 
 	errs := util.NewErrors()
