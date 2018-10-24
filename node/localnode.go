@@ -118,7 +118,7 @@ func (ln *LocalNode) Start() error {
 func (ln *LocalNode) Stop(err error) {
 	ln.StopOnce.Do(func() {
 		if err != nil {
-			log.Warnf("Local node %v stops because of error: %s", ln, err)
+			log.Warningf("Local node %v stops because of error: %s", ln, err)
 		} else {
 			log.Infof("Local node %v stops", ln)
 		}
@@ -212,7 +212,7 @@ func (ln *LocalNode) Connect(remoteNodeAddr string) (*RemoteNode, bool, error) {
 		remoteNode, ok := value.(*RemoteNode)
 		if ok {
 			if remoteNode.IsStopped() {
-				log.Warnf("Remove stopped remote node %v from list", remoteNode)
+				log.Warningf("Remove stopped remote node %v from list", remoteNode)
 				ln.neighbors.Delete(remoteNodeAddr)
 			} else {
 				log.Infof("Load remote node %v from list", remoteNode)
@@ -309,7 +309,7 @@ func (ln *LocalNode) HandleRemoteMessage(remoteMsg *RemoteMessage) error {
 	select {
 	case ln.handleMsgChan <- remoteMsg:
 	default:
-		log.Warnf("Local node handle msg chan full, discarding msg")
+		log.Warningf("Local node handle msg chan full, discarding msg")
 	}
 	return nil
 }

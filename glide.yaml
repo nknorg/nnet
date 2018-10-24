@@ -17,3 +17,4 @@ import:
   version: v2.1.0
 - package: github.com/xtaci/kcp-go
   version: v4.3.1
+- package: github.com/op/go-logging

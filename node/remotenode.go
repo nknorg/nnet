@@ -187,14 +187,14 @@ func (rn *RemoteNode) Start() error {
 func (rn *RemoteNode) Stop(err error) {
 	rn.StopOnce.Do(func() {
 		if err != nil {
-			log.Warnf("Remote node %v stops because of error: %s", rn, err)
+			log.Warningf("Remote node %v stops because of error: %s", rn, err)
 		} else {
 			log.Infof("Remote node %v stops", rn)
 		}
 
 		err = rn.NotifyStop()
 		if err != nil {
-			log.Warn("Notify remote node stop error:", err)
+			log.Warning("Notify remote node stop error:", err)
 		}
 
 		time.AfterFunc(stopGracePeriod, func() {
@@ -245,7 +245,7 @@ func (rn *RemoteNode) handleMsg() {
 			select {
 			case msgChan <- remoteMsg:
 			default:
-				log.Warnf("Msg chan full for routing type %d, discarding msg", msg.RoutingType)
+				log.Warningf("Msg chan full for routing type %d, discarding msg", msg.RoutingType)
 			}
 		case <-keepAliveTimeoutTimer.C:
 			rn.Stop(errors.New("keepalive timeout"))
@@ -267,7 +267,7 @@ func (rn *RemoteNode) handleMsgBuf(buf []byte) {
 	select {
 	case rn.rxMsgChan <- msg:
 	default:
-		log.Warn("Rx msg chan full, discarding msg")
+		log.Warning("Rx msg chan full, discarding msg")
 	}
 }
 
@@ -326,7 +326,7 @@ func (rn *RemoteNode) rx() {
 		case nil:
 			err = rn.readBuf(buf[0:len])
 			if err != nil {
-				log.Warn("Read buffer error:", err)
+				log.Warning("Read buffer error:", err)
 			}
 		case io.EOF:
 			rn.Stop(errors.New("Rx get io.EOF"))

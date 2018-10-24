@@ -129,7 +129,7 @@ func (r *Routing) sendMessageToLocalNode(remoteMsg *node.RemoteMessage, localNod
 			select {
 			case replyChan <- remoteMsg:
 			default:
-				log.Warn("Reply chan unavailable or full, discarding msg")
+				log.Warning("Reply chan unavailable or full, discarding msg")
 			}
 		}
 		return nil
@@ -138,7 +138,7 @@ func (r *Routing) sendMessageToLocalNode(remoteMsg *node.RemoteMessage, localNod
 	select {
 	case r.localMsgChan <- remoteMsg:
 	default:
-		log.Warn("Router local msg chan full, discarding msg")
+		log.Warning("Router local msg chan full, discarding msg")
 	}
 
 	return nil
@@ -171,7 +171,7 @@ func (r *Routing) handleMsg(router Router) {
 
 		_, _, err = r.SendMessage(router, remoteMsg, false)
 		if err != nil {
-			log.Warn(err)
+			log.Warning(err)
 		}
 	}
 }

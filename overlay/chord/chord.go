@@ -187,7 +187,7 @@ func (c *Chord) Start() error {
 func (c *Chord) Stop(err error) {
 	c.StopOnce.Do(func() {
 		if err != nil {
-			log.Warnf("Chord overlay stops because of error: %s", err)
+			log.Warningf("Chord overlay stops because of error: %s", err)
 		} else {
 			log.Infof("Chord overlay stops")
 		}

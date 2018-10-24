@@ -2,6 +2,7 @@ package nnet
 
 import (
 	"github.com/nknorg/nnet/config"
+	"github.com/nknorg/nnet/log"
 	"github.com/nknorg/nnet/node"
 	"github.com/nknorg/nnet/overlay"
 	"github.com/nknorg/nnet/overlay/chord"
@@ -16,11 +17,13 @@ type NNet struct {
 }
 
 // NewNNet creates a new nnet using the userConf provided
-func NewNNet(id []byte, userConf config.Config) (*NNet, error) {
-	conf, err := config.MergedConfig(userConf)
+func NewNNet(id []byte, conf *config.Config) (*NNet, error) {
+	conf, err := config.MergedConfig(conf)
 	if err != nil {
 		return nil, err
 	}
+
+	log.SetLogger(conf.Logger)
 
 	if len(id) == 0 {
 		id, err = util.RandBytes(int(conf.NodeIDBytes))

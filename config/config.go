@@ -4,9 +4,11 @@ import (
 	"time"
 
 	"github.com/imdario/mergo"
+	"github.com/nknorg/nnet/log"
+	logging "github.com/op/go-logging"
 )
 
-// Config is the exposed configurations
+// Config is the configuration struct
 type Config struct {
 	Transport             string        // which transport to use, e.g. tcp, udp, kcp
 	Hostname              string        // IP or domain name for remote node to connect to, e.g. 127.0.0.1, nkn.org. Empty string means remote nodes will fill it with your address they saw, which works if all nodes are not in the same local network or are all in the local network, but will cause problem if some nodes are in the same local network
@@ -17,6 +19,7 @@ type Config struct {
 	NumFingerSuccessors   uint32        // minimal number of successors of each finger table key
 	BaseStabilizeInterval time.Duration // base stabilize interval
 	DialTimeout           time.Duration // dial timeout for tcp transport
+	Logger                log.Logger    // logger object for logging
 }
 
 // DefaultConfig returns the default configurations
@@ -29,13 +32,14 @@ func DefaultConfig() *Config {
 		NumFingerSuccessors:   3,
 		BaseStabilizeInterval: 1 * time.Second,
 		DialTimeout:           5 * time.Second,
+		Logger:                logging.MustGetLogger("example"),
 	}
 	return defaultConfig
 }
 
 // MergedConfig returns a new Config that use fields in conf if provided,
 // otherwise use default config
-func MergedConfig(conf Config) (*Config, error) {
+func MergedConfig(conf *Config) (*Config, error) {
 	merged := DefaultConfig()
 	err := mergo.Merge(merged, conf, mergo.WithOverride)
 	if err != nil {

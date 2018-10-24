@@ -20,7 +20,7 @@ import (
 )
 
 func create(transport string, port uint16) (*nnet.NNet, error) {
-	conf := config.Config{
+	conf := &config.Config{
 		Port:                  port,
 		Transport:             transport,
 		BaseStabilizeInterval: 233 * time.Millisecond,
