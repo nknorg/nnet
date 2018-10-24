@@ -13,14 +13,13 @@ import (
 	"time"
 
 	"github.com/nknorg/nnet"
-	"github.com/nknorg/nnet/config"
 	"github.com/nknorg/nnet/log"
 	"github.com/nknorg/nnet/node"
 	"github.com/nknorg/nnet/overlay/chord"
 )
 
 func create(transport string, port uint16) (*nnet.NNet, error) {
-	conf := &config.Config{
+	conf := &nnet.Config{
 		Port:                  port,
 		Transport:             transport,
 		BaseStabilizeInterval: 233 * time.Millisecond,

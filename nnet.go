@@ -16,9 +16,13 @@ type NNet struct {
 	Config    *config.Config
 }
 
-// NewNNet creates a new nnet using the userConf provided
-func NewNNet(id []byte, conf *config.Config) (*NNet, error) {
-	conf, err := config.MergedConfig(conf)
+// Config is the configuration struct for nnet
+type Config config.Config
+
+// NewNNet creates a new nnet using the configuration provided
+func NewNNet(id []byte, conf *Config) (*NNet, error) {
+	convertedConf := config.Config(*conf)
+	mergedConf, err := config.MergedConfig(&convertedConf)
 	if err != nil {
 		return nil, err
 	}
@@ -30,12 +34,12 @@ func NewNNet(id []byte, conf *config.Config) (*NNet, error) {
 		}
 	}
 
-	localNode, err := node.NewLocalNode(id[:], conf)
+	localNode, err := node.NewLocalNode(id[:], mergedConf)
 	if err != nil {
 		return nil, err
 	}
 
-	ovl, err := chord.NewChord(localNode, conf)
+	ovl, err := chord.NewChord(localNode, mergedConf)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +47,7 @@ func NewNNet(id []byte, conf *config.Config) (*NNet, error) {
 	nn := &NNet{
 		LocalNode: localNode,
 		Overlay:   ovl,
-		Config:    conf,
+		Config:    mergedConf,
 	}
 
 	return nn, nil

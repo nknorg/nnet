@@ -12,7 +12,6 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/nknorg/nnet"
-	"github.com/nknorg/nnet/config"
 	"github.com/nknorg/nnet/log"
 	"github.com/nknorg/nnet/node"
 	"github.com/nknorg/nnet/overlay/chord"
@@ -22,7 +21,7 @@ import (
 )
 
 func create(transport string, port uint16, id []byte) (*nnet.NNet, error) {
-	conf := &config.Config{
+	conf := &nnet.Config{
 		Port:                  port,
 		Transport:             transport,
 		BaseStabilizeInterval: 233 * time.Millisecond,
