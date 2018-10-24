@@ -1,5 +1,7 @@
 package log
 
+import logging "github.com/op/go-logging"
+
 // Logger is the logger interface
 type Logger interface {
 	Info(...interface{})
@@ -11,11 +13,12 @@ type Logger interface {
 }
 
 // The global logger object
-var logger Logger
+var logger Logger = logging.MustGetLogger("nnet")
 
 // SetLogger sets the global logger object
-func SetLogger(l Logger) {
+func SetLogger(l Logger) error {
 	logger = l
+	return nil
 }
 
 // Info logs to the INFO log. Arguments are handled in the manner of fmt.Print.

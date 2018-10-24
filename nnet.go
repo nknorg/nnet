@@ -23,8 +23,6 @@ func NewNNet(id []byte, conf *config.Config) (*NNet, error) {
 		return nil, err
 	}
 
-	log.SetLogger(conf.Logger)
-
 	if len(id) == 0 {
 		id, err = util.RandBytes(int(conf.NodeIDBytes))
 		if err != nil {
@@ -75,4 +73,9 @@ func (nn *NNet) Stop(err error) {
 // Join joins a seed node with address of the form ip:port
 func (nn *NNet) Join(seedNodeAddr string) error {
 	return nn.Overlay.Join(seedNodeAddr)
+}
+
+// SetLogger sets the global logger
+func SetLogger(logger log.Logger) error {
+	return log.SetLogger(logger)
 }

@@ -4,8 +4,6 @@ import (
 	"time"
 
 	"github.com/imdario/mergo"
-	"github.com/nknorg/nnet/log"
-	logging "github.com/op/go-logging"
 )
 
 // Config is the configuration struct
@@ -19,7 +17,6 @@ type Config struct {
 	NumSuccessorsFactor   uint32        // number of successors is max(this factor times the number of non empty finger table, MinNumSuccessors)
 	BaseStabilizeInterval time.Duration // base stabilize interval
 	DialTimeout           time.Duration // dial timeout for tcp transport
-	Logger                log.Logger    // logger object for logging
 }
 
 // DefaultConfig returns the default configurations
@@ -32,7 +29,6 @@ func DefaultConfig() *Config {
 		NumSuccessorsFactor:   2,
 		BaseStabilizeInterval: 1 * time.Second,
 		DialTimeout:           5 * time.Second,
-		Logger:                logging.MustGetLogger("nnet"),
 	}
 	return defaultConfig
 }
