@@ -15,8 +15,8 @@ type Config struct {
 	Port                  uint16        // port to listen to incoming connections
 	NodeIDBytes           uint32        // length of node id in bytes
 	MinNumSuccessors      uint32        // minimal number of successors of each chord node
-	MinNumPredecessors    uint32        // minimal number of predecessors of each chord node
 	NumFingerSuccessors   uint32        // minimal number of successors of each finger table key
+	NumSuccessorsFactor   uint32        // number of successors is max(this factor times the number of non empty finger table, MinNumSuccessors)
 	BaseStabilizeInterval time.Duration // base stabilize interval
 	DialTimeout           time.Duration // dial timeout for tcp transport
 	Logger                log.Logger    // logger object for logging
@@ -28,11 +28,11 @@ func DefaultConfig() *Config {
 		Transport:             "tcp",
 		NodeIDBytes:           32,
 		MinNumSuccessors:      8,
-		MinNumPredecessors:    8,
 		NumFingerSuccessors:   3,
+		NumSuccessorsFactor:   2,
 		BaseStabilizeInterval: 1 * time.Second,
 		DialTimeout:           5 * time.Second,
-		Logger:                logging.MustGetLogger("example"),
+		Logger:                logging.MustGetLogger("nnet"),
 	}
 	return defaultConfig
 }

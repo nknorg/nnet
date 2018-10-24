@@ -23,6 +23,8 @@ const (
 type Chord struct {
 	*overlay.Overlay
 	nodeIDBits            uint32
+	minNumSuccessors      uint32
+	numSuccessorsFactor   uint32
 	baseStabilizeInterval time.Duration
 	successors            *NeighborList
 	predecessors          *NeighborList
@@ -48,7 +50,7 @@ func NewChord(localNode *node.LocalNode, conf *config.Config) (*Chord, error) {
 		return nil, err
 	}
 
-	predecessors, err := NewNeighborList(prev, next, nodeIDBits, conf.MinNumPredecessors, true)
+	predecessors, err := NewNeighborList(prev, next, nodeIDBits, conf.MinNumSuccessors, true)
 	if err != nil {
 		return nil, err
 	}
@@ -73,6 +75,8 @@ func NewChord(localNode *node.LocalNode, conf *config.Config) (*Chord, error) {
 	c := &Chord{
 		Overlay:               ovl,
 		nodeIDBits:            nodeIDBits,
+		minNumSuccessors:      conf.MinNumSuccessors,
+		numSuccessorsFactor:   conf.NumSuccessorsFactor,
 		baseStabilizeInterval: conf.BaseStabilizeInterval,
 		successors:            successors,
 		predecessors:          predecessors,
@@ -235,8 +239,8 @@ func (c *Chord) handleMsg() {
 	}
 }
 
-// stabilize periodically updates successors and fingerTable to keep topology
-// correct
+// stabilize periodically updates successors, predecessors and fingerTable to
+// keep topology correct
 func (c *Chord) stabilize() {
 	go c.updateSuccessors()
 	go c.updatePredecessors()
@@ -314,7 +318,7 @@ func (c *Chord) findNewPredecessors() {
 	}
 }
 
-// updateSuccAndPred periodically updates non-empty finger table items
+// updateFinger periodically updates non-empty finger table items
 func (c *Chord) updateFinger() {
 	var err error
 	var finger *NeighborList
@@ -342,7 +346,7 @@ func (c *Chord) updateFinger() {
 	}
 }
 
-// updateSuccAndPred periodically updates empty finger table items
+// findNewFinger periodically find new finger table node
 func (c *Chord) findNewFinger() {
 	var err error
 	var i int
@@ -381,6 +385,24 @@ func (c *Chord) findNewFinger() {
 				i++
 			}
 		}
+	}
+}
+
+// updateSuccPredLen updates the length of successors and predecessors according
+// to the number of non empty finger table
+func (c *Chord) updateSuccPredMaxNumNodes() {
+	numNonEmptyFinger := 0
+	for _, finger := range c.fingerTable {
+		if !finger.IsEmpty() {
+			numNonEmptyFinger++
+		}
+	}
+
+	succPredLen := c.numSuccessorsFactor * uint32(numNonEmptyFinger)
+
+	if succPredLen > c.minNumSuccessors {
+		c.successors.SetMaxNumNodes(succPredLen)
+		c.predecessors.SetMaxNumNodes(succPredLen)
 	}
 }
 

@@ -14,12 +14,13 @@ import (
 
 // NeighborList is a list of nodes with minimal key that is greater than key
 type NeighborList struct {
-	startID     []byte
-	endID       []byte
-	nodeIDBits  uint32
-	maxNumNodes uint32
-	reversed    bool
-	nodes       sync.Map
+	startID         []byte
+	endID           []byte
+	reversed        bool
+	nodeIDBits      uint32
+	maxNumNodes     uint32
+	maxNumNodesLock sync.RWMutex
+	nodes           sync.Map
 }
 
 // NewNeighborList creates a NeighborList
@@ -76,7 +77,16 @@ func (sl *NeighborList) Len() uint32 {
 
 // Cap returns the maximal number of remote nodes that it can store
 func (sl *NeighborList) Cap() uint32 {
+	sl.maxNumNodesLock.RLock()
+	defer sl.maxNumNodesLock.RUnlock()
 	return sl.maxNumNodes
+}
+
+// SetMaxNumNodes changes the maximal number of remote nodes that it can store
+func (sl *NeighborList) SetMaxNumNodes(maxNumNodes uint32) {
+	sl.maxNumNodesLock.Lock()
+	sl.maxNumNodes = maxNumNodes
+	sl.maxNumNodesLock.Unlock()
 }
 
 // GetByID returns the remote node in NeighborList with give id, or nil if no
@@ -240,9 +250,9 @@ func (sl *NeighborList) getNewNodesToConnect() ([]*protobuf.Node, error) {
 	var succs, preds []*protobuf.Node
 	var err error
 	if sl.reversed {
-		succs, preds, err = GetSuccAndPred(first, 1, sl.maxNumNodes-1)
+		succs, preds, err = GetSuccAndPred(first, 1, sl.Cap()-1)
 	} else {
-		succs, preds, err = GetSuccAndPred(first, sl.maxNumNodes-1, 1)
+		succs, preds, err = GetSuccAndPred(first, sl.Cap()-1, 1)
 	}
 	if err != nil {
 		return nil, err

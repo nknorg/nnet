@@ -127,6 +127,10 @@ func (c *Chord) addFingerTable(remoteNode *node.RemoteNode, index int) error {
 
 			c.maybeStopRemoteNode(replaced)
 		}
+
+		if added != (replaced != nil) {
+			c.updateSuccPredMaxNumNodes()
+		}
 	}
 
 	return nil
