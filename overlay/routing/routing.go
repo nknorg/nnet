@@ -12,6 +12,7 @@ import (
 // Router is an abstract routing layer that determines how to route a message
 type Router interface {
 	Start() error
+	Stop(error)
 	ApplyMiddleware(interface{}) error
 	GetNodeToRoute(*node.RemoteMessage) (*node.LocalNode, []*node.RemoteNode, error)
 	SendMessage(Router, *node.RemoteMessage, bool) (<-chan *node.RemoteMessage, bool, error)
@@ -44,6 +45,19 @@ func (r *Routing) Start(router Router, numWorkers int) error {
 	})
 
 	return nil
+}
+
+// Stop stops the routing
+func (r *Routing) Stop(err error) {
+	r.StopOnce.Do(func() {
+		if err != nil {
+			log.Warningf("Routing stops because of error: %s", err)
+		} else {
+			log.Infof("Routing stops")
+		}
+
+		r.LifeCycle.Stop()
+	})
 }
 
 // SendMessage sends msg to the best next hop, returns reply chan (nil if if

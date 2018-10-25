@@ -123,11 +123,21 @@ func (ln *LocalNode) Stop(err error) {
 			log.Infof("Local node %v stops", ln)
 		}
 
-		ln.LifeCycle.Stop()
+		ln.neighbors.Range(func(key, value interface{}) bool {
+			remoteNode, ok := value.(*RemoteNode)
+			if ok {
+				remoteNode.Stop(err)
+			}
+			return true
+		})
 
-		if ln.listener != nil {
-			ln.listener.Close()
-		}
+		time.AfterFunc(stopGracePeriod, func() {
+			ln.LifeCycle.Stop()
+
+			if ln.listener != nil {
+				ln.listener.Close()
+			}
+		})
 	})
 }
 

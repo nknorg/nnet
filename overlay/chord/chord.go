@@ -17,6 +17,9 @@ import (
 const (
 	// How many concurrent goroutines are handling messages
 	numWorkers = 1
+
+	// A grace period that allows network to send schedule messages
+	stopGracePeriod = 1 * time.Second
 )
 
 // Chord is the overlay network based on Chord DHT
@@ -145,6 +148,11 @@ func NewChord(localNode *node.LocalNode, conf *config.Config) (*Chord, error) {
 
 // Start starts the runtime loop of the chord network
 func (c *Chord) Start() error {
+	err := c.LocalNode.Start()
+	if err != nil {
+		return err
+	}
+
 	c.StartOnce.Do(func() {
 		var joinOnce sync.Once
 
@@ -196,7 +204,17 @@ func (c *Chord) Stop(err error) {
 			log.Infof("Chord overlay stops")
 		}
 
+		for _, remoteNode := range c.neighbors.ToRemoteNodeList(false) {
+			remoteNode.Stop(err)
+		}
+
+		c.LocalNode.Stop(err)
+
+		time.Sleep(stopGracePeriod)
+
 		c.LifeCycle.Stop()
+
+		c.StopRouters(err)
 	})
 }
 

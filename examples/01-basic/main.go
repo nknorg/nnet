@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"sync"
 	"time"
 
 	"github.com/nknorg/nnet"
@@ -84,7 +85,13 @@ func main() {
 	<-signalChan
 	log.Info("\nReceived an interrupt, stopping...\n")
 
+	var wg sync.WaitGroup
 	for i := 0; i < len(nnets); i++ {
-		nnets[len(nnets)-1-i].Stop(nil)
+		wg.Add(1)
+		go func(nn *nnet.NNet) {
+			nn.Stop(nil)
+			wg.Done()
+		}(nnets[len(nnets)-1-i])
 	}
+	wg.Wait()
 }

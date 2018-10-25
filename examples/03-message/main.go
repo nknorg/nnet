@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"sync"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
@@ -49,6 +50,7 @@ func main() {
 	var nn *nnet.NNet
 	var id []byte
 	var err error
+	var ok bool
 
 	nnets := make([]*nnet.NNet, 0)
 
@@ -65,7 +67,7 @@ func main() {
 			return
 		}
 
-		err = nn.ApplyMiddleware(routing.RemoteMessageReceived(func(remoteMessage *node.RemoteMessage) (*node.RemoteMessage, bool) {
+		nn.MustApplyMiddleware(routing.RemoteMessageReceived(func(remoteMessage *node.RemoteMessage) (*node.RemoteMessage, bool) {
 			if remoteMessage.Msg.MessageType == protobuf.BYTES && remoteMessage.Msg.ReplyToId == nil {
 				msgBody := &protobuf.Bytes{}
 				err = proto.Unmarshal(remoteMessage.Msg.Message, msgBody)
@@ -79,7 +81,7 @@ func main() {
 
 				case protobuf.RELAY:
 					log.Infof("Receive relay message \"%s\" from %x", string(msgBody.Data), remoteMessage.Msg.SrcId)
-					ok, err := nn.SendBytesRelayReply(remoteMessage.Msg.MessageId, []byte("Well received!"), remoteMessage.Msg.SrcId)
+					ok, err = nn.SendBytesRelayReply(remoteMessage.Msg.MessageId, []byte("Well received!"), remoteMessage.Msg.SrcId)
 					if !ok || err != nil {
 						log.Error(err)
 					}
@@ -92,30 +94,22 @@ func main() {
 			}
 			return remoteMessage, true
 		}))
-		if err != nil {
-			log.Error(err)
-			return
-		}
 
 		nnets = append(nnets, nn)
 	}
 
-	err = nnets[0].ApplyMiddleware(chord.FingerTableAdded(func(remoteNode *node.RemoteNode, fingerIndex, nodeIndex int) bool {
-		err := nnets[0].SendBytesDirectAsync([]byte("Hello my finger!"), remoteNode)
+	nnets[0].MustApplyMiddleware(chord.FingerTableAdded(func(remoteNode *node.RemoteNode, fingerIndex, nodeIndex int) bool {
+		err = nnets[0].SendBytesDirectAsync([]byte("Hello my finger!"), remoteNode)
 		if err != nil {
 			log.Error(err)
 		}
 		return true
 	}))
-	if err != nil {
-		log.Error(err)
-		return
-	}
 
 	for i := 0; i < len(nnets); i++ {
 		time.Sleep(112358 * time.Microsecond)
 
-		err := nnets[i].Start()
+		err = nnets[i].Start()
 		if err != nil {
 			log.Error(err)
 			return
@@ -135,7 +129,7 @@ func main() {
 		log.Infof("Sending broadcast message in %d seconds", i)
 		time.Sleep(time.Second)
 	}
-	ok, err := nnets[0].SendBytesBroadcastAsync([]byte("This message should be received by EVERYONE multiple times!"))
+	ok, err = nnets[0].SendBytesBroadcastAsync([]byte("This message should be received by EVERYONE multiple times!"))
 	if !ok || err != nil {
 		log.Error(err)
 		return
@@ -163,7 +157,13 @@ func main() {
 	<-signalChan
 	log.Info("\nReceived an interrupt, stopping...\n")
 
+	var wg sync.WaitGroup
 	for i := 0; i < len(nnets); i++ {
-		nnets[len(nnets)-1-i].Stop(nil)
+		wg.Add(1)
+		go func(nn *nnet.NNet) {
+			nn.Stop(nil)
+			wg.Done()
+		}(nnets[len(nnets)-1-i])
 	}
+	wg.Wait()
 }

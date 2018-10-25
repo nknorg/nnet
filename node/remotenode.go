@@ -43,7 +43,7 @@ const (
 	txMsgCacheCleanupInterval = 1 * time.Second
 
 	// A grace period that allows remote node to send schedule messages
-	stopGracePeriod = 1 * time.Second
+	stopGracePeriod = 500 * time.Millisecond
 )
 
 type rxBuf struct {

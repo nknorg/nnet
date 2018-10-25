@@ -11,9 +11,8 @@ import (
 
 // NNet is is a peer to peer network
 type NNet struct {
-	LocalNode *node.LocalNode
-	Overlay   overlay.Interface
-	Config    *config.Config
+	overlay.Network
+	Config *config.Config
 }
 
 // Config is the configuration struct for nnet
@@ -28,7 +27,7 @@ func NewNNet(id []byte, conf *Config) (*NNet, error) {
 	}
 
 	if len(id) == 0 {
-		id, err = util.RandBytes(int(conf.NodeIDBytes))
+		id, err = util.RandBytes(int(mergedConf.NodeIDBytes))
 		if err != nil {
 			return nil, err
 		}
@@ -39,44 +38,17 @@ func NewNNet(id []byte, conf *Config) (*NNet, error) {
 		return nil, err
 	}
 
-	ovl, err := chord.NewChord(localNode, mergedConf)
+	network, err := chord.NewChord(localNode, mergedConf)
 	if err != nil {
 		return nil, err
 	}
 
 	nn := &NNet{
-		LocalNode: localNode,
-		Overlay:   ovl,
-		Config:    mergedConf,
+		Network: network,
+		Config:  mergedConf,
 	}
 
 	return nn, nil
-}
-
-// Start starts the lifecycle methods of nnet
-func (nn *NNet) Start() error {
-	err := nn.LocalNode.Start()
-	if err != nil {
-		return err
-	}
-
-	err = nn.Overlay.Start()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Stop stops the lifecycle methods of nnet
-func (nn *NNet) Stop(err error) {
-	nn.Overlay.Stop(err)
-	nn.LocalNode.Stop(err)
-}
-
-// Join joins a seed node with address of the form ip:port
-func (nn *NNet) Join(seedNodeAddr string) error {
-	return nn.Overlay.Join(seedNodeAddr)
 }
 
 // SetLogger sets the global logger

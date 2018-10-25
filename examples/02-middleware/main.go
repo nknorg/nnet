@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
+	"sync"
 	"time"
 
 	"github.com/nknorg/nnet"
@@ -52,68 +53,40 @@ func main() {
 		return
 	}
 
-	err = nn.ApplyMiddleware(node.RemoteNodeConnected(func(remoteNode *node.RemoteNode) bool {
+	nn.MustApplyMiddleware(node.RemoteNodeConnected(func(remoteNode *node.RemoteNode) bool {
 		log.Infof("Remote node connected: %v", remoteNode)
 		return true
 	}))
-	if err != nil {
-		log.Error(err)
-		return
-	}
 
-	err = nn.ApplyMiddleware(node.RemoteNodeReady(func(remoteNode *node.RemoteNode) bool {
+	nn.MustApplyMiddleware(node.RemoteNodeReady(func(remoteNode *node.RemoteNode) bool {
 		log.Infof("Remote node ready: %v", remoteNode)
 		return true
 	}))
-	if err != nil {
-		log.Error(err)
-		return
-	}
 
-	err = nn.ApplyMiddleware(node.RemoteNodeDisconnected(func(remoteNode *node.RemoteNode) bool {
+	nn.MustApplyMiddleware(node.RemoteNodeDisconnected(func(remoteNode *node.RemoteNode) bool {
 		log.Infof("Remote node disconnected: %v", remoteNode)
 		return true
 	}))
-	if err != nil {
-		log.Error(err)
-		return
-	}
 
-	err = nn.ApplyMiddleware(chord.NeighborAdded(func(remoteNode *node.RemoteNode, index int) bool {
+	nn.MustApplyMiddleware(chord.NeighborAdded(func(remoteNode *node.RemoteNode, index int) bool {
 		log.Infof("New neighbor %d: %v", index, remoteNode)
 		return true
 	}))
-	if err != nil {
-		log.Error(err)
-		return
-	}
 
-	err = nn.ApplyMiddleware(chord.SuccessorAdded(func(remoteNode *node.RemoteNode, index int) bool {
+	nn.MustApplyMiddleware(chord.SuccessorAdded(func(remoteNode *node.RemoteNode, index int) bool {
 		log.Infof("New successor %d: %v", index, remoteNode)
 		return true
 	}))
-	if err != nil {
-		log.Error(err)
-		return
-	}
 
-	err = nn.ApplyMiddleware(chord.PredecessorAdded(func(remoteNode *node.RemoteNode, index int) bool {
+	nn.MustApplyMiddleware(chord.PredecessorAdded(func(remoteNode *node.RemoteNode, index int) bool {
 		log.Infof("New predecessor %d: %v", index, remoteNode)
 		return true
 	}))
-	if err != nil {
-		log.Error(err)
-		return
-	}
 
-	err = nn.ApplyMiddleware(chord.FingerTableAdded(func(remoteNode *node.RemoteNode, fingerIndex, nodeIndex int) bool {
+	nn.MustApplyMiddleware(chord.FingerTableAdded(func(remoteNode *node.RemoteNode, fingerIndex, nodeIndex int) bool {
 		log.Infof("New finger table %d-%d: %v", fingerIndex, nodeIndex, remoteNode)
 		return true
 	}))
-	if err != nil {
-		log.Error(err)
-		return
-	}
 
 	err = nn.Start()
 	if err != nil {
@@ -132,7 +105,7 @@ func main() {
 			return
 		}
 
-		err = nn.ApplyMiddleware(node.RemoteNodeConnected(func(remoteNode *node.RemoteNode) bool {
+		nn.MustApplyMiddleware(node.RemoteNodeConnected(func(remoteNode *node.RemoteNode) bool {
 			if rand.Float64() < 0.23333 {
 				remoteNode.Stop(errors.New("YOU ARE UNLUCKY"))
 				// stop propagate to the next middleware
@@ -140,19 +113,11 @@ func main() {
 			}
 			return true
 		}))
-		if err != nil {
-			log.Error(err)
-			return
-		}
 
-		err = nn.ApplyMiddleware(node.RemoteNodeConnected(func(remoteNode *node.RemoteNode) bool {
+		nn.MustApplyMiddleware(node.RemoteNodeConnected(func(remoteNode *node.RemoteNode) bool {
 			log.Infof("Only lucky remote node can get here :)")
 			return true
 		}))
-		if err != nil {
-			log.Error(err)
-			return
-		}
 
 		err = nn.Start()
 		if err != nil {
@@ -174,7 +139,13 @@ func main() {
 	<-signalChan
 	log.Info("\nReceived an interrupt, stopping...\n")
 
+	var wg sync.WaitGroup
 	for i := 0; i < len(nnets); i++ {
-		nnets[len(nnets)-1-i].Stop(nil)
+		wg.Add(1)
+		go func(nn *nnet.NNet) {
+			nn.Stop(nil)
+			wg.Done()
+		}(nnets[len(nnets)-1-i])
 	}
+	wg.Wait()
 }

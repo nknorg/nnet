@@ -19,11 +19,12 @@ const (
 	replyTimeout = 5 * time.Second
 )
 
-// Interface is the overlay network interface
-type Interface interface {
+// Network is the overlay network interface
+type Network interface {
 	Start() error
 	Stop(error)
 	Join(string) error
+	GetLocalNode() *node.LocalNode
 	GetRouters() []routing.Router
 	ApplyMiddleware(interface{}) error
 	SendMessageAsync(*protobuf.Message, protobuf.RoutingType) (bool, error)
@@ -50,6 +51,11 @@ func NewOverlay(localNode *node.LocalNode) (*Overlay, error) {
 		routers:      make(map[protobuf.RoutingType]routing.Router),
 	}
 	return overlay, nil
+}
+
+// GetLocalNode returns the local node
+func (ovl *Overlay) GetLocalNode() *node.LocalNode {
+	return ovl.LocalNode
 }
 
 // AddRouter adds a router for a routingType, and returns error if router has
@@ -98,6 +104,13 @@ func (ovl *Overlay) StartRouters() error {
 	}
 
 	return nil
+}
+
+// StopRouters stops all routers added to overlay network
+func (ovl *Overlay) StopRouters(err error) {
+	for _, router := range ovl.routers {
+		router.Stop(err)
+	}
 }
 
 // SendMessage sends msg to the best next hop, returns reply chan (nil if if
