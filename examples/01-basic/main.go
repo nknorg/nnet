@@ -1,5 +1,7 @@
 // This example shows how to create and join a nnet with multiple nodes.
+//
 // Run with default options: go run main.go
+//
 // Show usage: go run main.go -h
 package main
 

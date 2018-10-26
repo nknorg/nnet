@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strconv"
 	"sync"
 	"time"
 
@@ -171,6 +172,20 @@ func (ln *LocalNode) listen() {
 	}
 	ln.listener = listener
 
+	if ln.port == 0 {
+		_, portStr, err := net.SplitHostPort(listener.Addr().String())
+		if err != nil {
+			ln.Stop(err)
+		}
+
+		port, err := strconv.Atoi(portStr)
+		if err != nil {
+			ln.Stop(err)
+		}
+
+		ln.SetInternalPort(uint16(port))
+	}
+
 	for {
 		// listener.Accept() is placed before checking stops to prevent the error
 		// log when local node is stopped and thus conn is closed
@@ -205,6 +220,13 @@ func (ln *LocalNode) listen() {
 
 		ln.neighbors.Store(conn.RemoteAddr().String(), rn)
 	}
+}
+
+// SetInternalPort changes the internal port that local node will listen on. It should
+// not be called once the node starts. Note that it does not change the external
+// port that other nodes will connect to.
+func (ln *LocalNode) SetInternalPort(port uint16) {
+	ln.port = port
 }
 
 // Connect try to establish connection with address remoteNodeAddr, returns the

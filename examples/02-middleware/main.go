@@ -1,5 +1,7 @@
 // This example shows how to interact with nnet by middlewares
+//
 // Run with default options: go run main.go
+//
 // Show usage: go run main.go -h
 package main
 
