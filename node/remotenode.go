@@ -42,8 +42,8 @@ const (
 	// How often to check and delete expired sent message
 	txMsgCacheCleanupInterval = 1 * time.Second
 
-	// A grace period that allows remote node to send schedule messages
-	stopGracePeriod = 500 * time.Millisecond
+	// A grace period that allows remote node to send messages in queue
+	stopGracePeriod = 100 * time.Millisecond
 )
 
 type rxBuf struct {
@@ -197,20 +197,20 @@ func (rn *RemoteNode) Stop(err error) {
 			log.Warning("Notify remote node stop error:", err)
 		}
 
-		time.AfterFunc(stopGracePeriod, func() {
-			rn.LifeCycle.Stop()
+		time.Sleep(stopGracePeriod)
 
-			if rn.conn != nil {
-				rn.LocalNode.neighbors.Delete(rn.conn.RemoteAddr().String())
-				rn.conn.Close()
-			}
+		rn.LifeCycle.Stop()
 
-			for _, f := range rn.LocalNode.middlewareStore.remoteNodeDisconnected {
-				if !f(rn) {
-					break
-				}
+		if rn.conn != nil {
+			rn.LocalNode.neighbors.Delete(rn.conn.RemoteAddr().String())
+			rn.conn.Close()
+		}
+
+		for _, f := range rn.LocalNode.middlewareStore.remoteNodeDisconnected {
+			if !f(rn) {
+				break
 			}
-		})
+		}
 	})
 }
 

@@ -51,17 +51,22 @@ func main() {
 	// This can also be done in a localNodeWillStart middleware
 	// ==========================================================================
 	log.Info("Discovering NAT gateway...")
+
 	nat, err := gonat.DiscoverGateway()
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	_, internalPort, err := nat.AddPortMapping(transportProtocol, int(*externalPortPtr), int(*internalPortPtr), "nnet", 10*time.Second)
+	log.Infof("Found %s gateway", nat.Type())
+
+	externalPort, internalPort, err := nat.AddPortMapping(transportProtocol, int(*externalPortPtr), int(*internalPortPtr), "nnet", 10*time.Second)
 	if err != nil {
 		log.Error(err)
 		return
 	}
+
+	log.Infof("Mapped external port %d to internal port %d", externalPort, internalPort)
 
 	// SetInternalPort should only be called before node starts
 	nn.GetLocalNode().SetInternalPort(uint16(internalPort))

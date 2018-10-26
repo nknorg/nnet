@@ -175,7 +175,7 @@ func (sl *NeighborList) GetLast() *node.RemoteNode {
 // more than maxNumNodes nodes in list. Returns if node is added, the node that
 // is replaced or nil if not, and error if any
 func (sl *NeighborList) AddOrReplace(remoteNode *node.RemoteNode) (bool, *node.RemoteNode, error) {
-	if !sl.IsIDInRange(remoteNode.Id) {
+	if remoteNode.IsStopped() || !sl.IsIDInRange(remoteNode.Id) {
 		return false, nil, nil
 	}
 

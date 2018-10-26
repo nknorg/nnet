@@ -2,6 +2,7 @@ package chord
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -17,9 +18,6 @@ import (
 const (
 	// How many concurrent goroutines are handling messages
 	numWorkers = 1
-
-	// A grace period that allows network to send schedule messages
-	stopGracePeriod = 1 * time.Second
 )
 
 // Chord is the overlay network based on Chord DHT
@@ -162,7 +160,8 @@ func (c *Chord) Start() error {
 				prev := prevID(c.LocalNode.Id, c.nodeIDBits)
 				succs, err := c.FindSuccessors(prev, c.successors.Cap())
 				if err != nil {
-					log.Error("Join failed:", err)
+					c.Stop(fmt.Errorf("Join failed: %s", err))
+					return
 				}
 
 				for _, succ := range succs {
@@ -209,8 +208,6 @@ func (c *Chord) Stop(err error) {
 		}
 
 		c.LocalNode.Stop(err)
-
-		time.Sleep(stopGracePeriod)
 
 		c.LifeCycle.Stop()
 

@@ -132,13 +132,13 @@ func (ln *LocalNode) Stop(err error) {
 			return true
 		})
 
-		time.AfterFunc(stopGracePeriod, func() {
-			ln.LifeCycle.Stop()
+		time.Sleep(stopGracePeriod)
 
-			if ln.listener != nil {
-				ln.listener.Close()
-			}
-		})
+		ln.LifeCycle.Stop()
+
+		if ln.listener != nil {
+			ln.listener.Close()
+		}
 	})
 }
 

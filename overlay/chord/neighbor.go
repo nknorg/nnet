@@ -202,8 +202,6 @@ func (c *Chord) addRemoteNode(remoteNode *node.RemoteNode) error {
 
 // removeNeighbor removes a remote node from the neighbor lists of chord overlay
 func (c *Chord) removeNeighbor(remoteNode *node.RemoteNode) error {
-	var err error
-
 	removed := c.successors.Remove(remoteNode)
 	if removed {
 		for _, f := range c.middlewareStore.successorRemoved {
@@ -214,7 +212,7 @@ func (c *Chord) removeNeighbor(remoteNode *node.RemoteNode) error {
 
 		for _, rn := range c.neighbors.ToRemoteNodeList(true) {
 			if rn != remoteNode {
-				err = c.addSuccessor(rn)
+				err := c.addSuccessor(rn)
 				if err != nil {
 					log.Error(err)
 				}
@@ -233,7 +231,7 @@ func (c *Chord) removeNeighbor(remoteNode *node.RemoteNode) error {
 		neighbors := c.neighbors.ToRemoteNodeList(true)
 		for i := range neighbors {
 			if neighbors[len(neighbors)-i-1] != remoteNode {
-				err = c.addPredecessor(neighbors[len(neighbors)-i-1])
+				err := c.addPredecessor(neighbors[len(neighbors)-i-1])
 				if err != nil {
 					log.Error(err)
 				}
@@ -252,7 +250,7 @@ func (c *Chord) removeNeighbor(remoteNode *node.RemoteNode) error {
 
 			for _, rn := range c.neighbors.ToRemoteNodeList(true) {
 				if rn != remoteNode {
-					err = c.addFingerTable(rn, i)
+					err := c.addFingerTable(rn, i)
 					if err != nil {
 						log.Error(err)
 					}
