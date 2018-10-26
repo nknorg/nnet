@@ -4,12 +4,12 @@ import logging "github.com/op/go-logging"
 
 // Logger is the logger interface
 type Logger interface {
-	Info(...interface{})
-	Infof(string, ...interface{})
-	Warning(...interface{})
-	Warningf(string, ...interface{})
-	Error(...interface{})
-	Errorf(string, ...interface{})
+	Info(args ...interface{})
+	Infof(format string, args ...interface{})
+	Warning(args ...interface{})
+	Warningf(format string, args ...interface{})
+	Error(args ...interface{})
+	Errorf(format string, args ...interface{})
 }
 
 // The global logger object

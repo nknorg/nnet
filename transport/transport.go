@@ -9,7 +9,7 @@ import (
 
 // Transport is an abstract transport layer between local and remote nodes
 type Transport interface {
-	Dial(raddr string) (net.Conn, error)
+	Dial(addr string) (net.Conn, error)
 	Listen(port uint16) (net.Listener, error)
 	GetProtocol() string
 }

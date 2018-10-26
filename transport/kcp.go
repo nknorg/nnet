@@ -20,9 +20,9 @@ func NewKCPTransport() *KCPTransport {
 	return t
 }
 
-// Dial connects to the remote address "raddr" on the network "udp"
-func (t *KCPTransport) Dial(raddr string) (net.Conn, error) {
-	return kcp.Dial(raddr)
+// Dial connects to the remote address on the network "udp"
+func (t *KCPTransport) Dial(addr string) (net.Conn, error) {
+	return kcp.Dial(addr)
 }
 
 // Listen listens for incoming packets to "port" on the network "udp"

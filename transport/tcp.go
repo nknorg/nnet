@@ -21,9 +21,9 @@ func NewTCPTransport(dialTimeout time.Duration) *TCPTransport {
 	return t
 }
 
-// Dial connects to the remote address "raddr" on the network "tcp"
-func (t *TCPTransport) Dial(raddr string) (net.Conn, error) {
-	return net.DialTimeout(t.GetProtocol(), raddr, t.dialTimeout)
+// Dial connects to the remote address on the network "tcp"
+func (t *TCPTransport) Dial(addr string) (net.Conn, error) {
+	return net.DialTimeout(t.GetProtocol(), addr, t.dialTimeout)
 }
 
 // Listen listens for incoming packets to "port" on the network "tcp"

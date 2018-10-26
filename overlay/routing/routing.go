@@ -14,8 +14,8 @@ type Router interface {
 	Start() error
 	Stop(error)
 	ApplyMiddleware(interface{}) error
-	GetNodeToRoute(*node.RemoteMessage) (*node.LocalNode, []*node.RemoteNode, error)
-	SendMessage(Router, *node.RemoteMessage, bool) (<-chan *node.RemoteMessage, bool, error)
+	GetNodeToRoute(remoteMsg *node.RemoteMessage) (localNode *node.LocalNode, remoteNodes []*node.RemoteNode, err error)
+	SendMessage(router Router, remoteMsg *node.RemoteMessage, hasReply bool) (replyChan <-chan *node.RemoteMessage, success bool, err error)
 }
 
 // Routing is the base struct for all routing

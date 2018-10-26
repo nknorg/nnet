@@ -23,12 +23,12 @@ const (
 type Network interface {
 	Start() error
 	Stop(error)
-	Join(string) error
+	Join(seedNodeAddr string) error
 	GetLocalNode() *node.LocalNode
 	GetRouters() []routing.Router
 	ApplyMiddleware(interface{}) error
-	SendMessageAsync(*protobuf.Message, protobuf.RoutingType) (bool, error)
-	SendMessageSync(*protobuf.Message, protobuf.RoutingType) (*protobuf.Message, bool, error)
+	SendMessageAsync(msg *protobuf.Message, routingType protobuf.RoutingType) (success bool, err error)
+	SendMessageSync(msg *protobuf.Message, routingType protobuf.RoutingType) (reply *protobuf.Message, success bool, err error)
 }
 
 // Overlay is an abstract overlay network
