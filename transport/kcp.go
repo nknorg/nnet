@@ -8,15 +8,11 @@ import (
 )
 
 // KCPTransport is the transport layer based on KCP protocol
-type KCPTransport struct {
-	protocol string
-}
+type KCPTransport struct{}
 
 // NewKCPTransport creates a new KCP transport layer
 func NewKCPTransport() *KCPTransport {
-	t := &KCPTransport{
-		protocol: "udp",
-	}
+	t := &KCPTransport{}
 	return t
 }
 
@@ -31,7 +27,11 @@ func (t *KCPTransport) Listen(port uint16) (net.Listener, error) {
 	return kcp.Listen(laddr)
 }
 
-// GetProtocol returns the network protocol used (tcp or udp)
-func (t *KCPTransport) GetProtocol() string {
-	return t.protocol
+// GetNetwork returns the network used (tcp or udp)
+func (t *KCPTransport) GetNetwork() string {
+	return "udp"
+}
+
+func (t *KCPTransport) String() string {
+	return "kcp"
 }

@@ -35,7 +35,7 @@ const (
 // LocalNode is a local node
 type LocalNode struct {
 	*Node
-	transport      transport.Transport
+	address        *transport.Address
 	port           uint16
 	listener       net.Listener
 	rxMsgChan      map[protobuf.RoutingType]chan *RemoteMessage
@@ -51,17 +51,15 @@ func NewLocalNode(id []byte, conf *config.Config) (*LocalNode, error) {
 		return nil, errors.New("node id is nil")
 	}
 
-	trans, err := transport.NewTransport(conf)
+	host := conf.Hostname
+	port := conf.Port
+
+	address, err := transport.NewAddress(conf.Transport, host, port)
 	if err != nil {
 		return nil, err
 	}
 
-	host := conf.Hostname
-	port := conf.Port
-
-	addr := fmt.Sprintf("%s:%d", host, port)
-
-	node, err := NewNode(id, addr)
+	node, err := NewNode(id, address.String())
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +77,7 @@ func NewLocalNode(id []byte, conf *config.Config) (*LocalNode, error) {
 
 	localNode := &LocalNode{
 		Node:            node,
-		transport:       trans,
+		address:         address,
 		port:            port,
 		rxMsgChan:       rxMsgChan,
 		handleMsgChan:   handleMsgChan,
@@ -165,7 +163,7 @@ func (ln *LocalNode) handleMsg() {
 
 // listen listens for incoming connections
 func (ln *LocalNode) listen() {
-	listener, err := ln.transport.Listen(ln.port)
+	listener, err := ln.address.Transport.Listen(ln.port)
 	if err != nil {
 		ln.Stop(fmt.Errorf("failed to listen to port %d", ln.port))
 		return
@@ -235,7 +233,7 @@ func (ln *LocalNode) SetInternalPort(port uint16) {
 // remote node is ready if an active connection to the remoteNodeAddr exists and
 // node info has been exchanged.
 func (ln *LocalNode) Connect(remoteNodeAddr string) (*RemoteNode, bool, error) {
-	if remoteNodeAddr == ln.Node.Addr {
+	if remoteNodeAddr == ln.address.String() {
 		return nil, false, errors.New("trying to connect to self")
 	}
 
@@ -256,7 +254,13 @@ func (ln *LocalNode) Connect(remoteNodeAddr string) (*RemoteNode, bool, error) {
 		}
 	}
 
-	conn, err := ln.transport.Dial(remoteNodeAddr)
+	remoteAddress, err := transport.Parse(remoteNodeAddr)
+	if err != nil {
+		ln.neighbors.Delete(remoteNodeAddr)
+		return nil, false, err
+	}
+
+	conn, err := remoteAddress.Dial()
 	if err != nil {
 		ln.neighbors.Delete(remoteNodeAddr)
 		return nil, false, err

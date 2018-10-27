@@ -14,6 +14,7 @@ import (
 	"github.com/nknorg/nnet/cache"
 	"github.com/nknorg/nnet/log"
 	"github.com/nknorg/nnet/protobuf"
+	"github.com/nknorg/nnet/transport"
 	"github.com/nknorg/nnet/util"
 )
 
@@ -130,8 +131,12 @@ func (rn *RemoteNode) Start() error {
 			rn.LocalNode.neighbors.Range(func(key, value interface{}) bool {
 				remoteNode, ok := value.(*RemoteNode)
 				if ok && remoteNode.IsReady() && bytes.Equal(remoteNode.Id, n.Id) {
-					rn.Stop(fmt.Errorf("Node with id %x is already connected at addr %s", remoteNode.Id, remoteNode.Addr))
-					existingRemoteNode = remoteNode
+					if remoteNode.IsStopped() {
+						rn.LocalNode.neighbors.Delete(key)
+					} else {
+						rn.Stop(fmt.Errorf("Node with id %x is already connected at addr %s", remoteNode.Id, remoteNode.Addr))
+						existingRemoteNode = remoteNode
+					}
 					return false
 				}
 				return true
@@ -145,25 +150,20 @@ func (rn *RemoteNode) Start() error {
 				return
 			}
 
-			host, port, err := net.SplitHostPort(n.Addr)
+			remoteAddr, err := transport.Parse(n.Addr)
 			if err != nil {
 				rn.Stop(fmt.Errorf("Parse node addr %s error: %s", n.Addr, err))
 				return
 			}
 
-			if port == "" {
-				rn.Stop(errors.New("Node addr port is empty"))
-				return
-			}
-
-			if host == "" {
+			if remoteAddr.Host == "" {
 				connAddr := rn.conn.RemoteAddr().String()
-				host, _, err = net.SplitHostPort(connAddr)
+				remoteAddr.Host, _, err = net.SplitHostPort(connAddr)
 				if err != nil {
 					rn.Stop(fmt.Errorf("Parse conn remote addr %s error: %s", connAddr, err))
 					return
 				}
-				n.Addr = net.JoinHostPort(host, port)
+				n.Addr = remoteAddr.String()
 			}
 
 			rn.Node.Node = n

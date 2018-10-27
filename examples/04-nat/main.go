@@ -17,7 +17,6 @@ import (
 
 	gonat "github.com/nknorg/go-nat"
 	"github.com/nknorg/nnet"
-	"github.com/nknorg/nnet/config"
 	"github.com/nknorg/nnet/log"
 	"github.com/nknorg/nnet/transport"
 )
@@ -39,13 +38,12 @@ func main() {
 		return
 	}
 
-	c := config.Config(*conf)
-	transport, err := transport.NewTransport(&c)
+	transport, err := transport.NewTransport(*transportPtr)
 	if err != nil {
 		log.Error(err)
 		return
 	}
-	transportProtocol := transport.GetProtocol()
+	transportProtocol := transport.GetNetwork()
 
 	// Begin of NAT setup
 	// This can also be done in a localNodeWillStart middleware

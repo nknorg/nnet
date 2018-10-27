@@ -7,6 +7,7 @@ package main
 
 import (
 	"flag"
+	"math/rand"
 	"os"
 	"os/signal"
 	"sync"
@@ -33,7 +34,6 @@ func create(transport string, port uint16) (*nnet.NNet, error) {
 
 func main() {
 	numNodesPtr := flag.Int("n", 10, "number of nodes")
-	transportPtr := flag.String("t", "tcp", "transport type, tcp or kcp")
 	flag.Parse()
 
 	if *numNodesPtr < 1 {
@@ -42,10 +42,11 @@ func main() {
 	}
 
 	const createPort uint16 = 23333
+	transports := []string{"tcp", "kcp"}
 	nnets := make([]*nnet.NNet, 0)
 
 	for i := 0; i < *numNodesPtr; i++ {
-		nn, err := create(*transportPtr, createPort+uint16(i))
+		nn, err := create(transports[rand.Intn(len(transports))], createPort+uint16(i))
 		if err != nil {
 			log.Error(err)
 			return

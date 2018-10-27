@@ -3,25 +3,29 @@ package transport
 import (
 	"errors"
 	"net"
+	"time"
+)
 
-	"github.com/nknorg/nnet/config"
+const (
+	dialTimeout = 5 * time.Second
 )
 
 // Transport is an abstract transport layer between local and remote nodes
 type Transport interface {
 	Dial(addr string) (net.Conn, error)
 	Listen(port uint16) (net.Listener, error)
-	GetProtocol() string
+	GetNetwork() string
+	String() string
 }
 
 // NewTransport creates a transport based on conf
-func NewTransport(conf *config.Config) (Transport, error) {
-	switch conf.Transport {
+func NewTransport(protocol string) (Transport, error) {
+	switch protocol {
 	case "kcp":
 		return NewKCPTransport(), nil
 	case "tcp":
-		return NewTCPTransport(conf.DialTimeout), nil
+		return NewTCPTransport(dialTimeout), nil
 	default:
-		return nil, errors.New("Unknown transport" + conf.Transport)
+		return nil, errors.New("Unknown protocol " + protocol)
 	}
 }

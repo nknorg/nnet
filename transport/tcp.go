@@ -8,14 +8,12 @@ import (
 
 // TCPTransport is the transport layer based on TCP protocol
 type TCPTransport struct {
-	protocol    string
 	dialTimeout time.Duration
 }
 
 // NewTCPTransport creates a new TCP transport layer
 func NewTCPTransport(dialTimeout time.Duration) *TCPTransport {
 	t := &TCPTransport{
-		protocol:    "tcp",
 		dialTimeout: dialTimeout,
 	}
 	return t
@@ -23,16 +21,20 @@ func NewTCPTransport(dialTimeout time.Duration) *TCPTransport {
 
 // Dial connects to the remote address on the network "tcp"
 func (t *TCPTransport) Dial(addr string) (net.Conn, error) {
-	return net.DialTimeout(t.GetProtocol(), addr, t.dialTimeout)
+	return net.DialTimeout(t.GetNetwork(), addr, t.dialTimeout)
 }
 
 // Listen listens for incoming packets to "port" on the network "tcp"
 func (t *TCPTransport) Listen(port uint16) (net.Listener, error) {
 	laddr := fmt.Sprintf(":%d", port)
-	return net.Listen(t.GetProtocol(), laddr)
+	return net.Listen(t.GetNetwork(), laddr)
 }
 
-// GetProtocol returns the network protocol used (tcp or udp)
-func (t *TCPTransport) GetProtocol() string {
-	return t.protocol
+// GetNetwork returns the network used (tcp or udp)
+func (t *TCPTransport) GetNetwork() string {
+	return "tcp"
+}
+
+func (t *TCPTransport) String() string {
+	return t.GetNetwork()
 }

@@ -1,4 +1,5 @@
-// This example shows how to send and receive messages of different routing types
+// This example shows how to mix different transport protocols and have nodes
+// with tcp and kcp running in the network at the same time
 //
 // Run with default options: go run main.go
 //
@@ -7,7 +8,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"os/signal"
 	"sync"
@@ -118,7 +118,7 @@ func main() {
 		}
 
 		if i > 0 {
-			err = nnets[i].Join(fmt.Sprintf("127.0.0.1:%d", createPort))
+			err = nnets[i].Join(nnets[0].GetLocalNode().Addr)
 			if err != nil {
 				log.Error(err)
 				return

@@ -8,7 +8,6 @@ package main
 import (
 	"errors"
 	"flag"
-	"fmt"
 	"math/rand"
 	"os"
 	"os/signal"
@@ -127,7 +126,7 @@ func main() {
 			return
 		}
 
-		err = nn.Join(fmt.Sprintf("127.0.0.1:%d", createPort))
+		err = nn.Join(nnets[0].GetLocalNode().Addr)
 		if err != nil {
 			log.Error(err)
 			return
