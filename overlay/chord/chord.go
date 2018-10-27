@@ -204,7 +204,7 @@ func (c *Chord) Stop(err error) {
 		}
 
 		for _, remoteNode := range c.neighbors.ToRemoteNodeList(false) {
-			remoteNode.Stop(err)
+			go remoteNode.Stop(err)
 		}
 
 		c.LocalNode.Stop(err)
