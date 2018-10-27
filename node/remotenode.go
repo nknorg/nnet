@@ -255,6 +255,8 @@ func (rn *RemoteNode) handleMsgBuf(buf []byte) {
 // rx receives and handle data from RemoteNode rn
 func (rn *RemoteNode) rx() {
 	msgLenBuf := make([]byte, msgLenBytes)
+	var readLen int
+
 	for {
 		if rn.IsStopped() {
 			return
@@ -263,23 +265,36 @@ func (rn *RemoteNode) rx() {
 		l, err := rn.conn.Read(msgLenBuf)
 		if err != nil {
 			rn.Stop(fmt.Errorf("Read msg len error: %s", err))
+			continue
 		}
 		if l != msgLenBytes {
 			rn.Stop(fmt.Errorf("Msg len has %d bytes, which is less than expected %d", l, msgLenBytes))
+			continue
 		}
 
 		msgLen := int(binary.BigEndian.Uint32(msgLenBuf))
 		if msgLen < 0 {
 			rn.Stop(fmt.Errorf("Msg len %d overflow", msgLen))
+			continue
 		}
 
 		buf := make([]byte, msgLen)
-		l, err = rn.conn.Read(buf)
+
+		for readLen = 0; readLen < msgLen; readLen += l {
+			l, err = rn.conn.Read(buf[readLen:])
+			if err != nil {
+				break
+			}
+		}
+
 		if err != nil {
 			rn.Stop(fmt.Errorf("Read msg error: %s", err))
+			continue
 		}
-		if l != msgLen {
-			rn.Stop(fmt.Errorf("Msg has %d bytes, which is less than expected %d", l, msgLen))
+
+		if readLen > msgLen {
+			rn.Stop(fmt.Errorf("Msg has %d bytes, which is more than expected %d", readLen, msgLen))
+			continue
 		}
 
 		rn.handleMsgBuf(buf)
@@ -313,11 +328,13 @@ func (rn *RemoteNode) tx() {
 			_, err = rn.conn.Write(msgLenBuf)
 			if err != nil {
 				rn.Stop(fmt.Errorf("Write to conn error: %s", err))
+				continue
 			}
 
 			_, err = rn.conn.Write(buf)
 			if err != nil {
 				rn.Stop(fmt.Errorf("Write to conn error: %s", err))
+				continue
 			}
 		case <-keepAliveTimer.C:
 			rn.keepAlive()
