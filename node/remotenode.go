@@ -251,7 +251,7 @@ func (rn *RemoteNode) handleMsgBuf(buf []byte) {
 	msg := &protobuf.Message{}
 	err := proto.Unmarshal(buf, msg)
 	if err != nil {
-		log.Error("unmarshal msg error:", err)
+		rn.Stop(fmt.Errorf("unmarshal msg error: %s", err))
 		return
 	}
 
