@@ -127,28 +127,19 @@ func (rn *RemoteNode) Start() error {
 				return
 			}
 
-			var existingRemoteNode *RemoteNode
 			rn.LocalNode.neighbors.Range(func(key, value interface{}) bool {
 				remoteNode, ok := value.(*RemoteNode)
 				if ok && remoteNode.IsReady() && bytes.Equal(remoteNode.Id, n.Id) {
 					if remoteNode.IsStopped() {
+						log.Warningf("Remove stopped remote node %v from list", remoteNode)
 						rn.LocalNode.neighbors.Delete(key)
 					} else {
-						rn.Stop(fmt.Errorf("Node with id %x is already connected at addr %s", remoteNode.Id, remoteNode.Addr))
-						existingRemoteNode = remoteNode
+						remoteNode.Stop(fmt.Errorf("Node with id %x is connecting at new addr %s", remoteNode.Id, remoteNode.Addr))
 					}
 					return false
 				}
 				return true
 			})
-			if existingRemoteNode != nil {
-				for _, f := range rn.LocalNode.middlewareStore.remoteNodeReady {
-					if !f(existingRemoteNode) {
-						break
-					}
-				}
-				return
-			}
 
 			remoteAddr, err := transport.Parse(n.Addr)
 			if err != nil {
