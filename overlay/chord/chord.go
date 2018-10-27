@@ -443,90 +443,78 @@ func GetSuccAndPred(remoteNode *node.RemoteNode, numSucc, numPred uint32) ([]*pr
 	return replyBody.Successors, replyBody.Predecessors, nil
 }
 
-// FindSuccessors sends a FindSuccessors message and returns numSucc successors
-// of a given key id
-func (c *Chord) FindSuccessors(key []byte, numSucc uint32) ([]*protobuf.Node, error) {
+// FindSuccAndPred sends a FindSuccAndPred message and returns numSucc
+// successors and numPred predecessors of a given key id
+func (c *Chord) FindSuccAndPred(key []byte, numSucc, numPred uint32) ([]*protobuf.Node, []*protobuf.Node, error) {
 	succ := c.successors.GetFirst()
 	if succ == nil {
-		return nil, errors.New("Local node has no successor yet")
+		return nil, nil, errors.New("Local node has no successor yet")
 	}
 
-	if CompareID(key, c.LocalNode.Id) == 0 || betweenLeftIncl(c.LocalNode.Id, succ.Id, key) {
-		var succs []*protobuf.Node
-		if CompareID(key, c.LocalNode.Id) == 0 {
-			succs = append(succs, c.LocalNode.Node.Node)
+	if CompareID(key, c.LocalNode.Id) == 0 || between(c.LocalNode.Id, succ.Id, key) {
+		var succs, preds []*protobuf.Node
+
+		if numSucc > 0 {
+			if CompareID(key, c.LocalNode.Id) == 0 {
+				succs = append(succs, c.LocalNode.Node.Node)
+			}
+
+			succs = append(succs, c.successors.ToProtoNodeList(true)...)
+
+			if succs != nil && len(succs) > int(numSucc) {
+				succs = succs[:numSucc]
+			}
 		}
 
-		succs = append(succs, c.successors.ToProtoNodeList(true)...)
+		if numPred > 0 {
+			preds = []*protobuf.Node{c.LocalNode.Node.Node}
+			preds = append(preds, c.predecessors.ToProtoNodeList(true)...)
 
-		if succs != nil && len(succs) > int(numSucc) {
-			succs = succs[:numSucc]
+			if preds != nil && len(preds) > int(numPred) {
+				preds = preds[:numPred]
+			}
 		}
 
-		return succs, nil
+		return succs, preds, nil
 	}
 
-	msg, err := NewFindSuccessorsMessage(key, numSucc)
+	msg, err := NewFindSuccAndPredMessage(key, numSucc, numPred)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	reply, _, err := c.SendMessageSync(msg, protobuf.RELAY)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	replyBody := &protobuf.FindSuccessorsReply{}
+	replyBody := &protobuf.FindSuccAndPredReply{}
 	err = proto.Unmarshal(reply.Message, replyBody)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if len(replyBody.Successors) > int(numSucc) {
-		return replyBody.Successors[:numSucc], nil
+		replyBody.Successors = replyBody.Successors[:numSucc]
 	}
 
-	return replyBody.Successors, nil
+	if len(replyBody.Predecessors) > int(numPred) {
+		replyBody.Predecessors = replyBody.Predecessors[:numPred]
+	}
+
+	return replyBody.Successors, replyBody.Predecessors, nil
+}
+
+// FindSuccessors sends a FindSuccessors message and returns numSucc successors
+// of a given key id
+func (c *Chord) FindSuccessors(key []byte, numSucc uint32) ([]*protobuf.Node, error) {
+	succs, _, err := c.FindSuccAndPred(key, numSucc, 0)
+	return succs, err
 }
 
 // FindPredecessors sends a FindPredecessors message and returns numPred
 // predecessors of a given key id
 func (c *Chord) FindPredecessors(key []byte, numPred uint32) ([]*protobuf.Node, error) {
-	succ := c.successors.GetFirst()
-	if succ == nil {
-		return nil, errors.New("Local node has no successor yet")
-	}
-
-	if CompareID(key, c.LocalNode.Id) == 0 || between(c.LocalNode.Id, succ.Id, key) {
-		preds := []*protobuf.Node{c.LocalNode.Node.Node}
-		preds = append(preds, c.predecessors.ToProtoNodeList(true)...)
-
-		if preds != nil && len(preds) > int(numPred) {
-			preds = preds[:numPred]
-		}
-
-		return preds, nil
-	}
-
-	msg, err := NewFindPredecessorsMessage(key, numPred)
-	if err != nil {
-		return nil, err
-	}
-
-	reply, _, err := c.SendMessageSync(msg, protobuf.RELAY)
-	if err != nil {
-		return nil, err
-	}
-
-	replyBody := &protobuf.FindPredecessorsReply{}
-	err = proto.Unmarshal(reply.Message, replyBody)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(replyBody.Predecessors) > int(numPred) {
-		return replyBody.Predecessors[:numPred], nil
-	}
-
-	return replyBody.Predecessors, nil
+	_, preds, err := c.FindSuccAndPred(key, 0, numPred)
+	return preds, err
 }

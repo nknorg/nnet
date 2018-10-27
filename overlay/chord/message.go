@@ -64,72 +64,17 @@ func NewGetSuccAndPredReply(replyToID []byte, successors, predecessors []*protob
 	return msg, nil
 }
 
-// NewFindSuccessorsMessage creates a FIND_SUCCESSORS message to find numSucc
-// successors of a key
-func NewFindSuccessorsMessage(key []byte, numSucc uint32) (*protobuf.Message, error) {
+// NewFindSuccAndPredMessage creates a FIND_SUCC_AND_PRED message to find
+// numSucc successors and numPred predecessors of a key
+func NewFindSuccAndPredMessage(key []byte, numSucc, numPred uint32) (*protobuf.Message, error) {
 	id, err := message.GenID()
 	if err != nil {
 		return nil, err
 	}
 
-	msgBody := &protobuf.FindSuccessors{
+	msgBody := &protobuf.FindSuccAndPred{
 		Key:     key,
 		NumSucc: numSucc,
-	}
-
-	buf, err := proto.Marshal(msgBody)
-	if err != nil {
-		return nil, err
-	}
-
-	msg := &protobuf.Message{
-		MessageType: protobuf.FIND_SUCCESSORS,
-		RoutingType: protobuf.DIRECT,
-		MessageId:   id,
-		Message:     buf,
-		DestId:      key,
-	}
-
-	return msg, nil
-}
-
-// NewFindSuccessorsReply creates a FIND_SUCCESSORS reply to send successors
-func NewFindSuccessorsReply(replyToID []byte, successors []*protobuf.Node) (*protobuf.Message, error) {
-	id, err := message.GenID()
-	if err != nil {
-		return nil, err
-	}
-
-	msgBody := &protobuf.FindSuccessorsReply{
-		Successors: successors,
-	}
-
-	buf, err := proto.Marshal(msgBody)
-	if err != nil {
-		return nil, err
-	}
-
-	msg := &protobuf.Message{
-		MessageType: protobuf.FIND_SUCCESSORS,
-		RoutingType: protobuf.DIRECT,
-		ReplyToId:   replyToID,
-		MessageId:   id,
-		Message:     buf,
-	}
-
-	return msg, nil
-}
-
-// NewFindPredecessorsMessage creates a FIND_PREDECESSORS message to find
-// numPred predecessors of a key
-func NewFindPredecessorsMessage(key []byte, numPred uint32) (*protobuf.Message, error) {
-	id, err := message.GenID()
-	if err != nil {
-		return nil, err
-	}
-
-	msgBody := &protobuf.FindPredecessors{
-		Key:     key,
 		NumPred: numPred,
 	}
 
@@ -139,7 +84,7 @@ func NewFindPredecessorsMessage(key []byte, numPred uint32) (*protobuf.Message, 
 	}
 
 	msg := &protobuf.Message{
-		MessageType: protobuf.FIND_PREDECESSORS,
+		MessageType: protobuf.FIND_SUCC_AND_PRED,
 		RoutingType: protobuf.DIRECT,
 		MessageId:   id,
 		Message:     buf,
@@ -149,15 +94,16 @@ func NewFindPredecessorsMessage(key []byte, numPred uint32) (*protobuf.Message, 
 	return msg, nil
 }
 
-// NewFindPredecessorsReply creates a FIND_PREDECESSORS reply to send
-// Predecessors
-func NewFindPredecessorsReply(replyToID []byte, predecessors []*protobuf.Node) (*protobuf.Message, error) {
+// NewFindSuccAndPredReply creates a FIND_SUCC_AND_PRED reply to send successors
+// and predecessors
+func NewFindSuccAndPredReply(replyToID []byte, successors, predecessors []*protobuf.Node) (*protobuf.Message, error) {
 	id, err := message.GenID()
 	if err != nil {
 		return nil, err
 	}
 
-	msgBody := &protobuf.FindPredecessorsReply{
+	msgBody := &protobuf.FindSuccAndPredReply{
+		Successors:   successors,
 		Predecessors: predecessors,
 	}
 
@@ -167,7 +113,7 @@ func NewFindPredecessorsReply(replyToID []byte, predecessors []*protobuf.Node) (
 	}
 
 	msg := &protobuf.Message{
-		MessageType: protobuf.FIND_PREDECESSORS,
+		MessageType: protobuf.FIND_SUCC_AND_PRED,
 		RoutingType: protobuf.DIRECT,
 		ReplyToId:   replyToID,
 		MessageId:   id,
@@ -212,41 +158,19 @@ func (c *Chord) handleRemoteMessage(remoteMsg *node.RemoteMessage) (bool, error)
 			return false, err
 		}
 
-	case protobuf.FIND_SUCCESSORS:
-		msgBody := &protobuf.FindSuccessors{}
+	case protobuf.FIND_SUCC_AND_PRED:
+		msgBody := &protobuf.FindSuccAndPred{}
 		err := proto.Unmarshal(remoteMsg.Msg.Message, msgBody)
 		if err != nil {
 			return false, err
 		}
 
-		succs, err := c.FindSuccessors(msgBody.Key, msgBody.NumSucc)
+		succs, preds, err := c.FindSuccAndPred(msgBody.Key, msgBody.NumSucc, msgBody.NumPred)
 		if err != nil {
 			return false, err
 		}
 
-		replyMsg, err := NewFindSuccessorsReply(remoteMsg.Msg.MessageId, succs)
-		if err != nil {
-			return false, err
-		}
-
-		err = remoteMsg.RemoteNode.SendMessageAsync(replyMsg)
-		if err != nil {
-			return false, err
-		}
-
-	case protobuf.FIND_PREDECESSORS:
-		msgBody := &protobuf.FindPredecessors{}
-		err := proto.Unmarshal(remoteMsg.Msg.Message, msgBody)
-		if err != nil {
-			return false, err
-		}
-
-		preds, err := c.FindPredecessors(msgBody.Key, msgBody.NumPred)
-		if err != nil {
-			return false, err
-		}
-
-		replyMsg, err := NewFindPredecessorsReply(remoteMsg.Msg.MessageId, preds)
+		replyMsg, err := NewFindSuccAndPredReply(remoteMsg.Msg.MessageId, succs, preds)
 		if err != nil {
 			return false, err
 		}
