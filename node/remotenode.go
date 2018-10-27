@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"io"
 	"net"
 	"sync"
 	"time"
@@ -24,9 +23,6 @@ const (
 
 	// Max number of msg to be sent that can be buffered
 	remoteTxMsgChanLen = 23333
-
-	// Maximum buffer to receive message
-	rxBufLen = 1024 * 16
 
 	// Timeout for reply message
 	replyTimeout = 5 * time.Second
@@ -47,18 +43,12 @@ const (
 	stopGracePeriod = 100 * time.Millisecond
 )
 
-type rxBuf struct {
-	buf []byte
-	len int
-}
-
 // RemoteNode is a remote node
 type RemoteNode struct {
 	*Node
 	LocalNode  *LocalNode
 	IsOutbound bool
 	conn       net.Conn
-	rxBuf      rxBuf
 	rxMsgChan  chan *protobuf.Message
 	txMsgChan  chan *protobuf.Message
 	txMsgCache cache.Cache
@@ -262,68 +252,37 @@ func (rn *RemoteNode) handleMsgBuf(buf []byte) {
 	}
 }
 
-// readBuf read buffer and handle the whole message
-func (rn *RemoteNode) readBuf(buf []byte) error {
-	if len(buf) == 0 {
-		return nil
-	}
-
-	if rn.rxBuf.len == 0 {
-		length := msgLenBytes - len(rn.rxBuf.buf)
-		if length > len(buf) {
-			length = len(buf)
-			rn.rxBuf.buf = append(rn.rxBuf.buf, buf[0:length]...)
-			return nil
-		}
-
-		rn.rxBuf.buf = append(rn.rxBuf.buf, buf[0:length]...)
-		rn.rxBuf.len = int(binary.BigEndian.Uint32(rn.rxBuf.buf))
-		if rn.rxBuf.len < 0 {
-			return fmt.Errorf("Message length %d overflow", rn.rxBuf.len)
-		}
-		buf = buf[length:]
-	}
-
-	msgLen := rn.rxBuf.len
-	if len(buf) == msgLen {
-		rn.handleMsgBuf(buf)
-		rn.rxBuf.buf = nil
-		rn.rxBuf.len = 0
-	} else if len(buf) < msgLen {
-		rn.rxBuf.buf = append(rn.rxBuf.buf, buf[:]...)
-		rn.rxBuf.len = msgLen - len(buf)
-	} else {
-		rn.handleMsgBuf(buf[0:msgLen])
-		rn.rxBuf.buf = nil
-		rn.rxBuf.len = 0
-		return rn.readBuf(buf[msgLen:])
-	}
-
-	return nil
-}
-
 // rx receives and handle data from RemoteNode rn
 func (rn *RemoteNode) rx() {
-	buf := make([]byte, rxBufLen)
+	msgLenBuf := make([]byte, msgLenBytes)
 	for {
 		if rn.IsStopped() {
 			return
 		}
 
-		len, err := rn.conn.Read(buf[0 : rxBufLen-1])
-		buf[rxBufLen-1] = 0 // Prevent overflow
-
-		switch err {
-		case nil:
-			err = rn.readBuf(buf[0:len])
-			if err != nil {
-				log.Warning("Read buffer error:", err)
-			}
-		case io.EOF:
-			rn.Stop(errors.New("Rx get io.EOF"))
-		default:
-			rn.Stop(fmt.Errorf("Read connection error: %s", err))
+		l, err := rn.conn.Read(msgLenBuf)
+		if err != nil {
+			rn.Stop(fmt.Errorf("Read msg len error: %s", err))
 		}
+		if l != msgLenBytes {
+			rn.Stop(fmt.Errorf("Msg len has %d bytes, which is less than expected %d", l, msgLenBytes))
+		}
+
+		msgLen := int(binary.BigEndian.Uint32(msgLenBuf))
+		if msgLen < 0 {
+			rn.Stop(fmt.Errorf("Msg len %d overflow", msgLen))
+		}
+
+		buf := make([]byte, msgLen)
+		l, err = rn.conn.Read(buf)
+		if err != nil {
+			rn.Stop(fmt.Errorf("Read msg error: %s", err))
+		}
+		if l != msgLen {
+			rn.Stop(fmt.Errorf("Msg has %d bytes, which is less than expected %d", l, msgLen))
+		}
+
+		rn.handleMsgBuf(buf)
 	}
 }
 
