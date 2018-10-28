@@ -112,7 +112,7 @@ func NewChord(localNode *node.LocalNode, conf *config.Config) (*Chord, error) {
 		return nil, err
 	}
 
-	broadcastRxMsgChan, err := localNode.GetRxMsgChan(protobuf.BROADCAST)
+	broadcastRxMsgChan, err := localNode.GetRxMsgChan(protobuf.BROADCAST_PUSH)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,20 @@ func NewChord(localNode *node.LocalNode, conf *config.Config) (*Chord, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = ovl.AddRouter(protobuf.BROADCAST, broadcastRouting)
+	err = ovl.AddRouter(protobuf.BROADCAST_PUSH, broadcastRouting)
+	if err != nil {
+		return nil, err
+	}
+
+	broadcastTreeRxMsgChan, err := localNode.GetRxMsgChan(protobuf.BROADCAST_TREE)
+	if err != nil {
+		return nil, err
+	}
+	broadcastTreeRouting, err := NewBroadcastTreeRouting(ovl.LocalMsgChan, broadcastTreeRxMsgChan, c)
+	if err != nil {
+		return nil, err
+	}
+	err = ovl.AddRouter(protobuf.BROADCAST_TREE, broadcastTreeRouting)
 	if err != nil {
 		return nil, err
 	}

@@ -20,7 +20,9 @@ option (gogoproto.populate_all) = true;
 enum RoutingType {
   DIRECT = 0;
   RELAY = 1;
-  BROADCAST = 2;
+  BROADCAST_PUSH = 2;
+  BROADCAST_PULL = 3; // to be implemented
+  BROADCAST_TREE = 4;
 }
 
 enum MessageType {

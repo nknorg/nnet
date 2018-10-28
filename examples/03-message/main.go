@@ -1,9 +1,9 @@
-// This example shows how to mix different transport protocols and have nodes
-// with tcp and kcp running in the network at the same time
-//
+// This example shows how to send and receive arbitrary byte messages.
+
 // Run with default options: go run main.go
-//
+
 // Show usage: go run main.go -h
+
 package main
 
 import (
@@ -39,8 +39,8 @@ func create(transport string, port uint16, id []byte) (*nnet.NNet, error) {
 }
 
 func main() {
-	numNodesPtr := flag.Int("n", 10, "number of nodes")
 	transportPtr := flag.String("t", "tcp", "transport type, tcp or kcp")
+	numNodesPtr := flag.Int("n", 10, "number of nodes")
 	flag.Parse()
 
 	if *numNodesPtr < 1 {
@@ -52,7 +52,6 @@ func main() {
 	var nn *nnet.NNet
 	var id []byte
 	var err error
-	var ok bool
 
 	nnets := make([]*nnet.NNet, 0)
 
@@ -83,12 +82,12 @@ func main() {
 
 				case protobuf.RELAY:
 					log.Infof("Receive relay message \"%s\" from %x", string(msgBody.Data), remoteMessage.Msg.SrcId)
-					ok, err = nn.SendBytesRelayReply(remoteMessage.Msg.MessageId, []byte("Well received!"), remoteMessage.Msg.SrcId)
-					if !ok || err != nil {
+					_, err = nn.SendBytesRelayReply(remoteMessage.Msg.MessageId, []byte("Well received!"), remoteMessage.Msg.SrcId)
+					if err != nil {
 						log.Error(err)
 					}
 
-				case protobuf.BROADCAST:
+				case protobuf.BROADCAST_PUSH:
 					log.Infof("Receive broadcast message \"%s\" from %x", string(msgBody.Data), remoteMessage.Msg.SrcId)
 				}
 
@@ -131,8 +130,11 @@ func main() {
 		log.Infof("Sending broadcast message in %d seconds", i)
 		time.Sleep(time.Second)
 	}
-	ok, err = nnets[0].SendBytesBroadcastAsync([]byte("This message should be received by EVERYONE multiple times!"))
-	if !ok || err != nil {
+	_, err = nnets[0].SendBytesBroadcastAsync(
+		[]byte("This message should be received by EVERYONE multiple times!"),
+		protobuf.BROADCAST_PUSH,
+	)
+	if err != nil {
 		log.Error(err)
 		return
 	}
@@ -142,8 +144,8 @@ func main() {
 		log.Infof("Sending relay message in %d seconds", i)
 		time.Sleep(time.Second)
 	}
-	reply, ok, err := nnets[0].SendBytesRelaySync([]byte("This message should only be received by SOMEONE!"), id)
-	if !ok || err != nil {
+	reply, _, err := nnets[0].SendBytesRelaySync([]byte("This message should only be received by SOMEONE!"), id)
+	if err != nil {
 		log.Error(err)
 		return
 	}

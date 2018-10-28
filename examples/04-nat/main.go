@@ -1,12 +1,13 @@
 // This example shows how to setup NAT traversal. The example uses go-nat
 // package, which only works for routers that support UPnP and NAT-PMP protocol.
-//
+
 // You may need to get go-nat package by `go get github.com/nknorg/go-nat` in
 // order to run this example.
-//
+
 // Run with default options: go run main.go
-//
+
 // Show usage: go run main.go -h
+
 package main
 
 import (
@@ -22,9 +23,9 @@ import (
 )
 
 func main() {
+	transportPtr := flag.String("t", "tcp", "transport type, tcp or kcp")
 	externalPortPtr := flag.Uint("e", 10086, "external port to map from")
 	internalPortPtr := flag.Uint("i", 12580, "internal port to map to")
-	transportPtr := flag.String("t", "tcp", "transport type, tcp or kcp")
 	flag.Parse()
 
 	conf := &nnet.Config{

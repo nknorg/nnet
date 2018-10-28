@@ -9,7 +9,7 @@ import (
 
 const (
 	// RelayRoutingNumWorkers determines how many concurrent goroutines are
-	// handling Relay messages
+	// handling relay messages
 	RelayRoutingNumWorkers = 1
 )
 
@@ -27,50 +27,50 @@ func NewRelayRouting(localMsgChan chan<- *node.RemoteMessage, rxMsgChan <-chan *
 		return nil, err
 	}
 
-	dr := &RelayRouting{
+	rr := &RelayRouting{
 		Routing: r,
 		chord:   chord,
 	}
 
-	return dr, nil
+	return rr, nil
 }
 
 // Start starts handling relay message from rxChan
-func (dr *RelayRouting) Start() error {
-	return dr.Routing.Start(dr, RelayRoutingNumWorkers)
+func (rr *RelayRouting) Start() error {
+	return rr.Routing.Start(rr, RelayRoutingNumWorkers)
 }
 
 // GetNodeToRoute returns the local node and remote nodes to route message to
-func (dr *RelayRouting) GetNodeToRoute(remoteMsg *node.RemoteMessage) (*node.LocalNode, []*node.RemoteNode, error) {
-	succ := dr.chord.successors.GetFirst()
+func (rr *RelayRouting) GetNodeToRoute(remoteMsg *node.RemoteMessage) (*node.LocalNode, []*node.RemoteNode, error) {
+	succ := rr.chord.successors.GetFirst()
 	if succ == nil {
 		return nil, nil, errors.New("Local node has no successor yet")
 	}
 
-	if betweenLeftIncl(dr.chord.LocalNode.Id, succ.Id, remoteMsg.Msg.DestId) {
-		return dr.chord.LocalNode, nil, nil
+	if betweenLeftIncl(rr.chord.LocalNode.Id, succ.Id, remoteMsg.Msg.DestId) {
+		return rr.chord.LocalNode, nil, nil
 	}
 
 	nextHop := succ
-	minDist := distance(succ.Id, remoteMsg.Msg.DestId, dr.chord.nodeIDBits)
+	minDist := distance(succ.Id, remoteMsg.Msg.DestId, rr.chord.nodeIDBits)
 
-	for _, remoteNode := range dr.chord.successors.ToRemoteNodeList(false) {
+	for _, remoteNode := range rr.chord.successors.ToRemoteNodeList(false) {
 		if remoteNode == remoteMsg.RemoteNode {
 			continue
 		}
-		dist := distance(remoteNode.Id, remoteMsg.Msg.DestId, dr.chord.nodeIDBits)
+		dist := distance(remoteNode.Id, remoteMsg.Msg.DestId, rr.chord.nodeIDBits)
 		if dist.Cmp(minDist) < 0 {
 			nextHop = remoteNode
 			minDist = dist
 		}
 	}
 
-	for _, finger := range dr.chord.fingerTable {
+	for _, finger := range rr.chord.fingerTable {
 		for _, remoteNode := range finger.ToRemoteNodeList(false) {
 			if remoteNode == remoteMsg.RemoteNode {
 				continue
 			}
-			dist := distance(remoteNode.Id, remoteMsg.Msg.DestId, dr.chord.nodeIDBits)
+			dist := distance(remoteNode.Id, remoteMsg.Msg.DestId, rr.chord.nodeIDBits)
 			if dist.Cmp(minDist) < 0 {
 				nextHop = remoteNode
 				minDist = dist

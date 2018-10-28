@@ -1,8 +1,9 @@
-// This example shows how to interact with nnet by middlewares
-//
+// This example shows how to interact with nnet by middlewares.
+
 // Run with default options: go run main.go
-//
+
 // Show usage: go run main.go -h
+
 package main
 
 import (
@@ -36,8 +37,8 @@ func create(transport string, port uint16) (*nnet.NNet, error) {
 }
 
 func main() {
-	numNodesPtr := flag.Int("n", 10, "number of nodes")
 	transportPtr := flag.String("t", "tcp", "transport type, tcp or kcp")
+	numNodesPtr := flag.Int("n", 10, "number of nodes")
 	flag.Parse()
 
 	if *numNodesPtr < 1 {
