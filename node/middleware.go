@@ -4,14 +4,21 @@ import (
 	"errors"
 )
 
-// LocalNodeWillStart is called right before local node start listening and
-// handling messages. It can be used to add additional data to local node, set
-// up NAT port mapping, etc.
+// LocalNodeWillStart is called right before local node starts listening and
+// handling messages. It can be used to add additional data to local node, etc.
 type LocalNodeWillStart func(*LocalNode) bool
 
-// LocalNodeStarted is called right after local node start listening and
+// LocalNodeStarted is called right after local node starts listening and
 // handling messages.
 type LocalNodeStarted func(*LocalNode) bool
+
+// LocalNodeWillStop is called right before local node stops listening and
+// handling messages.
+type LocalNodeWillStop func(*LocalNode) bool
+
+// LocalNodeStopped is called right after local node stops listening and
+// handling messages.
+type LocalNodeStopped func(*LocalNode) bool
 
 // RemoteNodeConnected is called when a connection is established with a remote
 // node, but the remote node id is typically nil, so it's not a good time to use
@@ -34,6 +41,8 @@ type RemoteNodeDisconnected func(*RemoteNode) bool
 type middlewareStore struct {
 	localNodeWillStart     []LocalNodeWillStart
 	localNodeStarted       []LocalNodeStarted
+	localNodeWillStop      []LocalNodeWillStop
+	localNodeStopped       []LocalNodeStopped
 	remoteNodeConnected    []RemoteNodeConnected
 	remoteNodeReady        []RemoteNodeReady
 	remoteNodeDisconnected []RemoteNodeDisconnected
@@ -44,6 +53,8 @@ func newMiddlewareStore() *middlewareStore {
 	return &middlewareStore{
 		localNodeWillStart:     make([]LocalNodeWillStart, 0),
 		localNodeStarted:       make([]LocalNodeStarted, 0),
+		localNodeWillStop:      make([]LocalNodeWillStop, 0),
+		localNodeStopped:       make([]LocalNodeStopped, 0),
 		remoteNodeConnected:    make([]RemoteNodeConnected, 0),
 		remoteNodeReady:        make([]RemoteNodeReady, 0),
 		remoteNodeDisconnected: make([]RemoteNodeDisconnected, 0),
@@ -63,6 +74,16 @@ func (store *middlewareStore) ApplyMiddleware(f interface{}) error {
 			return errors.New("middleware is nil")
 		}
 		store.localNodeStarted = append(store.localNodeStarted, f)
+	case LocalNodeWillStop:
+		if f == nil {
+			return errors.New("middleware is nil")
+		}
+		store.localNodeWillStop = append(store.localNodeWillStop, f)
+	case LocalNodeStopped:
+		if f == nil {
+			return errors.New("middleware is nil")
+		}
+		store.localNodeStopped = append(store.localNodeStopped, f)
 	case RemoteNodeConnected:
 		if f == nil {
 			return errors.New("middleware is nil")

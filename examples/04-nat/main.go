@@ -1,6 +1,7 @@
 // This example shows how to setup NAT traversal. The example uses go-nat
 // package, which only works for routers that support UPnP and NAT-PMP protocol.
-// NAT traversal can also be set up in middlewares such as LocalNodeWillStart.
+// NAT traversal can also be set up in middlewares such as NetworkWillStart and
+// LocalNodeWillStart.
 
 // You may need to get go-nat package by `go get github.com/nknorg/go-nat` in
 // order to run this example.
@@ -48,7 +49,7 @@ func main() {
 	transportProtocol := transport.GetNetwork()
 
 	// Begin of NAT setup
-	// This can also be done in a localNodeWillStart middleware
+	// This can also be done in middleware like NetworkWillStart or LocalNodeWillStart
 	// ==========================================================================
 	log.Info("Discovering NAT gateway...")
 

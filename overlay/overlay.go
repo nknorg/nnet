@@ -19,18 +19,6 @@ const (
 	replyTimeout = 5 * time.Second
 )
 
-// Network is the overlay network interface
-type Network interface {
-	Start() error
-	Stop(error)
-	Join(seedNodeAddr string) error
-	GetLocalNode() *node.LocalNode
-	GetRouters() []routing.Router
-	ApplyMiddleware(interface{}) error
-	SendMessageAsync(msg *protobuf.Message, routingType protobuf.RoutingType) (success bool, err error)
-	SendMessageSync(msg *protobuf.Message, routingType protobuf.RoutingType) (reply *protobuf.Message, success bool, err error)
-}
-
 // Overlay is an abstract overlay network
 type Overlay struct {
 	LocalNode    *node.LocalNode

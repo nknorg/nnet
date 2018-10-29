@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/nknorg/nnet/node"
+	"github.com/nknorg/nnet/overlay"
 )
 
 // SuccessorAdded is called when a new remote node has been added to the
@@ -65,6 +66,10 @@ type NeighborRemoved func(*node.RemoteNode) bool
 // middlewareStore stores the functions that will be called when certain events
 // are triggered or in some pipeline
 type middlewareStore struct {
+	networkWillStart   []overlay.NetworkWillStart
+	networkStarted     []overlay.NetworkStarted
+	networkWillStop    []overlay.NetworkWillStop
+	networkStopped     []overlay.NetworkStopped
 	successorAdded     []SuccessorAdded
 	successorRemoved   []SuccessorRemoved
 	predecessorAdded   []PredecessorAdded
@@ -78,6 +83,10 @@ type middlewareStore struct {
 // newMiddlewareStore creates a middlewareStore
 func newMiddlewareStore() *middlewareStore {
 	return &middlewareStore{
+		networkWillStart:   make([]overlay.NetworkWillStart, 0),
+		networkStarted:     make([]overlay.NetworkStarted, 0),
+		networkWillStop:    make([]overlay.NetworkWillStop, 0),
+		networkStopped:     make([]overlay.NetworkStopped, 0),
 		successorAdded:     make([]SuccessorAdded, 0),
 		successorRemoved:   make([]SuccessorRemoved, 0),
 		predecessorAdded:   make([]PredecessorAdded, 0),
@@ -92,6 +101,26 @@ func newMiddlewareStore() *middlewareStore {
 // ApplyMiddleware add a middleware to the store
 func (store *middlewareStore) ApplyMiddleware(f interface{}) error {
 	switch f := f.(type) {
+	case overlay.NetworkWillStart:
+		if f == nil {
+			return errors.New("middleware is nil")
+		}
+		store.networkWillStart = append(store.networkWillStart, f)
+	case overlay.NetworkStarted:
+		if f == nil {
+			return errors.New("middleware is nil")
+		}
+		store.networkStarted = append(store.networkStarted, f)
+	case overlay.NetworkWillStop:
+		if f == nil {
+			return errors.New("middleware is nil")
+		}
+		store.networkWillStop = append(store.networkWillStop, f)
+	case overlay.NetworkStopped:
+		if f == nil {
+			return errors.New("middleware is nil")
+		}
+		store.networkStopped = append(store.networkStopped, f)
 	case SuccessorAdded:
 		if f == nil {
 			return errors.New("middleware is nil")

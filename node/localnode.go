@@ -126,6 +126,12 @@ func (ln *LocalNode) Start() error {
 // Stop stops the local node
 func (ln *LocalNode) Stop(err error) {
 	ln.StopOnce.Do(func() {
+		for _, f := range ln.middlewareStore.localNodeWillStop {
+			if !f(ln) {
+				break
+			}
+		}
+
 		if err != nil {
 			log.Warningf("Local node %v stops because of error: %s", ln, err)
 		} else {
@@ -146,6 +152,12 @@ func (ln *LocalNode) Stop(err error) {
 
 		if ln.listener != nil {
 			ln.listener.Close()
+		}
+
+		for _, f := range ln.middlewareStore.localNodeStopped {
+			if !f(ln) {
+				break
+			}
 		}
 	})
 }

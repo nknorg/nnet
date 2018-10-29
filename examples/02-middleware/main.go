@@ -1,4 +1,6 @@
-// This example shows how to interact with nnet by middlewares.
+// This example shows how to interact with nnet by middlewares. This example
+// only shows a few middlewares, please see the document for a complete list of
+// middlewares.
 
 // Run with default options: go run main.go
 
@@ -18,6 +20,7 @@ import (
 	"github.com/nknorg/nnet"
 	"github.com/nknorg/nnet/log"
 	"github.com/nknorg/nnet/node"
+	"github.com/nknorg/nnet/overlay"
 	"github.com/nknorg/nnet/overlay/chord"
 )
 
@@ -54,6 +57,26 @@ func main() {
 		log.Error(err)
 		return
 	}
+
+	nn.MustApplyMiddleware(overlay.NetworkWillStart(func(network overlay.Network) bool {
+		log.Infof("Network will start")
+		return true
+	}))
+
+	nn.MustApplyMiddleware(overlay.NetworkStarted(func(network overlay.Network) bool {
+		log.Infof("Network started")
+		return true
+	}))
+
+	nn.MustApplyMiddleware(overlay.NetworkWillStop(func(network overlay.Network) bool {
+		log.Infof("Network will stop")
+		return true
+	}))
+
+	nn.MustApplyMiddleware(overlay.NetworkStopped(func(network overlay.Network) bool {
+		log.Infof("Network stopped")
+		return true
+	}))
 
 	nn.MustApplyMiddleware(node.RemoteNodeConnected(func(remoteNode *node.RemoteNode) bool {
 		log.Infof("Remote node connected: %v", remoteNode)

@@ -159,11 +159,6 @@ func NewChord(localNode *node.LocalNode, conf *config.Config) (*Chord, error) {
 
 // Start starts the runtime loop of the chord network
 func (c *Chord) Start() error {
-	err := c.LocalNode.Start()
-	if err != nil {
-		return err
-	}
-
 	c.StartOnce.Do(func() {
 		var joinOnce sync.Once
 
@@ -192,15 +187,35 @@ func (c *Chord) Start() error {
 		}))
 		if err != nil {
 			c.Stop(err)
+			return
+		}
+
+		for _, f := range c.middlewareStore.networkWillStart {
+			if !f(c) {
+				break
+			}
+		}
+
+		err = c.StartRouters()
+		if err != nil {
+			c.Stop(err)
+			return
 		}
 
 		for i := 0; i < numWorkers; i++ {
 			go c.handleMsg()
 		}
 
-		err = c.StartRouters()
+		err = c.LocalNode.Start()
 		if err != nil {
 			c.Stop(err)
+			return
+		}
+
+		for _, f := range c.middlewareStore.networkStarted {
+			if !f(c) {
+				break
+			}
 		}
 	})
 
@@ -210,6 +225,12 @@ func (c *Chord) Start() error {
 // Stop stops the chord network
 func (c *Chord) Stop(err error) {
 	c.StopOnce.Do(func() {
+		for _, f := range c.middlewareStore.networkWillStop {
+			if !f(c) {
+				break
+			}
+		}
+
 		if err != nil {
 			log.Warningf("Chord overlay stops because of error: %s", err)
 		} else {
@@ -225,6 +246,12 @@ func (c *Chord) Stop(err error) {
 		c.LifeCycle.Stop()
 
 		c.StopRouters(err)
+
+		for _, f := range c.middlewareStore.networkStopped {
+			if !f(c) {
+				break
+			}
+		}
 	})
 }
 
