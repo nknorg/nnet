@@ -1,5 +1,6 @@
 // This example shows how to setup NAT traversal. The example uses go-nat
 // package, which only works for routers that support UPnP and NAT-PMP protocol.
+// NAT traversal can also be set up in middlewares such as LocalNodeWillStart.
 
 // You may need to get go-nat package by `go get github.com/nknorg/go-nat` in
 // order to run this example.
@@ -64,6 +65,8 @@ func main() {
 		log.Error(err)
 		return
 	}
+
+	defer nat.DeletePortMapping(transportProtocol, int(*externalPortPtr))
 
 	log.Infof("Mapped external port %d to internal port %d", externalPort, internalPort)
 

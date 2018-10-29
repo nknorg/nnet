@@ -1,6 +1,8 @@
 package routing
 
 import (
+	"bytes"
+
 	"github.com/nknorg/nnet/node"
 )
 
@@ -44,7 +46,7 @@ func (br *BroadcastRouting) GetNodeToRoute(remoteMsg *node.RemoteMessage) (*node
 	}
 
 	nonSenderNeighbors, err := br.localNode.GetNeighbors(func(rn *node.RemoteNode) bool {
-		return rn != remoteMsg.RemoteNode
+		return rn != remoteMsg.RemoteNode && !bytes.Equal(rn.Id, remoteMsg.Msg.SrcId)
 	})
 	if err != nil {
 		return nil, nil, err

@@ -122,8 +122,13 @@ func (r *Routing) SendMessage(router Router, remoteMsg *node.RemoteMessage, hasR
 	return replyChan, success, nil
 }
 
-// handleLocalMsg handles msg sent to local node
+// sendMessageToLocalNode handles msg sent to local node
 func (r *Routing) sendMessageToLocalNode(remoteMsg *node.RemoteMessage, localNode *node.LocalNode) error {
+	added, err := localNode.AddToRxCache(remoteMsg)
+	if !added || err != nil {
+		return err
+	}
+
 	var shouldCallNextMiddleware bool
 
 	for _, f := range r.middlewareStore.remoteMessageReceived {

@@ -22,6 +22,12 @@ const (
 	// Max number of msg to be processed that can be buffered
 	handleMsgChanLen = 23333
 
+	// How long a received message id stays in cache before expiration
+	rxMsgCacheExpiration = 60 * time.Second
+
+	// How often to check and delete expired received message id
+	rxMsgCacheCleanupInterval = 10 * time.Second
+
 	// How long a reply chan becomes expired after created
 	replyChanExpiration = replyTimeout
 
@@ -38,8 +44,9 @@ type LocalNode struct {
 	address        *transport.Address
 	port           uint16
 	listener       net.Listener
-	rxMsgChan      map[protobuf.RoutingType]chan *RemoteMessage
 	handleMsgChan  chan *RemoteMessage
+	rxMsgChan      map[protobuf.RoutingType]chan *RemoteMessage
+	rxMsgCache     cache.Cache
 	replyChanCache cache.Cache
 	neighbors      sync.Map
 	*middlewareStore
@@ -64,12 +71,14 @@ func NewLocalNode(id []byte, conf *config.Config) (*LocalNode, error) {
 		return nil, err
 	}
 
+	handleMsgChan := make(chan *RemoteMessage, handleMsgChanLen)
+
 	rxMsgChan := make(map[protobuf.RoutingType]chan *RemoteMessage)
 	for routingType := range protobuf.RoutingType_name {
 		rxMsgChan[protobuf.RoutingType(routingType)] = make(chan *RemoteMessage, rxMsgChanLen)
 	}
 
-	handleMsgChan := make(chan *RemoteMessage, handleMsgChanLen)
+	rxMsgCache := cache.NewGoCache(rxMsgCacheExpiration, rxMsgCacheCleanupInterval)
 
 	replyChanCache := cache.NewGoCache(replyChanExpiration, replyChanCleanupInterval)
 
@@ -79,8 +88,9 @@ func NewLocalNode(id []byte, conf *config.Config) (*LocalNode, error) {
 		Node:            node,
 		address:         address,
 		port:            port,
-		rxMsgChan:       rxMsgChan,
 		handleMsgChan:   handleMsgChan,
+		rxMsgChan:       rxMsgChan,
+		rxMsgCache:      rxMsgCache,
 		replyChanCache:  replyChanCache,
 		middlewareStore: middlewareStore,
 	}
@@ -338,6 +348,18 @@ func (ln *LocalNode) GetReplyChan(msgID []byte) (chan *RemoteMessage, bool) {
 	}
 
 	return replyChan, true
+}
+
+// AddToRxCache add RemoteMessage id to rxMsgCache if not exists. Returns if msg
+// id is added (instead of loaded) and error when adding
+func (ln *LocalNode) AddToRxCache(remoteMsg *RemoteMessage) (bool, error) {
+	_, found := ln.rxMsgCache.Get(remoteMsg.Msg.MessageId)
+	if found {
+		return false, nil
+	}
+
+	err := ln.rxMsgCache.Add(remoteMsg.Msg.MessageId, struct{}{})
+	return true, err
 }
 
 // HandleRemoteMessage add remoteMsg to handleMsgChan for further processing

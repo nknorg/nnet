@@ -33,11 +33,11 @@ const (
 	// Max idle time before considering node dead and closing connection
 	keepAliveTimeout = 10 * time.Second
 
-	// How long a sent message stays in cache before expiration
+	// How long a sent message id stays in cache before expiration
 	txMsgCacheExpiration = 60 * time.Second
 
 	// How often to check and delete expired sent message
-	txMsgCacheCleanupInterval = 1 * time.Second
+	txMsgCacheCleanupInterval = 10 * time.Second
 
 	// A grace period that allows remote node to send messages in queue
 	stopGracePeriod = 100 * time.Millisecond

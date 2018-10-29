@@ -1,6 +1,8 @@
 package chord
 
 import (
+	"bytes"
+
 	"github.com/nknorg/nnet/node"
 	"github.com/nknorg/nnet/overlay/routing"
 )
@@ -52,7 +54,7 @@ func (btr *BroadcastTreeRouting) GetNodeToRoute(remoteMsg *node.RemoteMessage) (
 
 	for i := 0; i < maxIdx; i++ {
 		for _, remoteNode := range btr.chord.fingerTable[i].ToRemoteNodeList(false) {
-			if remoteNode != remoteMsg.RemoteNode {
+			if remoteNode != remoteMsg.RemoteNode && !bytes.Equal(remoteNode.Id, remoteMsg.Msg.SrcId) {
 				remoteNodes = append(remoteNodes, remoteNode)
 			}
 		}

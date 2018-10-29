@@ -131,7 +131,7 @@ func main() {
 		time.Sleep(time.Second)
 	}
 	_, err = nnets[0].SendBytesBroadcastAsync(
-		[]byte("This message should be received by EVERYONE multiple times!"),
+		[]byte("This message should be received by EVERYONE!"),
 		protobuf.BROADCAST_PUSH,
 	)
 	if err != nil {

@@ -88,8 +88,8 @@ func main() {
 			return
 		}
 
-		nn.MustApplyMiddleware(routing.RemoteMessageReceived(func(remoteMessage *node.RemoteMessage) (*node.RemoteMessage, bool) {
-			if remoteMessage.Msg.MessageType == protobuf.BYTES && remoteMessage.Msg.ReplyToId == nil {
+		nn.MustApplyMiddleware(routing.RemoteMessageRouted(func(remoteMessage *node.RemoteMessage, localNode *node.LocalNode, remoteNodes []*node.RemoteNode) (*node.RemoteMessage, *node.LocalNode, []*node.RemoteNode, bool) {
+			if remoteMessage.Msg.MessageType == protobuf.BYTES {
 				msgBody := &protobuf.Bytes{}
 				err = proto.Unmarshal(remoteMessage.Msg.Message, msgBody)
 				if err != nil {
@@ -106,10 +106,8 @@ func main() {
 					log.Infof("Receive broadcast tree message \"%s\" from %x", string(msgBody.Data), remoteMessage.Msg.SrcId)
 				}
 				msgCountLock.Unlock()
-
-				return nil, false
 			}
-			return remoteMessage, true
+			return remoteMessage, localNode, remoteNodes, true
 		}))
 
 		nnets = append(nnets, nn)
