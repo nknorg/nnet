@@ -1,6 +1,6 @@
-// This example shows how to interact with nnet by middlewares. This example
-// only shows a few middlewares, please see the document for a complete list of
-// middlewares.
+// This example shows how to interact with nnet by middleware. This example only
+// shows a few middleware, please see the document for a complete list of
+// middleware.
 
 // Run with default options: go run main.go
 

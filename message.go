@@ -101,20 +101,27 @@ func (nn *NNet) SendBytesDirectAsync(data []byte, remoteNode *node.RemoteNode) e
 	return remoteNode.SendMessageAsync(msg)
 }
 
-// SendBytesDirectSync sends bytes data to a remote node, returns reply message
-// or error if timeout
-func (nn *NNet) SendBytesDirectSync(data []byte, remoteNode *node.RemoteNode) (*protobuf.Message, error) {
+// SendBytesDirectSync sends bytes data to a remote node, returns reply message,
+// RemoteNode that sends the reply and error. Will also returns an error if
+// doesn't receive a reply before timeout.
+func (nn *NNet) SendBytesDirectSync(data []byte, remoteNode *node.RemoteNode) ([]byte, *node.RemoteNode, error) {
 	msg, err := NewDirectBytesMessage(data)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	reply, err := remoteNode.SendMessageSync(msg)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return reply.Msg, nil
+	replyBody := &protobuf.Bytes{}
+	err = proto.Unmarshal(reply.Msg.Message, replyBody)
+	if err != nil {
+		return nil, reply.RemoteNode, err
+	}
+
+	return replyBody.Data, reply.RemoteNode, nil
 }
 
 // SendBytesDirectReply is the same as SendBytesDirectAsync but with the
@@ -144,17 +151,27 @@ func (nn *NNet) SendBytesRelayAsync(data, key []byte) (bool, error) {
 }
 
 // SendBytesRelaySync sends bytes data to the remote node that has smallest
-// distance to the key, returns reply message, if send success (which is true if
-// successfully send message to at least one next hop), and aggregated error
-// during message sending, will also returns error if doesn't receive any reply
-// before timeout
-func (nn *NNet) SendBytesRelaySync(data, key []byte) (*protobuf.Message, bool, error) {
+// distance to the key, returns reply message, node ID who sends the reply, and
+// aggregated error during message sending and receiving, will also returns
+// error if doesn't receive any reply before timeout
+func (nn *NNet) SendBytesRelaySync(data, key []byte) ([]byte, []byte, error) {
 	msg, err := NewRelayBytesMessage(data, nn.GetLocalNode().Id, key)
 	if err != nil {
-		return nil, false, err
+		return nil, nil, err
 	}
 
-	return nn.SendMessageSync(msg, protobuf.RELAY)
+	reply, _, err := nn.SendMessageSync(msg, protobuf.RELAY)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	replyBody := &protobuf.Bytes{}
+	err = proto.Unmarshal(reply.Message, replyBody)
+	if err != nil {
+		return nil, reply.SrcId, err
+	}
+
+	return replyBody.Data, reply.SrcId, nil
 }
 
 // SendBytesRelayReply is the same as SendBytesRelayAsync but with the
@@ -184,24 +201,36 @@ func (nn *NNet) SendBytesBroadcastAsync(data []byte, routingType protobuf.Routin
 }
 
 // SendBytesBroadcastSync sends bytes data to EVERY remote node in the network
-// (not just neighbors), returns reply message, if send success (which is true
-// if successfully send message to at least one next hop), and aggregated error
-// during message sending, will also returns error if doesn't receive any reply
-// before timeout. Broadcast msg reply should be handled VERY carefully with
-// some sort of sender identity verification, otherwise it may be used to DDoS
-// attack sender with HUGE amplification factor
-func (nn *NNet) SendBytesBroadcastSync(data []byte, routingType protobuf.RoutingType) (*protobuf.Message, bool, error) {
+// (not just neighbors), returns reply message, node ID who sends the reply, and
+// aggregated error during message sending, will also returns error if doesn't
+// receive any reply before timeout. Broadcast msg reply should be handled VERY
+// carefully with some sort of sender identity verification, otherwise it may be
+// used to DDoS attack sender with HUGE amplification factor.
+func (nn *NNet) SendBytesBroadcastSync(data []byte, routingType protobuf.RoutingType) ([]byte, []byte, error) {
 	msg, err := NewBroadcastBytesMessage(data, nn.GetLocalNode().Id, routingType)
 	if err != nil {
-		return nil, false, err
+		return nil, nil, err
 	}
 
-	return nn.SendMessageSync(msg, routingType)
+	reply, _, err := nn.SendMessageSync(msg, routingType)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	replyBody := &protobuf.Bytes{}
+	err = proto.Unmarshal(reply.Message, replyBody)
+	if err != nil {
+		return nil, reply.SrcId, err
+	}
+
+	return replyBody.Data, reply.SrcId, nil
 }
 
 // SendBytesBroadcastReply is the same as SendBytesBroadcastAsync but with the
-// replyToId field of the message set. This should NOT be used unless msg src id
-// is unknown.
+// replyToId field of the message set. Broadcast msg reply should be handled
+// VERY carefully with some sort of sender identity verification, otherwise it
+// may be used to DDoS attack sender with HUGE amplification factor. This should
+// NOT be used unless msg src id is unknown.
 func (nn *NNet) SendBytesBroadcastReply(replyToID, data []byte, routingType protobuf.RoutingType) (bool, error) {
 	msg, err := NewBroadcastBytesMessage(data, nn.GetLocalNode().Id, routingType)
 	if err != nil {

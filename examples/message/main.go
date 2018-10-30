@@ -13,7 +13,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/nknorg/nnet"
 	"github.com/nknorg/nnet/log"
 	"github.com/nknorg/nnet/node"
@@ -126,17 +125,12 @@ func main() {
 		log.Infof("Sending relay message in %d seconds", i)
 		time.Sleep(time.Second)
 	}
-	reply, _, err := nnets[0].SendBytesRelaySync([]byte("This message should only be received by SOMEONE!"), id)
+	reply, senderID, err := nnets[0].SendBytesRelaySync([]byte("This message should only be received by SOMEONE!"), id)
 	if err != nil {
 		log.Error(err)
 		return
 	}
-	msgBody := &protobuf.Bytes{}
-	err = proto.Unmarshal(reply.Message, msgBody)
-	if err != nil {
-		log.Error(err)
-	}
-	log.Infof("Receive reply message \"%s\" from %x", string(msgBody.Data), reply.SrcId)
+	log.Infof("Receive reply message \"%s\" from %x", string(reply), senderID)
 
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)

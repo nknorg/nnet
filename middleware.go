@@ -2,7 +2,9 @@ package nnet
 
 import "github.com/nknorg/nnet/util"
 
-// ApplyMiddleware add a middleware to overlay or local node
+// ApplyMiddleware add a middleware to node, network, router, etc. If multiple
+// middleware of the same type are applied, they will be called in the order of
+// being added.
 func (nn *NNet) ApplyMiddleware(f interface{}) error {
 	applied := false
 	errs := util.NewErrors()
@@ -38,7 +40,8 @@ func (nn *NNet) ApplyMiddleware(f interface{}) error {
 }
 
 // MustApplyMiddleware is the same as ApplyMiddleware, but will panic if an
-// error occurs
+// error occurs. This is a convenient shortcut if ApplyMiddleware is not
+// expected to fail.
 func (nn *NNet) MustApplyMiddleware(f interface{}) {
 	err := nn.ApplyMiddleware(f)
 	if err != nil {

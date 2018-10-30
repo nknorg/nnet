@@ -129,7 +129,7 @@ func (ovl *Overlay) SendMessageAsync(msg *protobuf.Message, routingType protobuf
 func (ovl *Overlay) SendMessageSync(msg *protobuf.Message, routingType protobuf.RoutingType) (*protobuf.Message, bool, error) {
 	replyChan, success, err := ovl.SendMessage(msg, routingType, true)
 	if !success {
-		return nil, success, err
+		return nil, false, err
 	}
 
 	select {

@@ -132,7 +132,7 @@ func (rn *RemoteNode) Start() error {
 				return true
 			})
 			if existing != nil {
-				rn.Stop(fmt.Errorf("Node with id %x is already connected at new addr %s", existing.Id, existing.conn.RemoteAddr().String()))
+				rn.Stop(fmt.Errorf("Node with id %x is already connected at addr %s", existing.Id, existing.conn.RemoteAddr().String()))
 				return
 			}
 
