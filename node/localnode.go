@@ -74,9 +74,6 @@ func NewLocalNode(id []byte, conf *config.Config) (*LocalNode, error) {
 	handleMsgChan := make(chan *RemoteMessage, handleMsgChanLen)
 
 	rxMsgChan := make(map[protobuf.RoutingType]chan *RemoteMessage)
-	for routingType := range protobuf.RoutingType_name {
-		rxMsgChan[protobuf.RoutingType(routingType)] = make(chan *RemoteMessage, rxMsgChanLen)
-	}
 
 	rxMsgCache := cache.NewGoCache(rxMsgCacheExpiration, rxMsgCacheCleanupInterval)
 
@@ -93,6 +90,10 @@ func NewLocalNode(id []byte, conf *config.Config) (*LocalNode, error) {
 		rxMsgCache:      rxMsgCache,
 		replyChanCache:  replyChanCache,
 		middlewareStore: middlewareStore,
+	}
+
+	for routingType := range protobuf.RoutingType_name {
+		localNode.RegisterRoutingType(protobuf.RoutingType(routingType))
 	}
 
 	return localNode, nil
@@ -324,6 +325,11 @@ func (ln *LocalNode) StartRemoteNode(conn net.Conn, isOutbound bool) (*RemoteNod
 	}
 
 	return remoteNode, nil
+}
+
+// RegisterRoutingType register a routing type and creates the rxMsgChan for it
+func (ln *LocalNode) RegisterRoutingType(routingType protobuf.RoutingType) {
+	ln.rxMsgChan[routingType] = make(chan *RemoteMessage, rxMsgChanLen)
 }
 
 // GetRxMsgChan gets the message channel of a routing type, or return error if
