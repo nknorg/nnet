@@ -20,10 +20,17 @@ type Config config.Config
 
 // NewNNet creates a new nnet using the configuration provided
 func NewNNet(id []byte, conf *Config) (*NNet, error) {
-	convertedConf := config.Config(*conf)
-	mergedConf, err := config.MergedConfig(&convertedConf)
-	if err != nil {
-		return nil, err
+	var mergedConf *config.Config
+	var err error
+
+	if conf != nil {
+		convertedConf := config.Config(*conf)
+		mergedConf, err = config.MergedConfig(&convertedConf)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		mergedConf = config.DefaultConfig()
 	}
 
 	if len(id) == 0 {
