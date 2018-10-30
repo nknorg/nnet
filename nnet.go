@@ -15,10 +15,12 @@ type NNet struct {
 	Config *config.Config
 }
 
-// Config is the configuration struct for nnet
+// Config is an alias of config.Config for simpler usage
 type Config config.Config
 
-// NewNNet creates a new nnet using the configuration provided
+// NewNNet creates a new nnet using the local node id and configuration
+// provided. If id is nil, a random id will be generated. If conf is nil, the
+// default config will be used.
 func NewNNet(id []byte, conf *Config) (*NNet, error) {
 	var mergedConf *config.Config
 	var err error
