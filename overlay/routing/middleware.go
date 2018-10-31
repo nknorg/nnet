@@ -7,24 +7,26 @@ import (
 )
 
 // RemoteMessageArrived is called when a new remote message arrives and prepare
-// to be handled by the corresponding router. This can be used to process,
-// modify or discard message. Returns the remote message to be used (or nil to
-// discard the message) and if we should proceed to the next middleware.
+// to be handled by the corresponding router. Message with the same message id
+// will each trigger this middleware once. This can be used to process, modify
+// or discard message. Returns the remote message to be used (or nil to discard
+// the message) and if we should proceed to the next middleware.
 type RemoteMessageArrived func(*node.RemoteMessage) (*node.RemoteMessage, bool)
 
 // RemoteMessageRouted is called when the router has computed the node to route
 // (could be the local node, remote nodes, or both), and before the message is
-// dispatched to local or remote nodes. This can be used to process, modify or
+// dispatched to local or remote nodes. Message with the same message id will
+// each trigger this middleware once. This can be used to process, modify or
 // discard message, or change routes. Returns the remote message to be used (or
 // nil to discard the message), local node and remote nodes where the message
 // should be routed to, and if we should proceed to the next middleware.
 type RemoteMessageRouted func(*node.RemoteMessage, *node.LocalNode, []*node.RemoteNode) (*node.RemoteMessage, *node.LocalNode, []*node.RemoteNode, bool)
 
-// RemoteMessageReceived is called when a new remote message is received,
-// routed to local node, and prepare to be handled by local node.
-// This can be used to process, modify or discard message. Returns the remote
-// message to be used (or nil to discard the message) and if we should proceed
-// to the next middleware.
+// RemoteMessageReceived is called when a new remote message is received, routed
+// to local node, and prepare to be handled by local node. Message with the same
+// message id will only trigger this middleware once. This can be used to
+// process, modify or discard message. Returns the remote message to be used (or
+// nil to discard the message) and if we should proceed to the next middleware.
 type RemoteMessageReceived func(*node.RemoteMessage) (*node.RemoteMessage, bool)
 
 // middlewareStore stores the functions that will be called when certain events

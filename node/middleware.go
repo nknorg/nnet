@@ -5,7 +5,8 @@ import (
 )
 
 // BytesReceived is called when local node receive user-defined BYTES message.
-// The argument it accepts are bytes data, message ID (can be used to reply
+// Message with the same message id will only trigger this middleware once. The
+// argument it accepts are bytes data, message ID (can be used to reply
 // message), sender ID, and the neighbor that passes you the message (may be
 // different from the message sneder). Returns the bytes data to be passed in
 // the next middleware and if we should proceed to the next middleware.
