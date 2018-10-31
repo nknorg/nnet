@@ -1,7 +1,6 @@
 package chord
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -495,7 +494,7 @@ func GetSuccAndPred(remoteNode *node.RemoteNode, numSucc, numPred uint32) ([]*pr
 func (c *Chord) FindSuccAndPred(key []byte, numSucc, numPred uint32) ([]*protobuf.Node, []*protobuf.Node, error) {
 	succ := c.successors.GetFirst()
 	if succ == nil {
-		return nil, nil, errors.New("Local node has no successor yet")
+		return []*protobuf.Node{c.LocalNode.Node.Node}, []*protobuf.Node{c.LocalNode.Node.Node}, nil
 	}
 
 	if CompareID(key, c.LocalNode.Id) == 0 || between(c.LocalNode.Id, succ.Id, key) {
