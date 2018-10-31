@@ -1,4 +1,4 @@
-# nnet: a fast, scalable, and developer-friendly p2p network stack in Go
+# nnet: a fast, scalable, and easy-to-use p2p overlay network stack
 
 ## Introduction
 
@@ -303,7 +303,7 @@ nnet will use [go-logging](github.com/op/go-logging) by default.
 
 Welcome to open a [pull request](https://github.com/nknorg/nkn/pulls) if you
 want your project using nnet to be listed here. The project needs to be
-maintained in order to be eligible.
+maintained in order to be listed.
 
 ## Contributing
 
