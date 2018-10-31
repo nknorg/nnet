@@ -18,6 +18,9 @@ import (
 const (
 	// How many concurrent goroutines are handling messages
 	numWorkers = 1
+
+	// Number of retries to find successors when joining
+	joinRetries = 3
 )
 
 // Chord is the overlay network based on Chord DHT
@@ -164,9 +167,18 @@ func (c *Chord) Start() error {
 
 		err := c.ApplyMiddleware(SuccessorAdded(func(remoteNode *node.RemoteNode, index int) bool {
 			joinOnce.Do(func() {
+				var succs []*protobuf.Node
+				var err error
+
 				// prev is used to prevent msg being routed to self
 				prev := prevID(c.LocalNode.Id, c.nodeIDBits)
-				succs, err := c.FindSuccessors(prev, c.successors.Cap())
+
+				for i := 0; i < joinRetries; i++ {
+					succs, err = c.FindSuccessors(prev, c.successors.Cap())
+					if err == nil {
+						break
+					}
+				}
 				if err != nil {
 					c.Stop(fmt.Errorf("Join failed: %s", err))
 					return

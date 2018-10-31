@@ -41,6 +41,9 @@ const (
 
 	// A grace period that allows remote node to send messages in queue
 	stopGracePeriod = 100 * time.Millisecond
+
+	// Number of retries to get remote node when remote node starts
+	startRetries = 3
 )
 
 // RemoteNode is a remote node
@@ -111,7 +114,15 @@ func (rn *RemoteNode) Start() error {
 		go rn.tx()
 
 		go func() {
-			n, err := rn.GetNode()
+			var n *protobuf.Node
+			var err error
+
+			for i := 0; i < startRetries; i++ {
+				n, err = rn.GetNode()
+				if err == nil {
+					break
+				}
+			}
 			if err != nil {
 				rn.Stop(fmt.Errorf("Get node error: %s", err))
 				return
