@@ -23,7 +23,7 @@ const (
 	handleMsgChanLen = 23333
 
 	// How long a received message id stays in cache before expiration
-	rxMsgCacheExpiration = 60 * time.Second
+	rxMsgCacheExpiration = 300 * time.Second
 
 	// How often to check and delete expired received message id
 	rxMsgCacheCleanupInterval = 10 * time.Second
@@ -375,13 +375,13 @@ func (ln *LocalNode) GetReplyChan(msgID []byte) (chan *RemoteMessage, bool) {
 
 // AddToRxCache add RemoteMessage id to rxMsgCache if not exists. Returns if msg
 // id is added (instead of loaded) and error when adding
-func (ln *LocalNode) AddToRxCache(remoteMsg *RemoteMessage) (bool, error) {
-	_, found := ln.rxMsgCache.Get(remoteMsg.Msg.MessageId)
+func (ln *LocalNode) AddToRxCache(msgID []byte) (bool, error) {
+	_, found := ln.rxMsgCache.Get(msgID)
 	if found {
 		return false, nil
 	}
 
-	err := ln.rxMsgCache.Add(remoteMsg.Msg.MessageId, struct{}{})
+	err := ln.rxMsgCache.Add(msgID, struct{}{})
 	return true, err
 }
 

@@ -34,7 +34,7 @@ const (
 	keepAliveTimeout = 10 * time.Second
 
 	// How long a sent message id stays in cache before expiration
-	txMsgCacheExpiration = 60 * time.Second
+	txMsgCacheExpiration = 300 * time.Second
 
 	// How often to check and delete expired sent message
 	txMsgCacheCleanupInterval = 10 * time.Second
@@ -219,6 +219,7 @@ func (rn *RemoteNode) handleMsg() {
 	var msg *protobuf.Message
 	var remoteMsg *RemoteMessage
 	var msgChan chan *RemoteMessage
+	var added bool
 	var err error
 	keepAliveTimeoutTimer := time.NewTimer(keepAliveTimeout)
 
@@ -230,6 +231,15 @@ func (rn *RemoteNode) handleMsg() {
 
 		select {
 		case msg = <-rn.rxMsgChan:
+			added, err = rn.LocalNode.AddToRxCache(msg.MessageId)
+			if err != nil {
+				log.Error(err)
+				continue
+			}
+			if !added {
+				continue
+			}
+
 			remoteMsg, err = NewRemoteMessage(rn, msg)
 			if err != nil {
 				log.Error(err)
