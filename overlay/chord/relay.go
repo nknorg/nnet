@@ -1,8 +1,6 @@
 package chord
 
 import (
-	"errors"
-
 	"github.com/nknorg/nnet/node"
 	"github.com/nknorg/nnet/overlay/routing"
 )
@@ -43,11 +41,7 @@ func (rr *RelayRouting) Start() error {
 // GetNodeToRoute returns the local node and remote nodes to route message to
 func (rr *RelayRouting) GetNodeToRoute(remoteMsg *node.RemoteMessage) (*node.LocalNode, []*node.RemoteNode, error) {
 	succ := rr.chord.successors.GetFirst()
-	if succ == nil {
-		return nil, nil, errors.New("Local node has no successor yet")
-	}
-
-	if betweenLeftIncl(rr.chord.LocalNode.Id, succ.Id, remoteMsg.Msg.DestId) {
+	if succ == nil || betweenLeftIncl(rr.chord.LocalNode.Id, succ.Id, remoteMsg.Msg.DestId) {
 		return rr.chord.LocalNode, nil, nil
 	}
 
