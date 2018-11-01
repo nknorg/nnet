@@ -142,7 +142,7 @@ func (ln *LocalNode) Stop(err error) {
 		ln.neighbors.Range(func(key, value interface{}) bool {
 			remoteNode, ok := value.(*RemoteNode)
 			if ok {
-				go remoteNode.Stop(err)
+				remoteNode.Stop(err)
 			}
 			return true
 		})
