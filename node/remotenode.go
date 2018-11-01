@@ -194,20 +194,20 @@ func (rn *RemoteNode) Stop(err error) {
 			log.Warning("Notify remote node stop error:", err)
 		}
 
-		time.Sleep(stopGracePeriod)
+		time.AfterFunc(stopGracePeriod, func() {
+			rn.LifeCycle.Stop()
 
-		rn.LifeCycle.Stop()
-
-		if rn.conn != nil {
-			rn.LocalNode.neighbors.Delete(rn.conn.RemoteAddr().String())
-			rn.conn.Close()
-		}
-
-		for _, f := range rn.LocalNode.middlewareStore.remoteNodeDisconnected {
-			if !f(rn) {
-				break
+			if rn.conn != nil {
+				rn.LocalNode.neighbors.Delete(rn.conn.RemoteAddr().String())
+				rn.conn.Close()
 			}
-		}
+
+			for _, f := range rn.LocalNode.middlewareStore.remoteNodeDisconnected {
+				if !f(rn) {
+					break
+				}
+			}
+		})
 	})
 }
 

@@ -165,20 +165,23 @@ func (c *Chord) handleRemoteMessage(remoteMsg *node.RemoteMessage) (bool, error)
 			return false, err
 		}
 
-		succs, preds, err := c.FindSuccAndPred(msgBody.Key, msgBody.NumSucc, msgBody.NumPred)
-		if err != nil {
-			return false, err
-		}
+		// TODO: prevent unbounded number of goroutines
+		go func() {
+			succs, preds, err := c.FindSuccAndPred(msgBody.Key, msgBody.NumSucc, msgBody.NumPred)
+			if err != nil {
+				return
+			}
 
-		replyMsg, err := NewFindSuccAndPredReply(remoteMsg.Msg.MessageId, succs, preds)
-		if err != nil {
-			return false, err
-		}
+			replyMsg, err := NewFindSuccAndPredReply(remoteMsg.Msg.MessageId, succs, preds)
+			if err != nil {
+				return
+			}
 
-		err = remoteMsg.RemoteNode.SendMessageAsync(replyMsg)
-		if err != nil {
-			return false, err
-		}
+			err = remoteMsg.RemoteNode.SendMessageAsync(replyMsg)
+			if err != nil {
+				return
+			}
+		}()
 
 	default:
 		return true, nil
