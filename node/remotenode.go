@@ -44,6 +44,9 @@ const (
 
 	// Number of retries to get remote node when remote node starts
 	startRetries = 3
+
+	// Max message size in bytes
+	maxMsgSize = 20 * 1024 * 1024
 )
 
 // RemoteNode is a remote node
@@ -294,6 +297,11 @@ func (rn *RemoteNode) rx() {
 			continue
 		}
 
+		if msgLen > maxMsgSize {
+			rn.Stop(fmt.Errorf("Msg size %d exceeds max msg size %d", msgLen, maxMsgSize))
+			continue
+		}
+
 		buf := make([]byte, msgLen)
 
 		for readLen = 0; readLen < msgLen; readLen += l {
@@ -336,6 +344,11 @@ func (rn *RemoteNode) tx() {
 			buf, err = proto.Marshal(msg)
 			if err != nil {
 				log.Error(err)
+				continue
+			}
+
+			if len(buf) > maxMsgSize {
+				log.Errorf("Msg size %d exceeds max msg size %d", len(buf), maxMsgSize)
 				continue
 			}
 
