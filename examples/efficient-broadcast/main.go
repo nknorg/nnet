@@ -99,10 +99,10 @@ func main() {
 				msgCountLock.Lock()
 				switch remoteMessage.Msg.RoutingType {
 				case protobuf.BROADCAST_PUSH:
-					pushMsgCount++
+					pushMsgCount += len(remoteNodes)
 					log.Infof("Receive broadcast push message \"%s\" from %x", string(msgBody.Data), remoteMessage.Msg.SrcId)
 				case protobuf.BROADCAST_TREE:
-					treeMsgCount++
+					treeMsgCount += len(remoteNodes)
 					log.Infof("Receive broadcast tree message \"%s\" from %x", string(msgBody.Data), remoteMessage.Msg.SrcId)
 				}
 				msgCountLock.Unlock()
@@ -116,7 +116,7 @@ func main() {
 	for i := 0; i < len(nnets); i++ {
 		time.Sleep(112358 * time.Microsecond)
 
-		err = nnets[i].Start()
+		err = nnets[i].Start(i == 0)
 		if err != nil {
 			log.Error(err)
 			return

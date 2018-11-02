@@ -113,7 +113,7 @@ func main() {
 		return true
 	}))
 
-	err = nn.Start()
+	err = nn.Start(true)
 	if err != nil {
 		log.Error(err)
 		return
@@ -144,7 +144,7 @@ func main() {
 			return true
 		}))
 
-		err = nn.Start()
+		err = nn.Start(false)
 		if err != nil {
 			log.Error(err)
 			return

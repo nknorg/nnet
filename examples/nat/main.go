@@ -76,7 +76,7 @@ func main() {
 	// ==========================================================================
 	// End of NAT setup
 
-	err = nn.Start()
+	err = nn.Start(true)
 	if err != nil {
 		log.Error(err)
 		return

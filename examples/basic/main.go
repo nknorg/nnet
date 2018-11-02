@@ -58,7 +58,7 @@ func main() {
 	for i := 0; i < len(nnets); i++ {
 		time.Sleep(112358 * time.Microsecond)
 
-		err := nnets[i].Start()
+		err := nnets[i].Start(i == 0)
 		if err != nil {
 			log.Error(err)
 			return

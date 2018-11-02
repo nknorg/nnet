@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"sync"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
@@ -58,8 +57,6 @@ type RemoteNode struct {
 	rxMsgChan  chan *protobuf.Message
 	txMsgChan  chan *protobuf.Message
 	txMsgCache cache.Cache
-	ready      bool
-	readyLock  sync.RWMutex
 }
 
 // NewRemoteNode creates a remote node
@@ -96,13 +93,6 @@ func (rn *RemoteNode) String() string {
 		return fmt.Sprintf("<%s>", rn.conn.RemoteAddr().String())
 	}
 	return fmt.Sprintf("%v<%s>", rn.Node, rn.conn.RemoteAddr().String())
-}
-
-// IsReady returns if the remote node is ready
-func (rn *RemoteNode) IsReady() bool {
-	rn.readyLock.RLock()
-	defer rn.readyLock.RUnlock()
-	return rn.ready
 }
 
 // Start starts the runtime loop of the remote node
@@ -168,9 +158,7 @@ func (rn *RemoteNode) Start() error {
 
 			rn.Node.Node = n
 
-			rn.readyLock.Lock()
-			rn.ready = true
-			rn.readyLock.Unlock()
+			rn.SetReady(true)
 
 			for _, f := range rn.LocalNode.middlewareStore.remoteNodeReady {
 				if !f(rn) {

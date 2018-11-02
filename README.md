@@ -61,7 +61,7 @@ This will create a nnet node with random ID and default configuration (listen to
 a random port, etc). Starting the node is as simple as
 
 ```go
-err = nn.Start()
+err = nn.Start(true) // or false if joining rather than creating
 ```
 
 To join an existing network, simply call `Join` after node has been started
@@ -77,7 +77,7 @@ few lines of code.
 nnets := make([]*nnet.NNet, 10)
 for i := 0; i < len(nnets); i++ {
   nnets[i], _ = nnet.NewNNet(nil, nil) // error is omitted here for simplicity
-  nnets[i].Start() // error is omitted here for simplicity
+  nnets[i].Start(i == 0) // error is omitted here for simplicity
   if i > 0 {
     nnets[i].Join(nnets[0].GetLocalNode().Addr) // error is omitted here for simplicity
   }

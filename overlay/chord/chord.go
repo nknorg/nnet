@@ -1,6 +1,7 @@
 package chord
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -160,8 +161,22 @@ func NewChord(localNode *node.LocalNode, conf *config.Config) (*Chord, error) {
 }
 
 // Start starts the runtime loop of the chord network
-func (c *Chord) Start() error {
+func (c *Chord) Start(isCreate bool) error {
 	c.StartOnce.Do(func() {
+		if !isCreate {
+			err := c.LocalNode.ApplyMiddleware(node.RemoteNodeConnected(func(rn *node.RemoteNode) bool {
+				if !c.IsReady() && !rn.IsOutbound {
+					rn.Stop(errors.New("Chord node is not ready yet"))
+					return false
+				}
+				return true
+			}))
+			if err != nil {
+				c.Stop(err)
+				return
+			}
+		}
+
 		var joinOnce sync.Once
 
 		err := c.ApplyMiddleware(SuccessorAdded(func(remoteNode *node.RemoteNode, index int) bool {
@@ -191,6 +206,8 @@ func (c *Chord) Start() error {
 						}
 					}
 				}
+
+				c.SetReady(true)
 
 				c.stabilize()
 			})

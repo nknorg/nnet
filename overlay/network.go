@@ -8,7 +8,7 @@ import (
 
 // Network is the overlay network interface
 type Network interface {
-	Start() error
+	Start(isCreate bool) error
 	Stop(error)
 	Join(seedNodeAddr string) error
 	GetLocalNode() *node.LocalNode
