@@ -581,3 +581,22 @@ func (c *Chord) FindPredecessors(key []byte, numPred uint32) ([]*protobuf.Node, 
 	_, preds, err := c.FindSuccAndPred(key, 0, numPred)
 	return preds, err
 }
+
+// Successors returns the remote nodes in succesor list
+func (c *Chord) Successors() []*node.RemoteNode {
+	return c.successors.ToRemoteNodeList(true)
+}
+
+// Predecessors returns the remote nodes in predecessor list
+func (c *Chord) Predecessors() []*node.RemoteNode {
+	return c.predecessors.ToRemoteNodeList(true)
+}
+
+// FingerTable returns the remote nodes in finger table
+func (c *Chord) FingerTable() [][]*node.RemoteNode {
+	fingerTable := make([][]*node.RemoteNode, c.nodeIDBits)
+	for i := 0; i < int(c.nodeIDBits); i++ {
+		fingerTable[i] = c.fingerTable[i].ToRemoteNodeList(true)
+	}
+	return fingerTable
+}
