@@ -11,8 +11,8 @@
 // whole network. This is suitable when message to be broadcasted is large and
 // bandwidth is the bottleneck.
 
-// Message redundency increase approximately linearly with NumFingerSuccessors.
-// Higher redundency uses more bandwidth but gives the more robustness.
+// Message redundancy increase approximately linearly with NumFingerSuccessors.
+// Higher redundancy uses more bandwidth but gives the more robustness.
 
 // Run with default options: go run main.go
 
@@ -53,7 +53,7 @@ func create(transport string, port uint16, id []byte, numFingerSuccessors uint32
 func main() {
 	transportPtr := flag.String("t", "tcp", "transport type, tcp or kcp")
 	numNodesPtr := flag.Int("n", 10, "number of nodes")
-	numFingerSuccessorsPtr := flag.Uint("k", 1, "number of finger successors (also tree message redundency)")
+	numFingerSuccessorsPtr := flag.Uint("k", 1, "number of finger successors (also tree message redundancy)")
 	flag.Parse()
 
 	if *numNodesPtr < 1 {

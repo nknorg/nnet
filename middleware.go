@@ -1,6 +1,9 @@
 package nnet
 
-import "github.com/nknorg/nnet/util"
+import (
+	"github.com/nknorg/nnet/log"
+	"github.com/nknorg/nnet/util"
+)
 
 // ApplyMiddleware add a middleware to node, network, router, etc. If multiple
 // middleware of the same type are applied, they will be called in the order of
@@ -45,6 +48,7 @@ func (nn *NNet) ApplyMiddleware(f interface{}) error {
 func (nn *NNet) MustApplyMiddleware(f interface{}) {
 	err := nn.ApplyMiddleware(f)
 	if err != nil {
+		log.Error(err)
 		panic(err)
 	}
 }

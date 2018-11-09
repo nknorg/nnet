@@ -11,6 +11,7 @@ powerful middleware architecture.
 ## Features
 
 * nnet uses a **modular and layered overlay architecture**. By default an improved and much more reliable version of Chord DHT protocol is used to maintain a scalable overlay topology, while other topologies like Kademlia can be easily added by implementing a few overlay interfaces.
+* Highly efficient messaging implementation that is able to send, receive and handle ~**75k messages/s** or ~**1 GB/s** of messages on a 2-core personal laptop.
 * Extremely easy to use message sending interface with **both async and sync message flow** (block until reply). Message reply in sync mode are handled efficiently and automatically, you just need to provide the content.
 * Deliver message to any node in the network (**not just the nodes you are directly connected to**) reliably and efficiently in at most log_2(N) hops (w.h.p) where N is the total number of nodes in the network.
 * **Novel and highly efficient** message broadcasting algorithm with exact once (or K-times where K is something adjustable) message sending that achieves **optimal throughput and near-optimal latency**. This is done by sending message through the spanning tree constructed by utilizing the Chord topology.
@@ -296,6 +297,60 @@ probably want it to share the logger with the rest of your application. You can
 do it by calling `nnet.SetLogger(logger)` method as long as `logger` implements
 the `Logger` interface defined in [log/log.go](log/log.go). If you don't set it,
 nnet will use [go-logging](github.com/op/go-logging) by default.
+
+## Benchmark
+
+Throughput is a very important metric of the network stack. There are multiple
+potential bottlenecks when we consider throughput, e.g. network i/o, message
+serialization/deserialization, architecture and implementation efficiency. To
+measure the throughput, we wrote a simple local benchmark, which can be found at
+[examples/message-benchmark/main.go](examples/message-benchmark/main.go). You
+can run it with default arguments (2 nodes, 1 KB message size) by
+
+```bash
+go run $GOPATH/src/github.com/nknorg/nnet/examples/message-benchmark/main.go
+```
+
+On a MacBook Pro 2018 this will give you around 75k message/s per node,
+far more than enough for most p2p applications.
+
+When message size increase, the bottleneck will becomes bandwidth rather than
+message count. We can run the benchmark with 1 MB message by
+
+```bash
+go run $GOPATH/src/github.com/nknorg/nnet/examples/message-benchmark/main.go -m 1048576
+```
+
+This will give you around 900 MB/s per node on the same computer, again far
+more than enough in typical cases.
+
+The same benchmark can be used to see how spanning tree broadcasting can greatly
+improve throughput. We first use the standard push method to broadcast in a
+16-node network:
+
+```bash
+go run $GOPATH/src/github.com/nknorg/nnet/examples/message-benchmark/main.go -n 16 -b push
+```
+
+Each node can only receive around 300 unique message/s. The number is so low
+because: 1. we are running all 16 nodes on the same laptop with just 6 cores and
+more importantly 2. Gossip protocol has a high message redundancy, and in this
+particular example each node receives the same message 15 times! If we sum them
+up, the total messages being processed are 300*15*15, which is pretty close to
+the 75k we got in 2-node benchmark. Of course if the overlay topology is fully
+connected, we don't need Gossip protocol at all, but similar inefficiency will
+happen once the network size is large enough so that fully connected topology is
+unrealistic.
+
+Now let's change to spanning tree broadcasting:
+
+```bash
+go run $GOPATH/src/github.com/nknorg/nnet/examples/message-benchmark/main.go -n 16 -b tree
+```
+
+Now each node can receive 3k unique messages/s, an order of magnitude boost!
+Actually if the benchmark is running on multiple computers with enough network
+resources, each node can again receive around 75k messages/s.
 
 ## Who is using nnet
 
