@@ -382,7 +382,14 @@ func (ln *LocalNode) AddToRxCache(msgID []byte) (bool, error) {
 	}
 
 	err := ln.rxMsgCache.Add(msgID, struct{}{})
-	return true, err
+	if err != nil {
+		if _, found := ln.rxMsgCache.Get(msgID); found {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
 }
 
 // HandleRemoteMessage add remoteMsg to handleMsgChan for further processing
