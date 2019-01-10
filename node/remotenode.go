@@ -24,8 +24,8 @@ const (
 	// Max number of msg to be sent that can be buffered
 	remoteTxMsgChanLen = 23333
 
-	// Time interval between keep-alive msg
-	keepAliveInterval = 3 * time.Second
+	// Time interval between measuring round trip time
+	measureRoundTripTimeInterval = 3 * time.Second
 
 	// Max idle time before considering node dead and closing connection
 	keepAliveTimeout = 10 * time.Second
@@ -57,7 +57,8 @@ type RemoteNode struct {
 	txMsgCache cache.Cache
 
 	sync.RWMutex
-	lastRxTime time.Time
+	lastRxTime    time.Time
+	roundTripTime time.Duration
 }
 
 // NewRemoteNode creates a remote node
@@ -107,6 +108,7 @@ func (rn *RemoteNode) Start() error {
 		go rn.handleMsg()
 		go rn.rx()
 		go rn.tx()
+		go rn.startMeasuringRoundTripTime()
 
 		go func() {
 			var n *protobuf.Node
@@ -343,46 +345,80 @@ func (rn *RemoteNode) tx() {
 	var buf []byte
 	var err error
 	msgLenBuf := make([]byte, msgLenBytes)
-	keepAliveTimer := time.NewTimer(keepAliveInterval)
 
 	for {
 		if rn.IsStopped() {
-			util.StopTimer(keepAliveTimer)
 			return
 		}
 
-		select {
-		case msg = <-rn.txMsgChan:
-			buf, err = proto.Marshal(msg)
-			if err != nil {
-				log.Error(err)
-				continue
-			}
+		msg = <-rn.txMsgChan
 
-			if len(buf) > maxMsgSize {
-				log.Errorf("Msg size %d exceeds max msg size %d", len(buf), maxMsgSize)
-				continue
-			}
-
-			binary.BigEndian.PutUint32(msgLenBuf, uint32(len(buf)))
-
-			_, err = rn.conn.Write(msgLenBuf)
-			if err != nil {
-				rn.Stop(fmt.Errorf("Write to conn error: %s", err))
-				continue
-			}
-
-			_, err = rn.conn.Write(buf)
-			if err != nil {
-				rn.Stop(fmt.Errorf("Write to conn error: %s", err))
-				continue
-			}
-		case <-keepAliveTimer.C:
-			rn.keepAlive()
+		buf, err = proto.Marshal(msg)
+		if err != nil {
+			log.Error(err)
+			continue
 		}
 
-		util.ResetTimer(keepAliveTimer, keepAliveInterval)
+		if len(buf) > maxMsgSize {
+			log.Errorf("Msg size %d exceeds max msg size %d", len(buf), maxMsgSize)
+			continue
+		}
+
+		binary.BigEndian.PutUint32(msgLenBuf, uint32(len(buf)))
+
+		_, err = rn.conn.Write(msgLenBuf)
+		if err != nil {
+			rn.Stop(fmt.Errorf("Write to conn error: %s", err))
+			continue
+		}
+
+		_, err = rn.conn.Write(buf)
+		if err != nil {
+			rn.Stop(fmt.Errorf("Write to conn error: %s", err))
+			continue
+		}
 	}
+}
+
+// startMeasuringRoundTripTime starts to periodically send ping message to
+// measure round trip time to remote node.
+func (rn *RemoteNode) startMeasuringRoundTripTime() {
+	var err error
+	var startTime time.Time
+	var roundTripTime time.Duration
+	ticker := time.Tick(measureRoundTripTimeInterval)
+
+	for {
+		if rn.IsStopped() {
+			return
+		}
+
+		<-ticker
+
+		startTime = time.Now()
+		err = rn.Ping()
+		if err != nil {
+			log.Warningf("Ping error: %v", err)
+			continue
+		}
+		roundTripTime = time.Since(startTime)
+
+		rn.Lock()
+		if rn.roundTripTime > 0 {
+			rn.roundTripTime = (rn.roundTripTime + roundTripTime) / 2
+		} else {
+			rn.roundTripTime = roundTripTime
+		}
+		rn.Unlock()
+	}
+}
+
+// GetRoundTripTime returns the measured round trip time between local node and
+// remote node. Will return 0 if no result available yet.
+func (rn *RemoteNode) GetRoundTripTime() time.Duration {
+	rn.RLock()
+	defer rn.RUnlock()
+	return rn.roundTripTime
 }
 
 // SendMessage marshals and sends msg, will returns a RemoteMessage chan if
@@ -444,20 +480,6 @@ func (rn *RemoteNode) SendMessageSync(msg *protobuf.Message, replyTimeout time.D
 	case <-time.After(replyTimeout):
 		return nil, errors.New("Wait for reply timeout")
 	}
-}
-
-func (rn *RemoteNode) keepAlive() error {
-	msg, err := NewPingMessage()
-	if err != nil {
-		return err
-	}
-
-	err = rn.SendMessageAsync(msg)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // Ping sends a Ping message to remote node and wait for reply
