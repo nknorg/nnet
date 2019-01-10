@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
@@ -54,6 +55,9 @@ type RemoteNode struct {
 	rxMsgChan  chan *protobuf.Message
 	txMsgChan  chan *protobuf.Message
 	txMsgCache cache.Cache
+
+	sync.RWMutex
+	lastRxTime time.Time
 }
 
 // NewRemoteNode creates a remote node
@@ -80,6 +84,7 @@ func NewRemoteNode(localNode *LocalNode, conn net.Conn, isOutbound bool) (*Remot
 		rxMsgChan:  make(chan *protobuf.Message, remoteRxMsgChanLen),
 		txMsgChan:  make(chan *protobuf.Message, remoteTxMsgChanLen),
 		txMsgCache: txMsgCache,
+		lastRxTime: time.Now(),
 	}
 
 	return remoteNode, nil
@@ -243,7 +248,11 @@ func (rn *RemoteNode) handleMsg() {
 				log.Warningf("Msg chan full for routing type %d, discarding msg", msg.RoutingType)
 			}
 		case <-keepAliveTimeoutTimer.C:
-			rn.Stop(errors.New("keepalive timeout"))
+			rn.RLock()
+			if time.Since(rn.lastRxTime) > keepAliveTimeout {
+				rn.Stop(errors.New("keepalive timeout"))
+			}
+			rn.RUnlock()
 		}
 
 		util.ResetTimer(keepAliveTimeoutTimer, keepAliveTimeout)
@@ -286,6 +295,10 @@ func (rn *RemoteNode) rx() {
 			continue
 		}
 
+		rn.Lock()
+		rn.lastRxTime = time.Now()
+		rn.Unlock()
+
 		msgLen := int(binary.BigEndian.Uint32(msgLenBuf))
 		if msgLen < 0 {
 			rn.Stop(fmt.Errorf("Msg len %d overflow", msgLen))
@@ -304,6 +317,10 @@ func (rn *RemoteNode) rx() {
 			if err != nil {
 				break
 			}
+
+			rn.Lock()
+			rn.lastRxTime = time.Now()
+			rn.Unlock()
 		}
 
 		if err != nil {
