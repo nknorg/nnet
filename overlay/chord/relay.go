@@ -45,32 +45,40 @@ func (rr *RelayRouting) GetNodeToRoute(remoteMsg *node.RemoteMessage) (*node.Loc
 		return rr.chord.LocalNode, nil, nil
 	}
 
-	nextHop := succ
-	minDist := distance(succ.Id, remoteMsg.Msg.DestId, rr.chord.nodeIDBits)
-
-	for _, remoteNode := range rr.chord.successors.ToRemoteNodeList(false) {
-		if remoteNode == remoteMsg.RemoteNode {
+	successors := rr.chord.successors.ToRemoteNodeList(true)
+	for i := 0; i < len(successors)-1; i++ {
+		if successors[i] == remoteMsg.RemoteNode {
 			continue
 		}
-		dist := distance(remoteNode.Id, remoteMsg.Msg.DestId, rr.chord.nodeIDBits)
-		if dist.Cmp(minDist) < 0 {
-			nextHop = remoteNode
-			minDist = dist
+		if betweenLeftIncl(successors[i].Id, successors[i+1].Id, remoteMsg.Msg.DestId) {
+			return nil, []*node.RemoteNode{successors[i]}, nil
 		}
 	}
 
-	for _, finger := range rr.chord.fingerTable {
-		for _, remoteNode := range finger.ToRemoteNodeList(false) {
-			if remoteNode == remoteMsg.RemoteNode {
-				continue
-			}
-			dist := distance(remoteNode.Id, remoteMsg.Msg.DestId, rr.chord.nodeIDBits)
-			if dist.Cmp(minDist) < 0 {
-				nextHop = remoteNode
-				minDist = dist
+	for i := len(rr.chord.fingerTable) - 1; i >= 0; i-- {
+		finger := rr.chord.fingerTable[i]
+		first := finger.GetFirst()
+		if first == nil {
+			continue
+		}
+		if !betweenIncl(rr.chord.LocalNode.Id, remoteMsg.Msg.DestId, first.Id) {
+			continue
+		}
+
+		nextHop := first
+		minRoundTripTime := first.GetRoundTripTime()
+		for _, rn := range finger.ToRemoteNodeList(true) {
+			if betweenIncl(rr.chord.LocalNode.Id, remoteMsg.Msg.DestId, rn.Id) {
+				rtt := rn.GetRoundTripTime()
+				if minRoundTripTime == 0 || (rtt > 0 && rtt <= minRoundTripTime) {
+					nextHop = rn
+					minRoundTripTime = rtt
+				}
 			}
 		}
+
+		return nil, []*node.RemoteNode{nextHop}, nil
 	}
 
-	return nil, []*node.RemoteNode{nextHop}, nil
+	return nil, []*node.RemoteNode{succ}, nil
 }
