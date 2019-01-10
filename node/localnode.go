@@ -28,9 +28,6 @@ const (
 	// How often to check and delete expired received message id
 	rxMsgCacheCleanupInterval = 10 * time.Second
 
-	// How long a reply chan becomes expired after created
-	replyChanExpiration = replyTimeout
-
 	// How often to check and delete expired reply chan
 	replyChanCleanupInterval = 1 * time.Second
 
@@ -48,6 +45,7 @@ type LocalNode struct {
 	rxMsgChan      map[protobuf.RoutingType]chan *RemoteMessage
 	rxMsgCache     cache.Cache
 	replyChanCache cache.Cache
+	replyTimeout   time.Duration
 	neighbors      sync.Map
 	*middlewareStore
 }
@@ -77,7 +75,7 @@ func NewLocalNode(id []byte, conf *config.Config) (*LocalNode, error) {
 
 	rxMsgCache := cache.NewGoCache(rxMsgCacheExpiration, rxMsgCacheCleanupInterval)
 
-	replyChanCache := cache.NewGoCache(replyChanExpiration, replyChanCleanupInterval)
+	replyChanCache := cache.NewGoCache(conf.ReplyTimeout, replyChanCleanupInterval)
 
 	middlewareStore := newMiddlewareStore()
 
@@ -89,6 +87,7 @@ func NewLocalNode(id []byte, conf *config.Config) (*LocalNode, error) {
 		rxMsgChan:       rxMsgChan,
 		rxMsgCache:      rxMsgCache,
 		replyChanCache:  replyChanCache,
+		replyTimeout:    conf.ReplyTimeout,
 		middlewareStore: middlewareStore,
 	}
 
@@ -343,14 +342,14 @@ func (ln *LocalNode) GetRxMsgChan(routingType protobuf.RoutingType) (chan *Remot
 }
 
 // AllocReplyChan creates a reply chan for msg with id msgID
-func (ln *LocalNode) AllocReplyChan(msgID []byte) (chan *RemoteMessage, error) {
+func (ln *LocalNode) AllocReplyChan(msgID []byte, expiration time.Duration) (chan *RemoteMessage, error) {
 	if len(msgID) == 0 {
 		return nil, errors.New("Message id is empty")
 	}
 
 	replyChan := make(chan *RemoteMessage)
 
-	err := ln.replyChanCache.Add(msgID, replyChan)
+	err := ln.replyChanCache.AddWithExpiration(msgID, replyChan, expiration)
 	if err != nil {
 		return nil, err
 	}
@@ -417,4 +416,9 @@ func (ln *LocalNode) GetNeighbors(filter func(*RemoteNode) bool) ([]*RemoteNode,
 		return true
 	})
 	return nodes, nil
+}
+
+// GetDefaultReplyTimeout returns the default reply timeout
+func (ln *LocalNode) GetDefaultReplyTimeout() time.Duration {
+	return ln.replyTimeout
 }

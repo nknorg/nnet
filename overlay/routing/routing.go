@@ -2,6 +2,7 @@ package routing
 
 import (
 	"errors"
+	"time"
 
 	"github.com/nknorg/nnet/common"
 	"github.com/nknorg/nnet/log"
@@ -15,7 +16,7 @@ type Router interface {
 	Stop(error)
 	ApplyMiddleware(interface{}) error
 	GetNodeToRoute(remoteMsg *node.RemoteMessage) (localNode *node.LocalNode, remoteNodes []*node.RemoteNode, err error)
-	SendMessage(router Router, remoteMsg *node.RemoteMessage, hasReply bool) (replyChan <-chan *node.RemoteMessage, success bool, err error)
+	SendMessage(router Router, remoteMsg *node.RemoteMessage, hasReply bool, replyTimeout time.Duration) (replyChan <-chan *node.RemoteMessage, success bool, err error)
 }
 
 // Routing is the base struct for all routing
@@ -64,7 +65,7 @@ func (r *Routing) Stop(err error) {
 // hasReply is false), if send success (which is true if successfully send
 // message to at least one next hop), and aggregated errors during message
 // sending
-func (r *Routing) SendMessage(router Router, remoteMsg *node.RemoteMessage, hasReply bool) (<-chan *node.RemoteMessage, bool, error) {
+func (r *Routing) SendMessage(router Router, remoteMsg *node.RemoteMessage, hasReply bool, replyTimeout time.Duration) (<-chan *node.RemoteMessage, bool, error) {
 	var shouldCallNextMiddleware bool
 	success := false
 
@@ -103,9 +104,9 @@ func (r *Routing) SendMessage(router Router, remoteMsg *node.RemoteMessage, hasR
 		// If there are multiple next hop, we only grab the first reply channel
 		// because all msg have the same ID and will be using the same reply channel
 		if hasReply && replyChan == nil {
-			replyChan, err = remoteNode.SendMessage(remoteMsg.Msg, true)
+			replyChan, err = remoteNode.SendMessage(remoteMsg.Msg, true, replyTimeout)
 		} else {
-			_, err = remoteNode.SendMessage(remoteMsg.Msg, false)
+			_, err = remoteNode.SendMessage(remoteMsg.Msg, false, 0)
 		}
 
 		if err != nil {
@@ -183,7 +184,7 @@ func (r *Routing) handleMsg(router Router) {
 			continue
 		}
 
-		_, _, err = r.SendMessage(router, remoteMsg, false)
+		_, _, err = r.SendMessage(router, remoteMsg, false, 0)
 		if err != nil {
 			log.Warning(err)
 		}

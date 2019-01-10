@@ -1,6 +1,8 @@
 package nnet
 
 import (
+	"time"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/nknorg/nnet/message"
 	"github.com/nknorg/nnet/node"
@@ -101,16 +103,22 @@ func (nn *NNet) SendBytesDirectAsync(data []byte, remoteNode *node.RemoteNode) e
 	return remoteNode.SendMessageAsync(msg)
 }
 
-// SendBytesDirectSync sends bytes data to a remote node, returns reply message,
-// RemoteNode that sends the reply and error. Will also returns an error if
-// doesn't receive a reply before timeout.
+// SendBytesDirectSync is the same as SendBytesDirectSyncWithTimeout but use
+// default reply timeout in config.
 func (nn *NNet) SendBytesDirectSync(data []byte, remoteNode *node.RemoteNode) ([]byte, *node.RemoteNode, error) {
+	return nn.SendBytesDirectSyncWithTimeout(data, remoteNode, 0)
+}
+
+// SendBytesDirectSyncWithTimeout sends bytes data to a remote node, returns
+// reply message, RemoteNode that sends the reply and error. Will also returns
+// an error if doesn't receive a reply before timeout.
+func (nn *NNet) SendBytesDirectSyncWithTimeout(data []byte, remoteNode *node.RemoteNode, replyTimeout time.Duration) ([]byte, *node.RemoteNode, error) {
 	msg, err := NewDirectBytesMessage(data)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	reply, err := remoteNode.SendMessageSync(msg)
+	reply, err := remoteNode.SendMessageSync(msg, replyTimeout)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -150,17 +158,23 @@ func (nn *NNet) SendBytesRelayAsync(data, key []byte) (bool, error) {
 	return nn.SendMessageAsync(msg, protobuf.RELAY)
 }
 
-// SendBytesRelaySync sends bytes data to the remote node that has smallest
-// distance to the key, returns reply message, node ID who sends the reply, and
-// aggregated error during message sending and receiving, will also returns
-// error if doesn't receive any reply before timeout
+// SendBytesRelaySync is the same as SendBytesRelaySync but use default reply
+// timeout in config.
 func (nn *NNet) SendBytesRelaySync(data, key []byte) ([]byte, []byte, error) {
+	return nn.SendBytesRelaySyncWithTimeout(data, key, 0)
+}
+
+// SendBytesRelaySyncWithTimeout sends bytes data to the remote node that has
+// smallest distance to the key, returns reply message, node ID who sends the
+// reply, and aggregated error during message sending and receiving, will also
+// returns error if doesn't receive any reply before timeout
+func (nn *NNet) SendBytesRelaySyncWithTimeout(data, key []byte, replyTimeout time.Duration) ([]byte, []byte, error) {
 	msg, err := NewRelayBytesMessage(data, nn.GetLocalNode().Id, key)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	reply, _, err := nn.SendMessageSync(msg, protobuf.RELAY)
+	reply, _, err := nn.SendMessageSync(msg, protobuf.RELAY, replyTimeout)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -200,19 +214,26 @@ func (nn *NNet) SendBytesBroadcastAsync(data []byte, routingType protobuf.Routin
 	return nn.SendMessageAsync(msg, routingType)
 }
 
-// SendBytesBroadcastSync sends bytes data to EVERY remote node in the network
-// (not just neighbors), returns reply message, node ID who sends the reply, and
-// aggregated error during message sending, will also returns error if doesn't
-// receive any reply before timeout. Broadcast msg reply should be handled VERY
-// carefully with some sort of sender identity verification, otherwise it may be
-// used to DDoS attack sender with HUGE amplification factor.
+// SendBytesBroadcastSync is the same as SendBytesBroadcastSyncTimeout but use
+// default reply timeout in config.
 func (nn *NNet) SendBytesBroadcastSync(data []byte, routingType protobuf.RoutingType) ([]byte, []byte, error) {
+	return nn.SendBytesBroadcastSyncWithTimeout(data, routingType, 0)
+}
+
+// SendBytesBroadcastSyncWithTimeout sends bytes data to EVERY remote node in
+// the network (not just neighbors), returns reply message, node ID who sends
+// the reply, and aggregated error during message sending, will also returns
+// error if doesn't receive any reply before timeout. Broadcast msg reply should
+// be handled VERY carefully with some sort of sender identity verification,
+// otherwise it may be used to DDoS attack sender with HUGE amplification
+// factor.
+func (nn *NNet) SendBytesBroadcastSyncWithTimeout(data []byte, routingType protobuf.RoutingType, replyTimeout time.Duration) ([]byte, []byte, error) {
 	msg, err := NewBroadcastBytesMessage(data, nn.GetLocalNode().Id, routingType)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	reply, _, err := nn.SendMessageSync(msg, routingType)
+	reply, _, err := nn.SendMessageSync(msg, routingType, replyTimeout)
 	if err != nil {
 		return nil, nil, err
 	}

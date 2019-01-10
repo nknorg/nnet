@@ -23,9 +23,6 @@ const (
 	// Max number of msg to be sent that can be buffered
 	remoteTxMsgChanLen = 23333
 
-	// Timeout for reply message
-	replyTimeout = 5 * time.Second
-
 	// Time interval between keep-alive msg
 	keepAliveInterval = 3 * time.Second
 
@@ -371,8 +368,9 @@ func (rn *RemoteNode) tx() {
 	}
 }
 
-// SendMessage marshals and sends msg, will returns a RemoteMessage chan if hasReply is true
-func (rn *RemoteNode) SendMessage(msg *protobuf.Message, hasReply bool) (<-chan *RemoteMessage, error) {
+// SendMessage marshals and sends msg, will returns a RemoteMessage chan if
+// hasReply is true and reply is received within replyTimeout.
+func (rn *RemoteNode) SendMessage(msg *protobuf.Message, hasReply bool, replyTimeout time.Duration) (<-chan *RemoteMessage, error) {
 	if rn.IsStopped() {
 		return nil, errors.New("Remote node has stopped")
 	}
@@ -398,7 +396,7 @@ func (rn *RemoteNode) SendMessage(msg *protobuf.Message, hasReply bool) (<-chan 
 	}
 
 	if hasReply {
-		return rn.LocalNode.AllocReplyChan(msg.MessageId)
+		return rn.LocalNode.AllocReplyChan(msg.MessageId, replyTimeout)
 	}
 
 	return nil, nil
@@ -406,13 +404,19 @@ func (rn *RemoteNode) SendMessage(msg *protobuf.Message, hasReply bool) (<-chan 
 
 // SendMessageAsync sends msg and returns if there is an error
 func (rn *RemoteNode) SendMessageAsync(msg *protobuf.Message) error {
-	_, err := rn.SendMessage(msg, false)
+	_, err := rn.SendMessage(msg, false, 0)
 	return err
 }
 
-// SendMessageSync sends msg, returns reply message or error if timeout
-func (rn *RemoteNode) SendMessageSync(msg *protobuf.Message) (*RemoteMessage, error) {
-	replyChan, err := rn.SendMessage(msg, true)
+// SendMessageSync sends msg, returns reply message or error if don't receive
+// reply within replyTimeout. Will use default reply timeout in config if
+// replyTimeout = 0.
+func (rn *RemoteNode) SendMessageSync(msg *protobuf.Message, replyTimeout time.Duration) (*RemoteMessage, error) {
+	if replyTimeout == 0 {
+		replyTimeout = rn.LocalNode.replyTimeout
+	}
+
+	replyChan, err := rn.SendMessage(msg, true, replyTimeout)
 	if err != nil {
 		return nil, err
 	}
@@ -446,7 +450,7 @@ func (rn *RemoteNode) Ping() error {
 		return err
 	}
 
-	_, err = rn.SendMessageSync(msg)
+	_, err = rn.SendMessageSync(msg, 0)
 	if err != nil {
 		return err
 	}
@@ -461,7 +465,7 @@ func (rn *RemoteNode) GetNode() (*protobuf.Node, error) {
 		return nil, err
 	}
 
-	reply, err := rn.SendMessageSync(msg)
+	reply, err := rn.SendMessageSync(msg, 0)
 	if err != nil {
 		return nil, err
 	}

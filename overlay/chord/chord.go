@@ -492,7 +492,7 @@ func GetSuccAndPred(remoteNode *node.RemoteNode, numSucc, numPred uint32) ([]*pr
 		return nil, nil, err
 	}
 
-	reply, err := remoteNode.SendMessageSync(msg)
+	reply, err := remoteNode.SendMessageSync(msg, 0)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -546,7 +546,7 @@ func (c *Chord) FindSuccAndPred(key []byte, numSucc, numPred uint32) ([]*protobu
 		return nil, nil, err
 	}
 
-	reply, _, err := c.SendMessageSync(msg, protobuf.RELAY)
+	reply, _, err := c.SendMessageSync(msg, protobuf.RELAY, 0)
 	if err != nil {
 		return nil, nil, err
 	}

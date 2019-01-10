@@ -24,9 +24,17 @@ func (gc *GoCache) byteKeyToStringKey(byteKey []byte) string {
 }
 
 // Add adds an item to the cache only if an item doesn't already exist for the
-// given key, or if the existing item has expired. Returns an error otherwise.
+// given key, or if the existing item has expired, using the default expiration.
+// Returns an error otherwise.
 func (gc *GoCache) Add(key []byte, value interface{}) error {
 	return gc.cache.Add(gc.byteKeyToStringKey(key), value, 0)
+}
+
+// AddWithExpiration adds an item to the cache only if an item doesn't already
+// exist for the given key, or if the existing item has expired, using specified
+// expiration. Returns an error otherwise.
+func (gc *GoCache) AddWithExpiration(key []byte, value interface{}, expiration time.Duration) error {
+	return gc.cache.Add(gc.byteKeyToStringKey(key), value, expiration)
 }
 
 // Get gets an item from the cache. Returns the item or nil, and a bool
@@ -38,6 +46,13 @@ func (gc *GoCache) Get(key []byte) (interface{}, bool) {
 // Set adds an item to the cache, replacing any existing item, using the default
 // expiration.
 func (gc *GoCache) Set(key []byte, value interface{}) error {
-	gc.cache.SetDefault(gc.byteKeyToStringKey(key), value)
+	gc.cache.Set(gc.byteKeyToStringKey(key), value, 0)
+	return nil
+}
+
+// SetWithExpiration adds an item to the cache, replacing any existing item,
+// using specified expiration.
+func (gc *GoCache) SetWithExpiration(key []byte, value interface{}, expiration time.Duration) error {
+	gc.cache.Set(gc.byteKeyToStringKey(key), value, expiration)
 	return nil
 }

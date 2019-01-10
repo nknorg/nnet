@@ -1,6 +1,8 @@
 package overlay
 
 import (
+	"time"
+
 	"github.com/nknorg/nnet/node"
 	"github.com/nknorg/nnet/overlay/routing"
 	"github.com/nknorg/nnet/protobuf"
@@ -15,5 +17,5 @@ type Network interface {
 	GetRouters() []routing.Router
 	ApplyMiddleware(interface{}) error
 	SendMessageAsync(msg *protobuf.Message, routingType protobuf.RoutingType) (success bool, err error)
-	SendMessageSync(msg *protobuf.Message, routingType protobuf.RoutingType) (reply *protobuf.Message, success bool, err error)
+	SendMessageSync(msg *protobuf.Message, routingType protobuf.RoutingType, replyTimeout time.Duration) (reply *protobuf.Message, success bool, err error)
 }

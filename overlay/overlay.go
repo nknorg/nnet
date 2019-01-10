@@ -14,9 +14,6 @@ import (
 const (
 	// Max number of msg to be processed by local node that can be buffered
 	localMsgChanLen = 23333
-
-	// Timeout for reply message
-	replyTimeout = 5 * time.Second
 )
 
 // Overlay is an abstract overlay network
@@ -104,30 +101,35 @@ func (ovl *Overlay) StopRouters(err error) {
 // SendMessage sends msg to the best next hop, returns reply chan (nil if if
 // hasReply is false), if send success (which is true if successfully send
 // message to at least one next hop), and aggregated errors during message
-// sending
-func (ovl *Overlay) SendMessage(msg *protobuf.Message, routingType protobuf.RoutingType, hasReply bool) (<-chan *node.RemoteMessage, bool, error) {
+// sending.
+func (ovl *Overlay) SendMessage(msg *protobuf.Message, routingType protobuf.RoutingType, hasReply bool, replyTimeout time.Duration) (<-chan *node.RemoteMessage, bool, error) {
 	router, err := ovl.GetRouter(routingType)
 	if err != nil {
 		return nil, false, err
 	}
 
-	return router.SendMessage(router, &node.RemoteMessage{Msg: msg}, hasReply)
+	return router.SendMessage(router, &node.RemoteMessage{Msg: msg}, hasReply, replyTimeout)
 }
 
 // SendMessageAsync sends msg to the best next hop, returns if send success
 // (which is true if successfully send message to at least one next hop), and
 // aggretated error during message sending
 func (ovl *Overlay) SendMessageAsync(msg *protobuf.Message, routingType protobuf.RoutingType) (bool, error) {
-	_, success, err := ovl.SendMessage(msg, routingType, false)
+	_, success, err := ovl.SendMessage(msg, routingType, false, 0)
 	return success, err
 }
 
 // SendMessageSync sends msg to the best next hop, returns reply message, if
 // send success (which is true if successfully send message to at least one next
 // hop), and aggregated error during message sending, will also returns error if
-// haven't receive reply before timeout
-func (ovl *Overlay) SendMessageSync(msg *protobuf.Message, routingType protobuf.RoutingType) (*protobuf.Message, bool, error) {
-	replyChan, success, err := ovl.SendMessage(msg, routingType, true)
+// haven't receive reply within replyTimeout. Will use default reply timeout if
+// replyTimeout = 0.
+func (ovl *Overlay) SendMessageSync(msg *protobuf.Message, routingType protobuf.RoutingType, replyTimeout time.Duration) (*protobuf.Message, bool, error) {
+	if replyTimeout == 0 {
+		replyTimeout = ovl.LocalNode.GetDefaultReplyTimeout()
+	}
+
+	replyChan, success, err := ovl.SendMessage(msg, routingType, true, replyTimeout)
 	if !success {
 		return nil, false, err
 	}

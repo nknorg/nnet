@@ -16,6 +16,7 @@ type Config struct {
 	NumFingerSuccessors   uint32        // minimal number of successors of each finger table key
 	NumSuccessorsFactor   uint32        // number of successors is max(this factor times the number of non empty finger table, MinNumSuccessors)
 	BaseStabilizeInterval time.Duration // base stabilize interval
+	ReplyTimeout          time.Duration // default timeout for receiving reply msg
 }
 
 // DefaultConfig returns the default configurations
@@ -27,6 +28,7 @@ func DefaultConfig() *Config {
 		NumFingerSuccessors:   3,
 		NumSuccessorsFactor:   2,
 		BaseStabilizeInterval: 1 * time.Second,
+		ReplyTimeout:          5 * time.Second,
 	}
 	return defaultConfig
 }
