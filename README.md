@@ -25,8 +25,8 @@ powerful middleware architecture.
 
 Coming soon:
 
-- [ ] Latency measurement
-- [ ] Proximity routing
+- [x] Latency measurement
+- [x] Proximity routing
 - [ ] Push-pull broadcasting for large messages
 - [ ] Efficient Pub/Sub
 - [ ] Test cases
