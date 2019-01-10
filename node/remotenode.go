@@ -393,8 +393,6 @@ func (rn *RemoteNode) startMeasuringRoundTripTime() {
 			return
 		}
 
-		<-ticker
-
 		startTime = time.Now()
 		err = rn.Ping()
 		if err != nil {
@@ -410,6 +408,8 @@ func (rn *RemoteNode) startMeasuringRoundTripTime() {
 			rn.roundTripTime = roundTripTime
 		}
 		rn.Unlock()
+
+		<-ticker
 	}
 }
 
