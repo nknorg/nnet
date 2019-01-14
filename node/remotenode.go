@@ -98,6 +98,19 @@ func (rn *RemoteNode) String() string {
 	return fmt.Sprintf("%v<%s>", rn.Node, rn.conn.RemoteAddr().String())
 }
 
+// GetConn returns the connection with remote node
+func (rn *RemoteNode) GetConn() net.Conn {
+	return rn.conn
+}
+
+// GetRoundTripTime returns the measured round trip time between local node and
+// remote node. Will return 0 if no result available yet.
+func (rn *RemoteNode) GetRoundTripTime() time.Duration {
+	rn.RLock()
+	defer rn.RUnlock()
+	return rn.roundTripTime
+}
+
 // Start starts the runtime loop of the remote node
 func (rn *RemoteNode) Start() error {
 	rn.StartOnce.Do(func() {
@@ -411,14 +424,6 @@ func (rn *RemoteNode) startMeasuringRoundTripTime() {
 
 		<-ticker
 	}
-}
-
-// GetRoundTripTime returns the measured round trip time between local node and
-// remote node. Will return 0 if no result available yet.
-func (rn *RemoteNode) GetRoundTripTime() time.Duration {
-	rn.RLock()
-	defer rn.RUnlock()
-	return rn.roundTripTime
 }
 
 // SendMessage marshals and sends msg, will returns a RemoteMessage chan if
