@@ -48,7 +48,7 @@ func (btr *BroadcastTreeRouting) GetNodeToRoute(remoteMsg *node.RemoteMessage) (
 
 	if remoteMsg.RemoteNode != nil {
 		localNode = btr.chord.LocalNode
-		dist := distance(remoteMsg.RemoteNode.Id, btr.chord.LocalNode.Id, btr.chord.nodeIDBits)
+		dist := Distance(remoteMsg.RemoteNode.Id, btr.chord.LocalNode.Id, btr.chord.nodeIDBits)
 		maxIdx = dist.BitLen() - 1
 	}
 

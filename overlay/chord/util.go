@@ -121,7 +121,7 @@ func nextID(id []byte, mod uint32) []byte {
 }
 
 // Computes the forward distance from a to b modulus a ring size
-func distance(a, b []byte, bits uint32) *big.Int {
+func Distance(a, b []byte, bits uint32) *big.Int {
 	// Get the ring size
 	var ring big.Int
 	ring.Exp(big.NewInt(2), big.NewInt(int64(bits)), nil)

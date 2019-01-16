@@ -40,7 +40,7 @@ func NewNeighborList(startID, endID []byte, nodeIDBits, maxNumNodes uint32, reve
 }
 
 func (sl *NeighborList) cmp(node1, node2 *protobuf.Node) int {
-	res := distance(sl.startID, node1.Id, sl.nodeIDBits).Cmp(distance(sl.startID, node2.Id, sl.nodeIDBits))
+	res := Distance(sl.startID, node1.Id, sl.nodeIDBits).Cmp(Distance(sl.startID, node2.Id, sl.nodeIDBits))
 	if sl.reversed {
 		return -res
 	}
@@ -130,9 +130,9 @@ func (sl *NeighborList) GetFirst() *node.RemoteNode {
 		remoteNode, ok := value.(*node.RemoteNode)
 		if ok {
 			if sl.reversed {
-				dist = distance(remoteNode.Id, sl.startID, sl.nodeIDBits)
+				dist = Distance(remoteNode.Id, sl.startID, sl.nodeIDBits)
 			} else {
-				dist = distance(sl.startID, remoteNode.Id, sl.nodeIDBits)
+				dist = Distance(sl.startID, remoteNode.Id, sl.nodeIDBits)
 			}
 			if minDist == nil || dist.Cmp(minDist) < 0 {
 				first = remoteNode
@@ -156,9 +156,9 @@ func (sl *NeighborList) GetLast() *node.RemoteNode {
 		remoteNode, ok := value.(*node.RemoteNode)
 		if ok {
 			if sl.reversed {
-				dist = distance(remoteNode.Id, sl.startID, sl.nodeIDBits)
+				dist = Distance(remoteNode.Id, sl.startID, sl.nodeIDBits)
 			} else {
-				dist = distance(sl.startID, remoteNode.Id, sl.nodeIDBits)
+				dist = Distance(sl.startID, remoteNode.Id, sl.nodeIDBits)
 			}
 			if maxDist == nil || dist.Cmp(maxDist) > 0 {
 				last = remoteNode
