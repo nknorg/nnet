@@ -224,6 +224,7 @@ func (rn *RemoteNode) handleMsg() {
 	var msg *protobuf.Message
 	var remoteMsg *RemoteMessage
 	var msgChan chan *RemoteMessage
+	var lastRxTime time.Time
 	var added bool
 	var err error
 	keepAliveTimeoutTimer := time.NewTimer(keepAliveTimeout)
@@ -264,10 +265,11 @@ func (rn *RemoteNode) handleMsg() {
 			}
 		case <-keepAliveTimeoutTimer.C:
 			rn.RLock()
-			if time.Since(rn.lastRxTime) > keepAliveTimeout {
+			lastRxTime = rn.lastRxTime
+			rn.RUnlock()
+			if time.Since(lastRxTime) > keepAliveTimeout {
 				rn.Stop(errors.New("keepalive timeout"))
 			}
-			rn.RUnlock()
 		}
 
 		util.ResetTimer(keepAliveTimeoutTimer, keepAliveTimeout)
@@ -399,14 +401,13 @@ func (rn *RemoteNode) startMeasuringRoundTripTime() {
 	var err error
 	var startTime time.Time
 	var roundTripTime time.Duration
-	ticker := time.Tick(measureRoundTripTimeInterval)
 
 	for {
+		time.Sleep(measureRoundTripTimeInterval)
+
 		if rn.IsStopped() {
 			return
 		}
-
-		<-ticker
 
 		startTime = time.Now()
 		err = rn.Ping()
