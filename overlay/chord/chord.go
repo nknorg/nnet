@@ -25,6 +25,7 @@ const (
 // Chord is the overlay network based on Chord DHT
 type Chord struct {
 	*overlay.Overlay
+	*middlewareStore
 	nodeIDBits            uint32
 	minNumSuccessors      uint32
 	numSuccessorsFactor   uint32
@@ -33,7 +34,6 @@ type Chord struct {
 	predecessors          *NeighborList
 	fingerTable           []*NeighborList
 	neighbors             *NeighborList
-	*middlewareStore
 }
 
 // NewChord creates a Chord overlay network
@@ -322,8 +322,8 @@ func (c *Chord) handleMsg() {
 func (c *Chord) stabilize() {
 	go c.updateSuccessors()
 	go c.updatePredecessors()
-	go c.updateFinger()
 	go c.findNewPredecessors()
+	go c.updateFinger()
 	go c.findNewFinger()
 }
 
@@ -365,6 +365,7 @@ func (c *Chord) updatePredecessors() {
 
 // findNewPredecessors periodically find new predecessors
 func (c *Chord) findNewPredecessors() {
+	var hasInboundNeighbor bool
 	var err error
 	var existing *node.RemoteNode
 	var maybeNewNodes []*protobuf.Node
@@ -375,6 +376,20 @@ func (c *Chord) findNewPredecessors() {
 		}
 
 		time.Sleep(5 * randDuration(c.baseStabilizeInterval))
+
+		// prevent unreachable node to find predecessors
+		if !hasInboundNeighbor {
+			for _, rn := range c.neighbors.ToRemoteNodeList(false) {
+				if !rn.IsOutbound {
+					hasInboundNeighbor = true
+					break
+				}
+			}
+			if !hasInboundNeighbor {
+				log.Warning("Local node has no inbound neighbor, it's possible that local node is unreachable from outside, e.g. behind firewall or NAT.")
+				continue
+			}
+		}
 
 		maybeNewNodes, err = c.FindPredecessors(c.predecessors.startID, 1)
 		if err != nil {
