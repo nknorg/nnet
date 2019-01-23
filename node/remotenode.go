@@ -18,32 +18,11 @@ import (
 )
 
 const (
-	// Max number of msg received that can be buffered
-	remoteRxMsgChanLen = 23333
-
-	// Max number of msg to be sent that can be buffered
-	remoteTxMsgChanLen = 23333
-
-	// Time interval between measuring round trip time
-	measureRoundTripTimeInterval = 3 * time.Second
-
-	// Max idle time before considering node dead and closing connection
-	keepAliveTimeout = 10 * time.Second
-
-	// How long a sent message id stays in cache before expiration
-	txMsgCacheExpiration = 300 * time.Second
-
-	// How often to check and delete expired sent message
-	txMsgCacheCleanupInterval = 10 * time.Second
-
 	// A grace period that allows remote node to send messages in queue
 	stopGracePeriod = 100 * time.Millisecond
 
 	// Number of retries to get remote node when remote node starts
 	startRetries = 3
-
-	// Max message size in bytes
-	maxMsgSize = 20 * 1024 * 1024
 )
 
 // RemoteNode is a remote node
@@ -75,15 +54,15 @@ func NewRemoteNode(localNode *LocalNode, conn net.Conn, isOutbound bool) (*Remot
 		return nil, err
 	}
 
-	txMsgCache := cache.NewGoCache(txMsgCacheExpiration, txMsgCacheCleanupInterval)
+	txMsgCache := cache.NewGoCache(localNode.RemoteTxMsgCacheExpiration, localNode.RemoteTxMsgCacheCleanupInterval)
 
 	remoteNode := &RemoteNode{
 		Node:       node,
 		LocalNode:  localNode,
 		conn:       conn,
 		IsOutbound: isOutbound,
-		rxMsgChan:  make(chan *protobuf.Message, remoteRxMsgChanLen),
-		txMsgChan:  make(chan *protobuf.Message, remoteTxMsgChanLen),
+		rxMsgChan:  make(chan *protobuf.Message, localNode.RemoteRxMsgChanLen),
+		txMsgChan:  make(chan *protobuf.Message, localNode.RemoteTxMsgChanLen),
 		txMsgCache: txMsgCache,
 		lastRxTime: time.Now(),
 	}
@@ -227,7 +206,7 @@ func (rn *RemoteNode) handleMsg() {
 	var lastRxTime time.Time
 	var added, ok bool
 	var err error
-	keepAliveTimeoutTimer := time.NewTimer(keepAliveTimeout)
+	keepAliveTimeoutTimer := time.NewTimer(rn.LocalNode.KeepAliveTimeout)
 
 	for {
 		if rn.IsStopped() {
@@ -272,12 +251,12 @@ func (rn *RemoteNode) handleMsg() {
 			rn.RLock()
 			lastRxTime = rn.lastRxTime
 			rn.RUnlock()
-			if time.Since(lastRxTime) > keepAliveTimeout {
+			if time.Since(lastRxTime) > rn.LocalNode.KeepAliveTimeout {
 				rn.Stop(errors.New("keepalive timeout"))
 			}
 		}
 
-		util.ResetTimer(keepAliveTimeoutTimer, keepAliveTimeout)
+		util.ResetTimer(keepAliveTimeoutTimer, rn.LocalNode.KeepAliveTimeout)
 	}
 }
 
@@ -300,7 +279,7 @@ func (rn *RemoteNode) handleMsgBuf(buf []byte) {
 // rx receives and handle data from RemoteNode rn
 func (rn *RemoteNode) rx() {
 	msgLenBuf := make([]byte, msgLenBytes)
-	var readLen int
+	var readLen uint32
 
 	for {
 		if rn.IsStopped() {
@@ -321,20 +300,20 @@ func (rn *RemoteNode) rx() {
 		rn.lastRxTime = time.Now()
 		rn.Unlock()
 
-		msgLen := int(binary.BigEndian.Uint32(msgLenBuf))
+		msgLen := binary.BigEndian.Uint32(msgLenBuf)
 		if msgLen < 0 {
 			rn.Stop(fmt.Errorf("Msg len %d overflow", msgLen))
 			continue
 		}
 
-		if msgLen > maxMsgSize {
-			rn.Stop(fmt.Errorf("Msg size %d exceeds max msg size %d", msgLen, maxMsgSize))
+		if msgLen > rn.LocalNode.MaxMessageSize {
+			rn.Stop(fmt.Errorf("Msg size %d exceeds max msg size %d", msgLen, rn.LocalNode.MaxMessageSize))
 			continue
 		}
 
 		buf := make([]byte, msgLen)
 
-		for readLen = 0; readLen < msgLen; readLen += l {
+		for readLen = 0; readLen < msgLen; readLen += uint32(l) {
 			l, err = rn.conn.Read(buf[readLen:])
 			if err != nil {
 				break
@@ -387,8 +366,8 @@ func (rn *RemoteNode) tx() {
 				continue
 			}
 
-			if len(buf) > maxMsgSize {
-				log.Errorf("Msg size %d exceeds max msg size %d", len(buf), maxMsgSize)
+			if uint32(len(buf)) > rn.LocalNode.MaxMessageSize {
+				log.Errorf("Msg size %d exceeds max msg size %d", len(buf), rn.LocalNode.MaxMessageSize)
 				continue
 			}
 
@@ -420,7 +399,7 @@ func (rn *RemoteNode) startMeasuringRoundTripTime() {
 	var roundTripTime time.Duration
 
 	for {
-		time.Sleep(measureRoundTripTimeInterval)
+		time.Sleep(rn.LocalNode.MeasureRoundTripTimeInterval)
 
 		if rn.IsStopped() {
 			return
@@ -489,7 +468,7 @@ func (rn *RemoteNode) SendMessageAsync(msg *protobuf.Message) error {
 // replyTimeout = 0.
 func (rn *RemoteNode) SendMessageSync(msg *protobuf.Message, replyTimeout time.Duration) (*RemoteMessage, error) {
 	if replyTimeout == 0 {
-		replyTimeout = rn.LocalNode.replyTimeout
+		replyTimeout = rn.LocalNode.DefaultReplyTimeout
 	}
 
 	replyChan, err := rn.SendMessage(msg, true, replyTimeout)
@@ -507,7 +486,7 @@ func (rn *RemoteNode) SendMessageSync(msg *protobuf.Message, replyTimeout time.D
 
 // Ping sends a Ping message to remote node and wait for reply
 func (rn *RemoteNode) Ping() error {
-	msg, err := NewPingMessage()
+	msg, err := rn.LocalNode.NewPingMessage()
 	if err != nil {
 		return err
 	}
@@ -522,7 +501,7 @@ func (rn *RemoteNode) Ping() error {
 
 // GetNode sends a GetNode message to remote node and wait for reply
 func (rn *RemoteNode) GetNode() (*protobuf.Node, error) {
-	msg, err := NewGetNodeMessage()
+	msg, err := rn.LocalNode.NewGetNodeMessage()
 	if err != nil {
 		return nil, err
 	}
@@ -544,7 +523,7 @@ func (rn *RemoteNode) GetNode() (*protobuf.Node, error) {
 // NotifyStop sends a Stop message to remote node to notify it that we will
 // close connection with it
 func (rn *RemoteNode) NotifyStop() error {
-	msg, err := NewStopMessage()
+	msg, err := rn.LocalNode.NewStopMessage()
 	if err != nil {
 		return err
 	}

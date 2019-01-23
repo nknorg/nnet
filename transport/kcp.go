@@ -3,6 +3,7 @@ package transport
 import (
 	"fmt"
 	"net"
+	"time"
 
 	kcp "github.com/xtaci/kcp-go"
 )
@@ -17,7 +18,7 @@ func NewKCPTransport() *KCPTransport {
 }
 
 // Dial connects to the remote address on the network "udp"
-func (t *KCPTransport) Dial(addr string) (net.Conn, error) {
+func (t *KCPTransport) Dial(addr string, dialTimeout time.Duration) (net.Conn, error) {
 	return kcp.Dial(addr)
 }
 

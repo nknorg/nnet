@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/nknorg/nnet/config"
 	"github.com/nknorg/nnet/log"
 	"github.com/nknorg/nnet/node"
 	"github.com/nknorg/nnet/overlay"
@@ -38,12 +37,13 @@ type Chord struct {
 }
 
 // NewChord creates a Chord overlay network
-func NewChord(localNode *node.LocalNode, conf *config.Config) (*Chord, error) {
+func NewChord(localNode *node.LocalNode) (*Chord, error) {
 	ovl, err := overlay.NewOverlay(localNode)
 	if err != nil {
 		return nil, err
 	}
 
+	conf := localNode.Config
 	nodeIDBits := conf.NodeIDBytes * 8
 
 	next := nextID(localNode.Id, nodeIDBits)
@@ -374,7 +374,7 @@ func (c *Chord) findNewPredecessors() {
 			return
 		}
 
-		time.Sleep(3 * randDuration(c.baseStabilizeInterval))
+		time.Sleep(5 * randDuration(c.baseStabilizeInterval))
 
 		maybeNewNodes, err = c.FindPredecessors(c.predecessors.startID, 1)
 		if err != nil {
@@ -486,8 +486,8 @@ func (c *Chord) updateSuccPredMaxNumNodes() {
 
 // GetSuccAndPred sends a GetSuccAndPred message to remote node and returns its
 // successors and predecessor if no error occured
-func GetSuccAndPred(remoteNode *node.RemoteNode, numSucc, numPred uint32) ([]*protobuf.Node, []*protobuf.Node, error) {
-	msg, err := NewGetSuccAndPredMessage(numSucc, numPred)
+func GetSuccAndPred(remoteNode *node.RemoteNode, numSucc, numPred uint32, msgIDBytes uint8) ([]*protobuf.Node, []*protobuf.Node, error) {
+	msg, err := NewGetSuccAndPredMessage(numSucc, numPred, msgIDBytes)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -541,7 +541,7 @@ func (c *Chord) FindSuccAndPred(key []byte, numSucc, numPred uint32) ([]*protobu
 		return succs, preds, nil
 	}
 
-	msg, err := NewFindSuccAndPredMessage(key, numSucc, numPred)
+	msg, err := c.NewFindSuccAndPredMessage(key, numSucc, numPred)
 	if err != nil {
 		return nil, nil, err
 	}

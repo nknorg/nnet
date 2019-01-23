@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/url"
 	"strconv"
+	"time"
 )
 
 // Address is a URI for a node
@@ -71,6 +72,6 @@ func (addr *Address) ConnRemoteAddr() string {
 }
 
 // Dial dials the remote address using local transport
-func (addr *Address) Dial() (net.Conn, error) {
-	return addr.Transport.Dial(addr.ConnRemoteAddr())
+func (addr *Address) Dial(dialTimeout time.Duration) (net.Conn, error) {
+	return addr.Transport.Dial(addr.ConnRemoteAddr(), dialTimeout)
 }

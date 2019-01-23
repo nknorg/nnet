@@ -11,11 +11,6 @@ import (
 	"github.com/nknorg/nnet/protobuf"
 )
 
-const (
-	// Max number of msg to be processed by local node that can be buffered
-	localMsgChanLen = 23333
-)
-
 // Overlay is an abstract overlay network
 type Overlay struct {
 	LocalNode    *node.LocalNode
@@ -32,7 +27,7 @@ func NewOverlay(localNode *node.LocalNode) (*Overlay, error) {
 
 	overlay := &Overlay{
 		LocalNode:    localNode,
-		LocalMsgChan: make(chan *node.RemoteMessage, localMsgChanLen),
+		LocalMsgChan: make(chan *node.RemoteMessage, localNode.OverlayLocalMsgChanLen),
 		routers:      make(map[protobuf.RoutingType]routing.Router),
 	}
 	return overlay, nil
@@ -126,7 +121,7 @@ func (ovl *Overlay) SendMessageAsync(msg *protobuf.Message, routingType protobuf
 // replyTimeout = 0.
 func (ovl *Overlay) SendMessageSync(msg *protobuf.Message, routingType protobuf.RoutingType, replyTimeout time.Duration) (*protobuf.Message, bool, error) {
 	if replyTimeout == 0 {
-		replyTimeout = ovl.LocalNode.GetDefaultReplyTimeout()
+		replyTimeout = ovl.LocalNode.DefaultReplyTimeout
 	}
 
 	replyChan, success, err := ovl.SendMessage(msg, routingType, true, replyTimeout)

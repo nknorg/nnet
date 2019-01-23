@@ -16,21 +16,6 @@ import (
 )
 
 const (
-	// Max number of msg that can be buffered per routing type
-	rxMsgChanLen = 23333
-
-	// Max number of msg to be processed that can be buffered
-	handleMsgChanLen = 23333
-
-	// How long a received message id stays in cache before expiration
-	rxMsgCacheExpiration = 300 * time.Second
-
-	// How often to check and delete expired received message id
-	rxMsgCacheCleanupInterval = 10 * time.Second
-
-	// How often to check and delete expired reply chan
-	replyChanCleanupInterval = 1 * time.Second
-
 	// How many concurrent goroutines are handling messages
 	numWorkers = 1
 )
@@ -38,6 +23,8 @@ const (
 // LocalNode is a local node
 type LocalNode struct {
 	*Node
+	*config.Config
+	*middlewareStore
 	address        *transport.Address
 	port           uint16
 	listener       net.Listener
@@ -47,7 +34,6 @@ type LocalNode struct {
 	replyChanCache cache.Cache
 	replyTimeout   time.Duration
 	neighbors      sync.Map
-	*middlewareStore
 }
 
 // NewLocalNode creates a local node
@@ -56,10 +42,7 @@ func NewLocalNode(id []byte, conf *config.Config) (*LocalNode, error) {
 		return nil, errors.New("node id is nil")
 	}
 
-	host := conf.Hostname
-	port := conf.Port
-
-	address, err := transport.NewAddress(conf.Transport, host, port)
+	address, err := transport.NewAddress(conf.Transport, conf.Hostname, conf.Port)
 	if err != nil {
 		return nil, err
 	}
@@ -69,26 +52,27 @@ func NewLocalNode(id []byte, conf *config.Config) (*LocalNode, error) {
 		return nil, err
 	}
 
-	handleMsgChan := make(chan *RemoteMessage, handleMsgChanLen)
+	handleMsgChan := make(chan *RemoteMessage, conf.LocalHandleMsgChanLen)
 
 	rxMsgChan := make(map[protobuf.RoutingType]chan *RemoteMessage)
 
-	rxMsgCache := cache.NewGoCache(rxMsgCacheExpiration, rxMsgCacheCleanupInterval)
+	rxMsgCache := cache.NewGoCache(conf.LocalRxMsgCacheExpiration, conf.LocalRxMsgCacheCleanupInterval)
 
-	replyChanCache := cache.NewGoCache(conf.ReplyTimeout, replyChanCleanupInterval)
+	replyChanCache := cache.NewGoCache(conf.DefaultReplyTimeout, conf.ReplyChanCleanupInterval)
 
 	middlewareStore := newMiddlewareStore()
 
 	localNode := &LocalNode{
 		Node:            node,
+		Config:          conf,
+		middlewareStore: middlewareStore,
 		address:         address,
-		port:            port,
+		port:            conf.Port,
 		handleMsgChan:   handleMsgChan,
 		rxMsgChan:       rxMsgChan,
 		rxMsgCache:      rxMsgCache,
 		replyChanCache:  replyChanCache,
-		replyTimeout:    conf.ReplyTimeout,
-		middlewareStore: middlewareStore,
+		replyTimeout:    conf.DefaultReplyTimeout,
 	}
 
 	for routingType := range protobuf.RoutingType_name {
@@ -287,7 +271,7 @@ func (ln *LocalNode) Connect(remoteNodeAddr string) (*RemoteNode, bool, error) {
 		}
 	}
 
-	conn, err := remoteAddress.Dial()
+	conn, err := remoteAddress.Dial(ln.DialTimeout)
 	if err != nil {
 		ln.neighbors.Delete(key)
 		return nil, false, err
@@ -328,7 +312,7 @@ func (ln *LocalNode) StartRemoteNode(conn net.Conn, isOutbound bool) (*RemoteNod
 
 // RegisterRoutingType register a routing type and creates the rxMsgChan for it
 func (ln *LocalNode) RegisterRoutingType(routingType protobuf.RoutingType) {
-	ln.rxMsgChan[routingType] = make(chan *RemoteMessage, rxMsgChanLen)
+	ln.rxMsgChan[routingType] = make(chan *RemoteMessage, ln.LocalRxMsgChanLen)
 }
 
 // GetRxMsgChan gets the message channel of a routing type, or return error if
@@ -416,9 +400,4 @@ func (ln *LocalNode) GetNeighbors(filter func(*RemoteNode) bool) ([]*RemoteNode,
 		return true
 	})
 	return nodes, nil
-}
-
-// GetDefaultReplyTimeout returns the default reply timeout
-func (ln *LocalNode) GetDefaultReplyTimeout() time.Duration {
-	return ln.replyTimeout
 }

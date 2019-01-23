@@ -31,8 +31,8 @@ func NewRemoteMessage(rn *RemoteNode, msg *protobuf.Message) (*RemoteMessage, er
 }
 
 // NewPingMessage creates a PING message for heartbeat
-func NewPingMessage() (*protobuf.Message, error) {
-	id, err := message.GenID()
+func (ln *LocalNode) NewPingMessage() (*protobuf.Message, error) {
+	id, err := message.GenID(ln.MessageIDBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -55,8 +55,8 @@ func NewPingMessage() (*protobuf.Message, error) {
 }
 
 // NewPingReply creates a PING reply for heartbeat
-func NewPingReply(replyToID []byte) (*protobuf.Message, error) {
-	id, err := message.GenID()
+func (ln *LocalNode) NewPingReply(replyToID []byte) (*protobuf.Message, error) {
+	id, err := message.GenID(ln.MessageIDBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -79,8 +79,8 @@ func NewPingReply(replyToID []byte) (*protobuf.Message, error) {
 }
 
 // NewGetNodeMessage creates a GET_NODE message to get node info
-func NewGetNodeMessage() (*protobuf.Message, error) {
-	id, err := message.GenID()
+func (ln *LocalNode) NewGetNodeMessage() (*protobuf.Message, error) {
+	id, err := message.GenID(ln.MessageIDBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -103,8 +103,8 @@ func NewGetNodeMessage() (*protobuf.Message, error) {
 }
 
 // NewGetNodeReply creates a GET_NODE reply to send node info
-func NewGetNodeReply(replyToID []byte, n *protobuf.Node) (*protobuf.Message, error) {
-	id, err := message.GenID()
+func (ln *LocalNode) NewGetNodeReply(replyToID []byte, n *protobuf.Node) (*protobuf.Message, error) {
+	id, err := message.GenID(ln.MessageIDBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -131,8 +131,8 @@ func NewGetNodeReply(replyToID []byte, n *protobuf.Node) (*protobuf.Message, err
 
 // NewStopMessage creates a STOP message to notify local node to close
 // connection with remote node
-func NewStopMessage() (*protobuf.Message, error) {
-	id, err := message.GenID()
+func (ln *LocalNode) NewStopMessage() (*protobuf.Message, error) {
+	id, err := message.GenID(ln.MessageIDBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ func (ln *LocalNode) handleRemoteMessage(remoteMsg *RemoteMessage) error {
 
 	switch remoteMsg.Msg.MessageType {
 	case protobuf.PING:
-		replyMsg, err := NewPingReply(remoteMsg.Msg.MessageId)
+		replyMsg, err := ln.NewPingReply(remoteMsg.Msg.MessageId)
 		if err != nil {
 			return err
 		}
@@ -173,7 +173,7 @@ func (ln *LocalNode) handleRemoteMessage(remoteMsg *RemoteMessage) error {
 		}
 
 	case protobuf.GET_NODE:
-		replyMsg, err := NewGetNodeReply(remoteMsg.Msg.MessageId, remoteMsg.RemoteNode.LocalNode.Node.Node)
+		replyMsg, err := ln.NewGetNodeReply(remoteMsg.Msg.MessageId, remoteMsg.RemoteNode.LocalNode.Node.Node)
 		if err != nil {
 			return err
 		}

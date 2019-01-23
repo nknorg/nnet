@@ -241,7 +241,7 @@ func (sl *NeighborList) ToProtoNodeList(sorted bool) []*protobuf.Node {
 
 // getNewNodesToConnect query and connect with potentially new nodes that should
 // be added to NeighborList
-func (sl *NeighborList) getNewNodesToConnect() ([]*protobuf.Node, error) {
+func (sl *NeighborList) getNewNodesToConnect(msgIDBytes uint8) ([]*protobuf.Node, error) {
 	first := sl.GetFirst()
 	if first == nil {
 		return nil, errors.New("neighbor list is empty")
@@ -250,9 +250,9 @@ func (sl *NeighborList) getNewNodesToConnect() ([]*protobuf.Node, error) {
 	var succs, preds []*protobuf.Node
 	var err error
 	if sl.reversed {
-		succs, preds, err = GetSuccAndPred(first, 1, sl.Cap()-1)
+		succs, preds, err = GetSuccAndPred(first, 1, sl.Cap()-1, msgIDBytes)
 	} else {
-		succs, preds, err = GetSuccAndPred(first, sl.Cap()-1, 1)
+		succs, preds, err = GetSuccAndPred(first, sl.Cap()-1, 1, msgIDBytes)
 	}
 	if err != nil {
 		return nil, err

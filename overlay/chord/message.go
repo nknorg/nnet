@@ -9,8 +9,8 @@ import (
 
 // NewGetSuccAndPredMessage creates a GET_SUCC_AND_PRED message to get the
 // successors and predecessor of a remote node
-func NewGetSuccAndPredMessage(numSucc, numPred uint32) (*protobuf.Message, error) {
-	id, err := message.GenID()
+func NewGetSuccAndPredMessage(numSucc, numPred uint32, msgIDBytes uint8) (*protobuf.Message, error) {
+	id, err := message.GenID(msgIDBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -37,8 +37,8 @@ func NewGetSuccAndPredMessage(numSucc, numPred uint32) (*protobuf.Message, error
 
 // NewGetSuccAndPredReply creates a GET_SUCC_AND_PRED reply to send successors
 // and predecessor
-func NewGetSuccAndPredReply(replyToID []byte, successors, predecessors []*protobuf.Node) (*protobuf.Message, error) {
-	id, err := message.GenID()
+func (c *Chord) NewGetSuccAndPredReply(replyToID []byte, successors, predecessors []*protobuf.Node) (*protobuf.Message, error) {
+	id, err := message.GenID(c.LocalNode.MessageIDBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -66,8 +66,8 @@ func NewGetSuccAndPredReply(replyToID []byte, successors, predecessors []*protob
 
 // NewFindSuccAndPredMessage creates a FIND_SUCC_AND_PRED message to find
 // numSucc successors and numPred predecessors of a key
-func NewFindSuccAndPredMessage(key []byte, numSucc, numPred uint32) (*protobuf.Message, error) {
-	id, err := message.GenID()
+func (c *Chord) NewFindSuccAndPredMessage(key []byte, numSucc, numPred uint32) (*protobuf.Message, error) {
+	id, err := message.GenID(c.LocalNode.MessageIDBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +96,8 @@ func NewFindSuccAndPredMessage(key []byte, numSucc, numPred uint32) (*protobuf.M
 
 // NewFindSuccAndPredReply creates a FIND_SUCC_AND_PRED reply to send successors
 // and predecessors
-func NewFindSuccAndPredReply(replyToID []byte, successors, predecessors []*protobuf.Node) (*protobuf.Message, error) {
-	id, err := message.GenID()
+func (c *Chord) NewFindSuccAndPredReply(replyToID []byte, successors, predecessors []*protobuf.Node) (*protobuf.Message, error) {
+	id, err := message.GenID(c.LocalNode.MessageIDBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +148,7 @@ func (c *Chord) handleRemoteMessage(remoteMsg *node.RemoteMessage) (bool, error)
 			preds = preds[:msgBody.NumPred]
 		}
 
-		replyMsg, err := NewGetSuccAndPredReply(remoteMsg.Msg.MessageId, succs, preds)
+		replyMsg, err := c.NewGetSuccAndPredReply(remoteMsg.Msg.MessageId, succs, preds)
 		if err != nil {
 			return false, err
 		}
@@ -172,7 +172,7 @@ func (c *Chord) handleRemoteMessage(remoteMsg *node.RemoteMessage) (bool, error)
 				return
 			}
 
-			replyMsg, err := NewFindSuccAndPredReply(remoteMsg.Msg.MessageId, succs, preds)
+			replyMsg, err := c.NewFindSuccAndPredReply(remoteMsg.Msg.MessageId, succs, preds)
 			if err != nil {
 				return
 			}

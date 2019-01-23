@@ -12,15 +12,14 @@ import (
 // NNet is is a peer to peer network
 type NNet struct {
 	overlay.Network
-	Config *config.Config
 }
 
 // Config is an alias of config.Config for simpler usage
 type Config config.Config
 
 // NewNNet creates a new nnet using the local node id and configuration
-// provided. If id is nil, a random id will be generated. If conf is nil, the
-// default config will be used.
+// provided. If id is nil, a random id will be generated. Empty fields in conf
+// will be filled with the default config.
 func NewNNet(id []byte, conf *Config) (*NNet, error) {
 	var mergedConf *config.Config
 	var err error
@@ -47,17 +46,21 @@ func NewNNet(id []byte, conf *Config) (*NNet, error) {
 		return nil, err
 	}
 
-	network, err := chord.NewChord(localNode, mergedConf)
+	network, err := chord.NewChord(localNode)
 	if err != nil {
 		return nil, err
 	}
 
 	nn := &NNet{
 		Network: network,
-		Config:  mergedConf,
 	}
 
 	return nn, nil
+}
+
+// GetConfig returns the config of nnet
+func (nn *NNet) GetConfig() *Config {
+	return (*Config)(nn.GetLocalNode().Config)
 }
 
 // SetLogger sets the global logger

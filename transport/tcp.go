@@ -12,16 +12,14 @@ type TCPTransport struct {
 }
 
 // NewTCPTransport creates a new TCP transport layer
-func NewTCPTransport(dialTimeout time.Duration) *TCPTransport {
-	t := &TCPTransport{
-		dialTimeout: dialTimeout,
-	}
+func NewTCPTransport() *TCPTransport {
+	t := &TCPTransport{}
 	return t
 }
 
 // Dial connects to the remote address on the network "tcp"
-func (t *TCPTransport) Dial(addr string) (net.Conn, error) {
-	return net.DialTimeout(t.GetNetwork(), addr, t.dialTimeout)
+func (t *TCPTransport) Dial(addr string, dialTimeout time.Duration) (net.Conn, error) {
+	return net.DialTimeout(t.GetNetwork(), addr, dialTimeout)
 }
 
 // Listen listens for incoming packets to "port" on the network "tcp"
