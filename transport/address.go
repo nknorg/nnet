@@ -65,7 +65,12 @@ func (addr *Address) String() string {
 	return fmt.Sprintf("%s://%s:%d", addr.Transport, addr.Host, addr.Port)
 }
 
+// ConnRemoteAddr returns the remote address string that transport can dial
+func (addr *Address) ConnRemoteAddr() string {
+	return fmt.Sprintf("%s:%d", addr.Host, addr.Port)
+}
+
 // Dial dials the remote address using local transport
 func (addr *Address) Dial() (net.Conn, error) {
-	return addr.Transport.Dial(fmt.Sprintf("%s:%d", addr.Host, addr.Port))
+	return addr.Transport.Dial(addr.ConnRemoteAddr())
 }

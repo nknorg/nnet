@@ -225,7 +225,7 @@ func (rn *RemoteNode) handleMsg() {
 	var remoteMsg *RemoteMessage
 	var msgChan chan *RemoteMessage
 	var lastRxTime time.Time
-	var added bool
+	var added, ok bool
 	var err error
 	keepAliveTimeoutTimer := time.NewTimer(keepAliveTimeout)
 
@@ -236,7 +236,12 @@ func (rn *RemoteNode) handleMsg() {
 		}
 
 		select {
-		case msg = <-rn.rxMsgChan:
+		case msg, ok = <-rn.rxMsgChan:
+			if !ok {
+				util.StopTimer(keepAliveTimeoutTimer)
+				return
+			}
+
 			added, err = rn.LocalNode.AddToRxCache(msg.MessageId)
 			if err != nil {
 				log.Error(err)
@@ -358,40 +363,52 @@ func (rn *RemoteNode) rx() {
 func (rn *RemoteNode) tx() {
 	var msg *protobuf.Message
 	var buf []byte
+	var ok bool
 	var err error
 	msgLenBuf := make([]byte, msgLenBytes)
+	txTimeoutTimer := time.NewTimer(time.Second)
 
 	for {
 		if rn.IsStopped() {
+			util.StopTimer(txTimeoutTimer)
 			return
 		}
 
-		msg = <-rn.txMsgChan
+		select {
+		case msg, ok = <-rn.txMsgChan:
+			if !ok {
+				util.StopTimer(txTimeoutTimer)
+				return
+			}
 
-		buf, err = proto.Marshal(msg)
-		if err != nil {
-			log.Error(err)
-			continue
+			buf, err = proto.Marshal(msg)
+			if err != nil {
+				log.Error(err)
+				continue
+			}
+
+			if len(buf) > maxMsgSize {
+				log.Errorf("Msg size %d exceeds max msg size %d", len(buf), maxMsgSize)
+				continue
+			}
+
+			binary.BigEndian.PutUint32(msgLenBuf, uint32(len(buf)))
+
+			_, err = rn.conn.Write(msgLenBuf)
+			if err != nil {
+				rn.Stop(fmt.Errorf("Write to conn error: %s", err))
+				continue
+			}
+
+			_, err = rn.conn.Write(buf)
+			if err != nil {
+				rn.Stop(fmt.Errorf("Write to conn error: %s", err))
+				continue
+			}
+		case <-txTimeoutTimer.C:
 		}
 
-		if len(buf) > maxMsgSize {
-			log.Errorf("Msg size %d exceeds max msg size %d", len(buf), maxMsgSize)
-			continue
-		}
-
-		binary.BigEndian.PutUint32(msgLenBuf, uint32(len(buf)))
-
-		_, err = rn.conn.Write(msgLenBuf)
-		if err != nil {
-			rn.Stop(fmt.Errorf("Write to conn error: %s", err))
-			continue
-		}
-
-		_, err = rn.conn.Write(buf)
-		if err != nil {
-			rn.Stop(fmt.Errorf("Write to conn error: %s", err))
-			continue
-		}
+		util.ResetTimer(txTimeoutTimer, time.Second)
 	}
 }
 

@@ -264,43 +264,43 @@ func (ln *LocalNode) Connect(remoteNodeAddr string) (*RemoteNode, bool, error) {
 		return nil, false, errors.New("trying to connect to self")
 	}
 
-	value, loaded := ln.neighbors.LoadOrStore(remoteNodeAddr, nil)
+	remoteAddress, err := transport.Parse(remoteNodeAddr)
+	if err != nil {
+		return nil, false, err
+	}
+
+	key := remoteAddress.ConnRemoteAddr()
+	value, loaded := ln.neighbors.LoadOrStore(key, nil)
 	if loaded {
 		remoteNode, ok := value.(*RemoteNode)
 		if ok {
 			if remoteNode.IsStopped() {
 				log.Warningf("Remove stopped remote node %v from list", remoteNode)
-				ln.neighbors.Delete(remoteNodeAddr)
+				ln.neighbors.Delete(key)
 			} else {
 				log.Infof("Load remote node %v from list", remoteNode)
 				return remoteNode, remoteNode.IsReady(), nil
 			}
 		} else {
-			log.Infof("Another goroutine is connecting to %s", remoteNodeAddr)
+			log.Infof("Another goroutine is connecting to %s", key)
 			return nil, false, nil
 		}
 	}
 
-	remoteAddress, err := transport.Parse(remoteNodeAddr)
-	if err != nil {
-		ln.neighbors.Delete(remoteNodeAddr)
-		return nil, false, err
-	}
-
 	conn, err := remoteAddress.Dial()
 	if err != nil {
-		ln.neighbors.Delete(remoteNodeAddr)
+		ln.neighbors.Delete(key)
 		return nil, false, err
 	}
 
 	remoteNode, err := ln.StartRemoteNode(conn, true)
 	if err != nil {
-		ln.neighbors.Delete(remoteNodeAddr)
+		ln.neighbors.Delete(key)
 		conn.Close()
 		return nil, false, err
 	}
 
-	ln.neighbors.Store(remoteNodeAddr, remoteNode)
+	ln.neighbors.Store(key, remoteNode)
 
 	return remoteNode, false, nil
 }

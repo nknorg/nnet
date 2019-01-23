@@ -36,5 +36,5 @@ func (t *TCPTransport) GetNetwork() string {
 }
 
 func (t *TCPTransport) String() string {
-	return t.GetNetwork()
+	return "tcp"
 }
