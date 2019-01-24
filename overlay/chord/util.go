@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"log"
 	"math/big"
-	"math/rand"
-	"time"
 )
 
 // CompareID returns -1, 0, 1 if id1 <, =, > id2 respectively
@@ -138,10 +136,4 @@ func Distance(a, b []byte, bits uint32) *big.Int {
 	// Distance modulus ring size
 	(&dist).Mod(&dist, &ring)
 	return &dist
-}
-
-// Generates a random stabilization time
-func randDuration(average time.Duration) time.Duration {
-	// uniform random number between 2/3 * average to 4/3 * average
-	return time.Duration(2.0 / 3.0 * (1 + rand.Float64()) * float64(average))
 }

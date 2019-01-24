@@ -12,6 +12,7 @@ import (
 	"github.com/nknorg/nnet/overlay"
 	"github.com/nknorg/nnet/overlay/routing"
 	"github.com/nknorg/nnet/protobuf"
+	"github.com/nknorg/nnet/util"
 )
 
 const (
@@ -336,7 +337,7 @@ func (c *Chord) updateSuccessors() {
 			return
 		}
 
-		time.Sleep(randDuration(c.baseStabilizeInterval))
+		time.Sleep(util.RandDuration(c.baseStabilizeInterval, 1.0/3.0))
 
 		err = c.updateNeighborList(c.successors)
 		if err != nil {
@@ -354,7 +355,7 @@ func (c *Chord) updatePredecessors() {
 			return
 		}
 
-		time.Sleep(3 * randDuration(c.baseStabilizeInterval))
+		time.Sleep(3 * util.RandDuration(c.baseStabilizeInterval, 1.0/3.0))
 
 		err = c.updateNeighborList(c.predecessors)
 		if err != nil {
@@ -375,7 +376,7 @@ func (c *Chord) findNewPredecessors() {
 			return
 		}
 
-		time.Sleep(5 * randDuration(c.baseStabilizeInterval))
+		time.Sleep(5 * util.RandDuration(c.baseStabilizeInterval, 1.0/3.0))
 
 		// prevent unreachable node to find predecessors
 		if !hasInboundNeighbor {
@@ -426,7 +427,7 @@ func (c *Chord) updateFinger() {
 				return
 			}
 
-			time.Sleep(randDuration(c.baseStabilizeInterval))
+			time.Sleep(util.RandDuration(c.baseStabilizeInterval, 1.0/3.0))
 
 			err = c.updateNeighborList(finger)
 			if err != nil {
@@ -435,7 +436,7 @@ func (c *Chord) updateFinger() {
 		}
 
 		// to prevent endless looping when fingerTable is all empty
-		time.Sleep(randDuration(c.baseStabilizeInterval))
+		time.Sleep(util.RandDuration(c.baseStabilizeInterval, 1.0/3.0))
 	}
 }
 
@@ -452,7 +453,7 @@ func (c *Chord) findNewFinger() {
 				return
 			}
 
-			time.Sleep(randDuration(c.baseStabilizeInterval))
+			time.Sleep(util.RandDuration(c.baseStabilizeInterval, 1.0/3.0))
 
 			succs, err = c.FindSuccessors(c.fingerTable[i].startID, 1)
 			if err != nil {

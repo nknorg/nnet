@@ -399,7 +399,7 @@ func (rn *RemoteNode) startMeasuringRoundTripTime() {
 	var roundTripTime time.Duration
 
 	for {
-		time.Sleep(rn.LocalNode.MeasureRoundTripTimeInterval)
+		time.Sleep(util.RandDuration(rn.LocalNode.MeasureRoundTripTimeInterval, 1.0/3.0))
 
 		if rn.IsStopped() {
 			return
