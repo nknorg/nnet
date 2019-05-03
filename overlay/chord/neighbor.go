@@ -42,8 +42,8 @@ func (c *Chord) addSuccessor(remoteNode *node.RemoteNode) error {
 		if added {
 			index := c.successors.GetIndex(remoteNode.Id)
 			if index >= 0 {
-				for _, f := range c.middlewareStore.successorAdded {
-					if !f(remoteNode, index) {
+				for _, mw := range c.middlewareStore.successorAdded {
+					if !mw.Func(remoteNode, index) {
 						break
 					}
 				}
@@ -51,8 +51,8 @@ func (c *Chord) addSuccessor(remoteNode *node.RemoteNode) error {
 		}
 
 		if replaced != nil {
-			for _, f := range c.middlewareStore.successorRemoved {
-				if !f(replaced) {
+			for _, mw := range c.middlewareStore.successorRemoved {
+				if !mw.Func(replaced) {
 					break
 				}
 			}
@@ -75,8 +75,8 @@ func (c *Chord) addPredecessor(remoteNode *node.RemoteNode) error {
 		if added {
 			index := c.predecessors.GetIndex(remoteNode.Id)
 			if index >= 0 {
-				for _, f := range c.middlewareStore.predecessorAdded {
-					if !f(remoteNode, index) {
+				for _, mw := range c.middlewareStore.predecessorAdded {
+					if !mw.Func(remoteNode, index) {
 						break
 					}
 				}
@@ -84,8 +84,8 @@ func (c *Chord) addPredecessor(remoteNode *node.RemoteNode) error {
 		}
 
 		if replaced != nil {
-			for _, f := range c.middlewareStore.predecessorRemoved {
-				if !f(replaced) {
+			for _, mw := range c.middlewareStore.predecessorRemoved {
+				if !mw.Func(replaced) {
 					break
 				}
 			}
@@ -110,8 +110,8 @@ func (c *Chord) addFingerTable(remoteNode *node.RemoteNode, index int) error {
 		if added {
 			i := finger.GetIndex(remoteNode.Id)
 			if i >= 0 {
-				for _, f := range c.middlewareStore.fingerTableAdded {
-					if !f(remoteNode, index, i) {
+				for _, mw := range c.middlewareStore.fingerTableAdded {
+					if !mw.Func(remoteNode, index, i) {
 						break
 					}
 				}
@@ -119,8 +119,8 @@ func (c *Chord) addFingerTable(remoteNode *node.RemoteNode, index int) error {
 		}
 
 		if replaced != nil {
-			for _, f := range c.middlewareStore.fingerTableRemoved {
-				if !f(replaced, index) {
+			for _, mw := range c.middlewareStore.fingerTableRemoved {
+				if !mw.Func(replaced, index) {
 					break
 				}
 			}
@@ -147,8 +147,8 @@ func (c *Chord) addNeighbor(remoteNode *node.RemoteNode) error {
 		if added {
 			index := c.neighbors.GetIndex(remoteNode.Id)
 			if index >= 0 {
-				for _, f := range c.middlewareStore.neighborAdded {
-					if !f(remoteNode, index) {
+				for _, mw := range c.middlewareStore.neighborAdded {
+					if !mw.Func(remoteNode, index) {
 						break
 					}
 				}
@@ -156,8 +156,8 @@ func (c *Chord) addNeighbor(remoteNode *node.RemoteNode) error {
 		}
 
 		if replaced != nil {
-			for _, f := range c.middlewareStore.neighborRemoved {
-				if !f(replaced) {
+			for _, mw := range c.middlewareStore.neighborRemoved {
+				if !mw.Func(replaced) {
 					break
 				}
 			}
@@ -204,8 +204,8 @@ func (c *Chord) addRemoteNode(remoteNode *node.RemoteNode) error {
 func (c *Chord) removeNeighbor(remoteNode *node.RemoteNode) error {
 	removed := c.successors.Remove(remoteNode)
 	if removed {
-		for _, f := range c.middlewareStore.successorRemoved {
-			if !f(remoteNode) {
+		for _, mw := range c.middlewareStore.successorRemoved {
+			if !mw.Func(remoteNode) {
 				break
 			}
 		}
@@ -222,8 +222,8 @@ func (c *Chord) removeNeighbor(remoteNode *node.RemoteNode) error {
 
 	removed = c.predecessors.Remove(remoteNode)
 	if removed {
-		for _, f := range c.middlewareStore.predecessorRemoved {
-			if !f(remoteNode) {
+		for _, mw := range c.middlewareStore.predecessorRemoved {
+			if !mw.Func(remoteNode) {
 				break
 			}
 		}
@@ -242,8 +242,8 @@ func (c *Chord) removeNeighbor(remoteNode *node.RemoteNode) error {
 	for i, finger := range c.fingerTable {
 		removed = finger.Remove(remoteNode)
 		if removed {
-			for _, f := range c.middlewareStore.fingerTableRemoved {
-				if !f(remoteNode, i) {
+			for _, mw := range c.middlewareStore.fingerTableRemoved {
+				if !mw.Func(remoteNode, i) {
 					break
 				}
 			}
@@ -261,8 +261,8 @@ func (c *Chord) removeNeighbor(remoteNode *node.RemoteNode) error {
 
 	removed = c.neighbors.Remove(remoteNode)
 	if removed {
-		for _, f := range c.middlewareStore.neighborRemoved {
-			if !f(remoteNode) {
+		for _, mw := range c.middlewareStore.neighborRemoved {
+			if !mw.Func(remoteNode) {
 				break
 			}
 		}

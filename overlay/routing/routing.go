@@ -74,8 +74,8 @@ func (r *Routing) SendMessage(router Router, remoteMsg *node.RemoteMessage, hasR
 		return nil, false, err
 	}
 
-	for _, f := range r.middlewareStore.remoteMessageRouted {
-		remoteMsg, localNode, remoteNodes, shouldCallNextMiddleware = f(remoteMsg, localNode, remoteNodes)
+	for _, mw := range r.middlewareStore.remoteMessageRouted {
+		remoteMsg, localNode, remoteNodes, shouldCallNextMiddleware = mw.Func(remoteMsg, localNode, remoteNodes)
 		if remoteMsg == nil || !shouldCallNextMiddleware {
 			break
 		}
@@ -127,8 +127,8 @@ func (r *Routing) SendMessage(router Router, remoteMsg *node.RemoteMessage, hasR
 func (r *Routing) sendMessageToLocalNode(remoteMsg *node.RemoteMessage, localNode *node.LocalNode) error {
 	var shouldCallNextMiddleware bool
 
-	for _, f := range r.middlewareStore.remoteMessageReceived {
-		remoteMsg, shouldCallNextMiddleware = f(remoteMsg)
+	for _, mw := range r.middlewareStore.remoteMessageReceived {
+		remoteMsg, shouldCallNextMiddleware = mw.Func(remoteMsg)
 		if remoteMsg == nil || !shouldCallNextMiddleware {
 			break
 		}
@@ -173,8 +173,8 @@ func (r *Routing) handleMsg(router Router) {
 
 		remoteMsg = <-r.rxMsgChan
 
-		for _, f := range r.middlewareStore.remoteMessageArrived {
-			remoteMsg, shouldCallNextMiddleware = f(remoteMsg)
+		for _, mw := range r.middlewareStore.remoteMessageArrived {
+			remoteMsg, shouldCallNextMiddleware = mw.Func(remoteMsg)
 			if remoteMsg == nil || !shouldCallNextMiddleware {
 				break
 			}

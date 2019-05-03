@@ -104,34 +104,41 @@ called when a remote node is connected with the local node and exchanged node
 info
 
 ```go
-err = nn.ApplyMiddleware(node.RemoteNodeReady(func(remoteNode *node.RemoteNode) bool {
+err = nn.ApplyMiddleware(node.RemoteNodeReady{func(remoteNode *node.RemoteNode) bool {
   fmt.Printf("Remote node ready: %v", remoteNode)
   return true
-}))
+}, 0})
 ```
 
-Different middleware types take different arguments and have different return
-types, but they all share one thing in common: one of their returned value is a
-boolean indicating whether we should call the next middleware (of the same
-type). Multiple middleware of the same type will be called in the order added.
-They form a pipeline such that each one can respond to the event with some data,
-modify data that will be passed to the rest middleware, or decides to stop the
-data flow. For example, we can randomly reject remote nodes
+The number 0 after the function is the middleware priority, which is an int32
+type number. Different middleware types take different arguments and have
+different return types, but they all share one thing in common: one of their
+returned value is a boolean indicating whether we should call the next
+middleware (of the same type). Multiple middleware of the same type will be
+called in the order from highest priority to lowest priority. Middleware with
+the same priority will be called in the order of being added. They form a
+pipeline such that each one can respond to the event with some data, modify data
+that will be passed to the rest middleware, or decides to stop the data flow.
+For example, we can randomly reject remote nodes
 
 ```go
-nn.MustApplyMiddleware(node.RemoteNodeConnected(func(remoteNode *node.RemoteNode) bool {
+nn.MustApplyMiddleware(node.RemoteNodeConnected{func(remoteNode *node.RemoteNode) bool {
   if rand.Float64() < 0.23333 {
     remoteNode.Stop(errors.New("YOU ARE UNLUCKY"))
     return false
   }
   return true
-}))
+}, 0})
 
-nn.MustApplyMiddleware(node.RemoteNodeConnected(func(remoteNode *node.RemoteNode) bool {
+nn.MustApplyMiddleware(node.RemoteNodeConnected{func(remoteNode *node.RemoteNode) bool {
   log.Infof("Only lucky remote node can get here :)")
   return true
-}))
+}, 0})
 ```
+
+nnet internally use middleware with 0 priority to hook up events, e.g. to add
+neighbor to overlay network when a remote node is ready. You can make your
+middleware to be called earlier or later by choosing higher/lower priority.
 
 Middleware itself is stateless, but very likely you may need a stateful
 middleware for more complex logic. Stateful middleware can be created in a
@@ -140,10 +147,10 @@ just calling a method in the middleware. As a conceptual example
 
 ```go
 coolObj := NewCoolObj()
-nn.MustApplyMiddleware(node.BytesReceived(func(msg, msgID, srcID []byte, remoteNode *node.RemoteNode) ([]byte, bool) {
+nn.MustApplyMiddleware(node.BytesReceived{func(msg, msgID, srcID []byte, remoteNode *node.RemoteNode) ([]byte, bool) {
   coolObj.DoSomeCoolStuff(msg)
   return msg, true
-}))
+}, 0})
 ```
 
 Stateful middleware if very powerful and can give you almost full control of the
@@ -227,10 +234,10 @@ To handle received message and send back reply message, we can use the
 `node.BytesReceived` middleware together with `SendBytesRelayReply` method.
 
 ```go
-nn.MustApplyMiddleware(node.BytesReceived(func(msg, msgID, srcID []byte, remoteNode *node.RemoteNode) ([]byte, bool) {
+nn.MustApplyMiddleware(node.BytesReceived{func(msg, msgID, srcID []byte, remoteNode *node.RemoteNode) ([]byte, bool) {
   nn.SendBytesRelayReply(msgID, []byte("Well received!"), srcID) // error is omitted here for simplicity
   return msg, true
-}))
+}, 0})
 ```
 
 A complete message example can be found at

@@ -2,6 +2,8 @@ package node
 
 import (
 	"errors"
+
+	"github.com/nknorg/nnet/middleware"
 )
 
 // BytesReceived is called when local node receive user-defined BYTES message.
@@ -10,40 +12,64 @@ import (
 // message), sender ID, and the neighbor that passes you the message (may be
 // different from the message sneder). Returns the bytes data to be passed in
 // the next middleware and if we should proceed to the next middleware.
-type BytesReceived func(data, msgID, srcID []byte, remoteNode *RemoteNode) ([]byte, bool)
+type BytesReceived struct {
+	Func     func(data, msgID, srcID []byte, remoteNode *RemoteNode) ([]byte, bool)
+	Priority int32
+}
 
 // LocalNodeWillStart is called right before local node starts listening and
 // handling messages. It can be used to add additional data to local node, etc.
 // Returns if we should proceed to the next middleware.
-type LocalNodeWillStart func(*LocalNode) bool
+type LocalNodeWillStart struct {
+	Func     func(*LocalNode) bool
+	Priority int32
+}
 
 // LocalNodeStarted is called right after local node starts listening and
 // handling messages. Returns if we should proceed to the next middleware.
-type LocalNodeStarted func(*LocalNode) bool
+type LocalNodeStarted struct {
+	Func     func(*LocalNode) bool
+	Priority int32
+}
 
 // LocalNodeWillStop is called right before local node stops listening and
 // handling messages. Returns if we should proceed to the next middleware.
-type LocalNodeWillStop func(*LocalNode) bool
+type LocalNodeWillStop struct {
+	Func     func(*LocalNode) bool
+	Priority int32
+}
 
 // LocalNodeStopped is called right after local node stops listening and
 // handling messages. Returns if we should proceed to the next middleware.
-type LocalNodeStopped func(*LocalNode) bool
+type LocalNodeStopped struct {
+	Func     func(*LocalNode) bool
+	Priority int32
+}
 
 // RemoteNodeConnected is called when a connection is established with a remote
 // node, but the remote node id is typically nil, so it's not a good time to use
 // the node yet, but can be used to stop the connection to remote node. Returns
 // if we should proceed to the next middleware.
-type RemoteNodeConnected func(*RemoteNode) bool
+type RemoteNodeConnected struct {
+	Func     func(*RemoteNode) bool
+	Priority int32
+}
 
 // RemoteNodeReady is called when local node has received the node info from
 // remote node and the remote node is ready to use. Returns if we should proceed
 // to the next middleware.
-type RemoteNodeReady func(*RemoteNode) bool
+type RemoteNodeReady struct {
+	Func     func(*RemoteNode) bool
+	Priority int32
+}
 
 // RemoteNodeDisconnected is called when connection to remote node is closed.
 // The cause of the connection close can be on either local node or remote node.
 // Returns if we should proceed to the next middleware.
-type RemoteNodeDisconnected func(*RemoteNode) bool
+type RemoteNodeDisconnected struct {
+	Func     func(*RemoteNode) bool
+	Priority int32
+}
 
 // middlewareStore stores the functions that will be called when certain events
 // are triggered or in some pipeline
@@ -73,48 +99,56 @@ func newMiddlewareStore() *middlewareStore {
 }
 
 // ApplyMiddleware add a middleware to the store
-func (store *middlewareStore) ApplyMiddleware(f interface{}) error {
-	switch f := f.(type) {
+func (store *middlewareStore) ApplyMiddleware(mw interface{}) error {
+	switch mw := mw.(type) {
 	case BytesReceived:
-		if f == nil {
-			return errors.New("middleware is nil")
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
 		}
-		store.bytesReceived = append(store.bytesReceived, f)
+		store.bytesReceived = append(store.bytesReceived, mw)
+		middleware.Sort(store.bytesReceived)
 	case LocalNodeWillStart:
-		if f == nil {
-			return errors.New("middleware is nil")
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
 		}
-		store.localNodeWillStart = append(store.localNodeWillStart, f)
+		store.localNodeWillStart = append(store.localNodeWillStart, mw)
+		middleware.Sort(store.localNodeWillStart)
 	case LocalNodeStarted:
-		if f == nil {
-			return errors.New("middleware is nil")
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
 		}
-		store.localNodeStarted = append(store.localNodeStarted, f)
+		store.localNodeStarted = append(store.localNodeStarted, mw)
+		middleware.Sort(store.localNodeStarted)
 	case LocalNodeWillStop:
-		if f == nil {
-			return errors.New("middleware is nil")
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
 		}
-		store.localNodeWillStop = append(store.localNodeWillStop, f)
+		store.localNodeWillStop = append(store.localNodeWillStop, mw)
+		middleware.Sort(store.localNodeWillStop)
 	case LocalNodeStopped:
-		if f == nil {
-			return errors.New("middleware is nil")
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
 		}
-		store.localNodeStopped = append(store.localNodeStopped, f)
+		store.localNodeStopped = append(store.localNodeStopped, mw)
+		middleware.Sort(store.localNodeStopped)
 	case RemoteNodeConnected:
-		if f == nil {
-			return errors.New("middleware is nil")
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
 		}
-		store.remoteNodeConnected = append(store.remoteNodeConnected, f)
+		store.remoteNodeConnected = append(store.remoteNodeConnected, mw)
+		middleware.Sort(store.remoteNodeConnected)
 	case RemoteNodeReady:
-		if f == nil {
-			return errors.New("middleware is nil")
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
 		}
-		store.remoteNodeReady = append(store.remoteNodeReady, f)
+		store.remoteNodeReady = append(store.remoteNodeReady, mw)
+		middleware.Sort(store.remoteNodeReady)
 	case RemoteNodeDisconnected:
-		if f == nil {
-			return errors.New("middleware is nil")
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
 		}
-		store.remoteNodeDisconnected = append(store.remoteNodeDisconnected, f)
+		store.remoteNodeDisconnected = append(store.remoteNodeDisconnected, mw)
+		middleware.Sort(store.remoteNodeDisconnected)
 	default:
 		return errors.New("unknown middleware type")
 	}

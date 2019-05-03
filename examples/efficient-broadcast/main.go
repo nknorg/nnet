@@ -88,7 +88,7 @@ func main() {
 			return
 		}
 
-		nn.MustApplyMiddleware(routing.RemoteMessageRouted(func(remoteMessage *node.RemoteMessage, localNode *node.LocalNode, remoteNodes []*node.RemoteNode) (*node.RemoteMessage, *node.LocalNode, []*node.RemoteNode, bool) {
+		nn.MustApplyMiddleware(routing.RemoteMessageRouted{func(remoteMessage *node.RemoteMessage, localNode *node.LocalNode, remoteNodes []*node.RemoteNode) (*node.RemoteMessage, *node.LocalNode, []*node.RemoteNode, bool) {
 			if remoteMessage.Msg.MessageType == protobuf.BYTES {
 				msgBody := &protobuf.Bytes{}
 				err = proto.Unmarshal(remoteMessage.Msg.Message, msgBody)
@@ -108,7 +108,7 @@ func main() {
 				msgCountLock.Unlock()
 			}
 			return remoteMessage, localNode, remoteNodes, true
-		}))
+		}, 0})
 
 		nnets = append(nnets, nn)
 	}

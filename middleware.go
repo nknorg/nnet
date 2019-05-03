@@ -8,18 +8,18 @@ import (
 // ApplyMiddleware add a middleware to node, network, router, etc. If multiple
 // middleware of the same type are applied, they will be called in the order of
 // being added.
-func (nn *NNet) ApplyMiddleware(f interface{}) error {
+func (nn *NNet) ApplyMiddleware(mw interface{}) error {
 	applied := false
 	errs := util.NewErrors()
 
-	err := nn.GetLocalNode().ApplyMiddleware(f)
+	err := nn.GetLocalNode().ApplyMiddleware(mw)
 	if err == nil {
 		applied = true
 	} else {
 		errs = append(errs, err)
 	}
 
-	err = nn.Network.ApplyMiddleware(f)
+	err = nn.Network.ApplyMiddleware(mw)
 	if err == nil {
 		applied = true
 	} else {
@@ -27,7 +27,7 @@ func (nn *NNet) ApplyMiddleware(f interface{}) error {
 	}
 
 	for _, router := range nn.GetRouters() {
-		err = router.ApplyMiddleware(f)
+		err = router.ApplyMiddleware(mw)
 		if err == nil {
 			applied = true
 		} else {
@@ -45,8 +45,8 @@ func (nn *NNet) ApplyMiddleware(f interface{}) error {
 // MustApplyMiddleware is the same as ApplyMiddleware, but will panic if an
 // error occurs. This is a convenient shortcut if ApplyMiddleware is not
 // expected to fail.
-func (nn *NNet) MustApplyMiddleware(f interface{}) {
-	err := nn.ApplyMiddleware(f)
+func (nn *NNet) MustApplyMiddleware(mw interface{}) {
+	err := nn.ApplyMiddleware(mw)
 	if err != nil {
 		log.Error(err)
 		panic(err)
