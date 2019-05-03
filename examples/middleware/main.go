@@ -58,60 +58,70 @@ func main() {
 		return
 	}
 
-	nn.MustApplyMiddleware(overlay.NetworkWillStart(func(network overlay.Network) bool {
+	nn.MustApplyMiddleware(overlay.NetworkWillStart{func(network overlay.Network) bool {
 		log.Infof("Network will start")
 		return true
-	}))
+	}, 0})
 
-	nn.MustApplyMiddleware(overlay.NetworkStarted(func(network overlay.Network) bool {
+	nn.MustApplyMiddleware(overlay.NetworkStarted{func(network overlay.Network) bool {
 		log.Infof("Network started")
 		return true
-	}))
+	}, 0})
 
-	nn.MustApplyMiddleware(overlay.NetworkWillStop(func(network overlay.Network) bool {
+	nn.MustApplyMiddleware(overlay.NetworkWillStop{func(network overlay.Network) bool {
 		log.Infof("Network will stop")
 		return true
-	}))
+	}, 0})
 
-	nn.MustApplyMiddleware(overlay.NetworkStopped(func(network overlay.Network) bool {
+	nn.MustApplyMiddleware(overlay.NetworkStopped{func(network overlay.Network) bool {
 		log.Infof("Network stopped")
 		return true
-	}))
+	}, 0})
 
-	nn.MustApplyMiddleware(node.RemoteNodeConnected(func(remoteNode *node.RemoteNode) bool {
+	nn.MustApplyMiddleware(node.RemoteNodeConnected{func(remoteNode *node.RemoteNode) bool {
 		log.Infof("Remote node connected: %v", remoteNode)
 		return true
-	}))
+	}, 0})
 
-	nn.MustApplyMiddleware(node.RemoteNodeReady(func(remoteNode *node.RemoteNode) bool {
-		log.Infof("Remote node ready: %v", remoteNode)
+	nn.MustApplyMiddleware(node.RemoteNodeReady{func(remoteNode *node.RemoteNode) bool {
+		log.Infof("Remote node ready (normal priority): %v", remoteNode)
 		return true
-	}))
+	}, 0})
 
-	nn.MustApplyMiddleware(node.RemoteNodeDisconnected(func(remoteNode *node.RemoteNode) bool {
+	nn.MustApplyMiddleware(node.RemoteNodeReady{func(remoteNode *node.RemoteNode) bool {
+		log.Infof("Remote node ready (higher priority): %v", remoteNode)
+		return true
+	}, 1})
+
+	nn.MustApplyMiddleware(node.RemoteNodeReady{func(remoteNode *node.RemoteNode) bool {
+		log.Infof("Remote node ready (lower priority): %v", remoteNode)
+		return true
+	}, -1})
+
+	nn.MustApplyMiddleware(node.RemoteNodeDisconnected{func(remoteNode *node.RemoteNode) bool {
 		log.Infof("Remote node disconnected: %v", remoteNode)
 		return true
-	}))
+	}, 0})
 
-	nn.MustApplyMiddleware(chord.NeighborAdded(func(remoteNode *node.RemoteNode, index int) bool {
+	nn.MustApplyMiddleware(chord.NeighborAdded{func(remoteNode *node.RemoteNode, index int) bool {
 		log.Infof("New neighbor %d: %v", index, remoteNode)
 		return true
-	}))
+	}, 0})
 
-	nn.MustApplyMiddleware(chord.SuccessorAdded(func(remoteNode *node.RemoteNode, index int) bool {
+	nn.MustApplyMiddleware(chord.SuccessorAdded{func(remoteNode *node.RemoteNode, index int) bool {
 		log.Infof("New successor %d: %v", index, remoteNode)
 		return true
-	}))
+	}, 0})
 
-	nn.MustApplyMiddleware(chord.PredecessorAdded(func(remoteNode *node.RemoteNode, index int) bool {
+	nn.MustApplyMiddleware(chord.PredecessorAdded{func(remoteNode *node.RemoteNode, index int) bool {
 		log.Infof("New predecessor %d: %v", index, remoteNode)
 		return true
-	}))
+	}, 0})
 
-	nn.MustApplyMiddleware(chord.FingerTableAdded(func(remoteNode *node.RemoteNode, fingerIndex, nodeIndex int) bool {
+	nn.MustApplyMiddleware(chord.FingerTableAdded{func(remoteNode *node.RemoteNode, fingerIndex, nodeIndex int) bool {
 		log.Infof("New finger table %d-%d: %v", fingerIndex, nodeIndex, remoteNode)
 		return true
-	}))
+	}, 0})
 
 	err = nn.Start(true)
 	if err != nil {
@@ -130,19 +140,19 @@ func main() {
 			return
 		}
 
-		nn.MustApplyMiddleware(node.RemoteNodeConnected(func(remoteNode *node.RemoteNode) bool {
+		nn.MustApplyMiddleware(node.RemoteNodeConnected{func(remoteNode *node.RemoteNode) bool {
 			if rand.Float64() < 0.23333 {
 				remoteNode.Stop(errors.New("YOU ARE UNLUCKY"))
 				// stop propagate to the next middleware
 				return false
 			}
 			return true
-		}))
+		}, 0})
 
-		nn.MustApplyMiddleware(node.RemoteNodeConnected(func(remoteNode *node.RemoteNode) bool {
+		nn.MustApplyMiddleware(node.RemoteNodeConnected{func(remoteNode *node.RemoteNode) bool {
 			log.Infof("Only lucky remote node can get here :)")
 			return true
-		}))
+		}, 0})
 
 		err = nn.Start(false)
 		if err != nil {

@@ -196,8 +196,8 @@ func (ln *LocalNode) handleRemoteMessage(remoteMsg *RemoteMessage) error {
 
 		data := msgBody.Data
 		var shouldCallNextMiddleware bool
-		for _, f := range ln.middlewareStore.bytesReceived {
-			data, shouldCallNextMiddleware = f(data, remoteMsg.Msg.MessageId, remoteMsg.Msg.SrcId, remoteMsg.RemoteNode)
+		for _, mw := range ln.middlewareStore.bytesReceived {
+			data, shouldCallNextMiddleware = mw.Func(data, remoteMsg.Msg.MessageId, remoteMsg.Msg.SrcId, remoteMsg.RemoteNode)
 			if !shouldCallNextMiddleware {
 				break
 			}

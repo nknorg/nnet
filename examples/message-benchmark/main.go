@@ -86,12 +86,12 @@ func main() {
 			return
 		}
 
-		nn.MustApplyMiddleware(node.BytesReceived(func(msg, msgID, srcID []byte, remoteNode *node.RemoteNode) ([]byte, bool) {
+		nn.MustApplyMiddleware(node.BytesReceived{func(msg, msgID, srcID []byte, remoteNode *node.RemoteNode) ([]byte, bool) {
 			msgCountLock.Lock()
 			msgCount++
 			msgCountLock.Unlock()
 			return msg, true
-		}))
+		}, 0})
 
 		nnets = append(nnets, nn)
 	}

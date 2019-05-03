@@ -85,8 +85,8 @@ func NewLocalNode(id []byte, conf *config.Config) (*LocalNode, error) {
 // Start starts the runtime loop of the local node
 func (ln *LocalNode) Start() error {
 	ln.StartOnce.Do(func() {
-		for _, f := range ln.middlewareStore.localNodeWillStart {
-			if !f(ln) {
+		for _, mw := range ln.middlewareStore.localNodeWillStart {
+			if !mw.Func(ln) {
 				break
 			}
 		}
@@ -97,8 +97,8 @@ func (ln *LocalNode) Start() error {
 
 		go ln.listen()
 
-		for _, f := range ln.middlewareStore.localNodeStarted {
-			if !f(ln) {
+		for _, mw := range ln.middlewareStore.localNodeStarted {
+			if !mw.Func(ln) {
 				break
 			}
 		}
@@ -110,8 +110,8 @@ func (ln *LocalNode) Start() error {
 // Stop stops the local node
 func (ln *LocalNode) Stop(err error) {
 	ln.StopOnce.Do(func() {
-		for _, f := range ln.middlewareStore.localNodeWillStop {
-			if !f(ln) {
+		for _, mw := range ln.middlewareStore.localNodeWillStop {
+			if !mw.Func(ln) {
 				break
 			}
 		}
@@ -138,8 +138,8 @@ func (ln *LocalNode) Stop(err error) {
 			ln.listener.Close()
 		}
 
-		for _, f := range ln.middlewareStore.localNodeStopped {
-			if !f(ln) {
+		for _, mw := range ln.middlewareStore.localNodeStopped {
+			if !mw.Func(ln) {
 				break
 			}
 		}
@@ -296,8 +296,8 @@ func (ln *LocalNode) StartRemoteNode(conn net.Conn, isOutbound bool) (*RemoteNod
 		return nil, err
 	}
 
-	for _, f := range ln.middlewareStore.remoteNodeConnected {
-		if !f(remoteNode) {
+	for _, mw := range ln.middlewareStore.remoteNodeConnected {
+		if !mw.Func(remoteNode) {
 			break
 		}
 	}

@@ -142,18 +142,18 @@ func NewChord(localNode *node.LocalNode) (*Chord, error) {
 		return nil, err
 	}
 
-	err = localNode.ApplyMiddleware(node.RemoteNodeReady(func(rn *node.RemoteNode) bool {
+	err = localNode.ApplyMiddleware(node.RemoteNodeReady{func(rn *node.RemoteNode) bool {
 		c.addRemoteNode(rn)
 		return true
-	}))
+	}, 0})
 	if err != nil {
 		return nil, err
 	}
 
-	err = localNode.ApplyMiddleware(node.RemoteNodeDisconnected(func(rn *node.RemoteNode) bool {
+	err = localNode.ApplyMiddleware(node.RemoteNodeDisconnected{func(rn *node.RemoteNode) bool {
 		c.removeNeighbor(rn)
 		return true
-	}))
+	}, 0})
 	if err != nil {
 		return nil, err
 	}
@@ -165,13 +165,13 @@ func NewChord(localNode *node.LocalNode) (*Chord, error) {
 func (c *Chord) Start(isCreate bool) error {
 	c.StartOnce.Do(func() {
 		if !isCreate {
-			err := c.LocalNode.ApplyMiddleware(node.RemoteNodeConnected(func(rn *node.RemoteNode) bool {
+			err := c.LocalNode.ApplyMiddleware(node.RemoteNodeConnected{func(rn *node.RemoteNode) bool {
 				if !c.IsReady() && !rn.IsOutbound {
 					rn.Stop(errors.New("Chord node is not ready yet"))
 					return false
 				}
 				return true
-			}))
+			}, 0})
 			if err != nil {
 				c.Stop(err)
 				return
@@ -180,7 +180,7 @@ func (c *Chord) Start(isCreate bool) error {
 
 		var joinOnce sync.Once
 
-		err := c.ApplyMiddleware(SuccessorAdded(func(remoteNode *node.RemoteNode, index int) bool {
+		err := c.ApplyMiddleware(SuccessorAdded{func(remoteNode *node.RemoteNode, index int) bool {
 			joinOnce.Do(func() {
 				var succs []*protobuf.Node
 				var err error
@@ -213,14 +213,14 @@ func (c *Chord) Start(isCreate bool) error {
 				c.stabilize()
 			})
 			return true
-		}))
+		}, 0})
 		if err != nil {
 			c.Stop(err)
 			return
 		}
 
-		for _, f := range c.middlewareStore.networkWillStart {
-			if !f(c) {
+		for _, mw := range c.middlewareStore.networkWillStart {
+			if !mw.Func(c) {
 				break
 			}
 		}
@@ -241,8 +241,8 @@ func (c *Chord) Start(isCreate bool) error {
 			return
 		}
 
-		for _, f := range c.middlewareStore.networkStarted {
-			if !f(c) {
+		for _, mw := range c.middlewareStore.networkStarted {
+			if !mw.Func(c) {
 				break
 			}
 		}
@@ -254,8 +254,8 @@ func (c *Chord) Start(isCreate bool) error {
 // Stop stops the chord network
 func (c *Chord) Stop(err error) {
 	c.StopOnce.Do(func() {
-		for _, f := range c.middlewareStore.networkWillStop {
-			if !f(c) {
+		for _, mw := range c.middlewareStore.networkWillStop {
+			if !mw.Func(c) {
 				break
 			}
 		}
@@ -276,8 +276,8 @@ func (c *Chord) Stop(err error) {
 
 		c.StopRouters(err)
 
-		for _, f := range c.middlewareStore.networkStopped {
-			if !f(c) {
+		for _, mw := range c.middlewareStore.networkStopped {
+			if !mw.Func(c) {
 				break
 			}
 		}

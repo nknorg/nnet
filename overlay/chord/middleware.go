@@ -3,6 +3,7 @@ package chord
 import (
 	"errors"
 
+	"github.com/nknorg/nnet/middleware"
 	"github.com/nknorg/nnet/node"
 	"github.com/nknorg/nnet/overlay"
 )
@@ -13,14 +14,20 @@ import (
 // remote node previously in successor list was disconnected or removed. When
 // being called, it will also pass the index of the remote node in successor
 // list after it is added. Returns if we should proceed to the next middleware.
-type SuccessorAdded func(*node.RemoteNode, int) bool
+type SuccessorAdded struct {
+	Func     func(*node.RemoteNode, int) bool
+	Priority int32
+}
 
 // SuccessorRemoved is called when a remote node has been removed from the
 // successor list. This does not necessarily means the remote node has just
 // disconnected with local node, but may also because another remote node is
 // added to the successor list. Returns if we should proceed to the next
 // middleware.
-type SuccessorRemoved func(*node.RemoteNode) bool
+type SuccessorRemoved struct {
+	Func     func(*node.RemoteNode) bool
+	Priority int32
+}
 
 // PredecessorAdded is called when a new remote node has been added to the
 // predecessor list. This does not necessarily means the remote node has just
@@ -28,14 +35,20 @@ type SuccessorRemoved func(*node.RemoteNode) bool
 // remote node previously in predecessor list was disconnected or removed. When
 // being called, it will also pass the index of the remote node in predecessor
 // list after it is added. Returns if we should proceed to the next middleware.
-type PredecessorAdded func(*node.RemoteNode, int) bool
+type PredecessorAdded struct {
+	Func     func(*node.RemoteNode, int) bool
+	Priority int32
+}
 
 // PredecessorRemoved is called when a remote node has been removed from the
 // predecessor list. This does not necessarily means the remote node has just
 // disconnected with local node, but may also because another remote node is
 // added to the predecessor list. Returns if we should proceed to the next
 // middleware.
-type PredecessorRemoved func(*node.RemoteNode) bool
+type PredecessorRemoved struct {
+	Func     func(*node.RemoteNode) bool
+	Priority int32
+}
 
 // FingerTableAdded is called when a new remote node has been added to the
 // finger table. This does not necessarily means the remote node has just
@@ -44,24 +57,36 @@ type PredecessorRemoved func(*node.RemoteNode) bool
 // being called, it will also pass the index of finger table and the index of
 // the remote node in that finger table after it is added. Returns if we should
 // proceed to the next middleware.
-type FingerTableAdded func(*node.RemoteNode, int, int) bool
+type FingerTableAdded struct {
+	Func     func(*node.RemoteNode, int, int) bool
+	Priority int32
+}
 
 // FingerTableRemoved is called when a remote node has been removed from the
 // finger table. This does not necessarily means the remote node has just
 // disconnected with local node, but may also because another remote node is
 // added to the finger table. Returns if we should proceed to the next
 // middleware.
-type FingerTableRemoved func(*node.RemoteNode, int) bool
+type FingerTableRemoved struct {
+	Func     func(*node.RemoteNode, int) bool
+	Priority int32
+}
 
 // NeighborAdded is called when a new remote node has been added to the neighbor
 // list. When being called, it will also pass the index of the remote node in
 // neighbor list after it is added. Returns if we should proceed to the next
 // middleware.
-type NeighborAdded func(*node.RemoteNode, int) bool
+type NeighborAdded struct {
+	Func     func(*node.RemoteNode, int) bool
+	Priority int32
+}
 
 // NeighborRemoved is called when a remote node has been removed from the
 // neighbor list. Returns if we should proceed to the next middleware.
-type NeighborRemoved func(*node.RemoteNode) bool
+type NeighborRemoved struct {
+	Func     func(*node.RemoteNode) bool
+	Priority int32
+}
 
 // middlewareStore stores the functions that will be called when certain events
 // are triggered or in some pipeline
@@ -99,68 +124,80 @@ func newMiddlewareStore() *middlewareStore {
 }
 
 // ApplyMiddleware add a middleware to the store
-func (store *middlewareStore) ApplyMiddleware(f interface{}) error {
-	switch f := f.(type) {
+func (store *middlewareStore) ApplyMiddleware(mw interface{}) error {
+	switch mw := mw.(type) {
 	case overlay.NetworkWillStart:
-		if f == nil {
-			return errors.New("middleware is nil")
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
 		}
-		store.networkWillStart = append(store.networkWillStart, f)
+		store.networkWillStart = append(store.networkWillStart, mw)
+		middleware.Sort(store.networkWillStart)
 	case overlay.NetworkStarted:
-		if f == nil {
-			return errors.New("middleware is nil")
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
 		}
-		store.networkStarted = append(store.networkStarted, f)
+		store.networkStarted = append(store.networkStarted, mw)
+		middleware.Sort(store.networkStarted)
 	case overlay.NetworkWillStop:
-		if f == nil {
-			return errors.New("middleware is nil")
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
 		}
-		store.networkWillStop = append(store.networkWillStop, f)
+		store.networkWillStop = append(store.networkWillStop, mw)
+		middleware.Sort(store.networkWillStop)
 	case overlay.NetworkStopped:
-		if f == nil {
-			return errors.New("middleware is nil")
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
 		}
-		store.networkStopped = append(store.networkStopped, f)
+		store.networkStopped = append(store.networkStopped, mw)
+		middleware.Sort(store.networkStopped)
 	case SuccessorAdded:
-		if f == nil {
-			return errors.New("middleware is nil")
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
 		}
-		store.successorAdded = append(store.successorAdded, f)
+		store.successorAdded = append(store.successorAdded, mw)
+		middleware.Sort(store.successorAdded)
 	case SuccessorRemoved:
-		if f == nil {
-			return errors.New("middleware is nil")
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
 		}
-		store.successorRemoved = append(store.successorRemoved, f)
+		store.successorRemoved = append(store.successorRemoved, mw)
+		middleware.Sort(store.successorRemoved)
 	case PredecessorAdded:
-		if f == nil {
-			return errors.New("middleware is nil")
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
 		}
-		store.predecessorAdded = append(store.predecessorAdded, f)
+		store.predecessorAdded = append(store.predecessorAdded, mw)
+		middleware.Sort(store.predecessorAdded)
 	case PredecessorRemoved:
-		if f == nil {
-			return errors.New("middleware is nil")
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
 		}
-		store.predecessorRemoved = append(store.predecessorRemoved, f)
+		store.predecessorRemoved = append(store.predecessorRemoved, mw)
+		middleware.Sort(store.predecessorRemoved)
 	case FingerTableAdded:
-		if f == nil {
-			return errors.New("middleware is nil")
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
 		}
-		store.fingerTableAdded = append(store.fingerTableAdded, f)
+		store.fingerTableAdded = append(store.fingerTableAdded, mw)
+		middleware.Sort(store.fingerTableAdded)
 	case FingerTableRemoved:
-		if f == nil {
-			return errors.New("middleware is nil")
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
 		}
-		store.fingerTableRemoved = append(store.fingerTableRemoved, f)
+		store.fingerTableRemoved = append(store.fingerTableRemoved, mw)
+		middleware.Sort(store.fingerTableRemoved)
 	case NeighborAdded:
-		if f == nil {
-			return errors.New("middleware is nil")
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
 		}
-		store.neighborAdded = append(store.neighborAdded, f)
+		store.neighborAdded = append(store.neighborAdded, mw)
+		middleware.Sort(store.neighborAdded)
 	case NeighborRemoved:
-		if f == nil {
-			return errors.New("middleware is nil")
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
 		}
-		store.neighborRemoved = append(store.neighborRemoved, f)
+		store.neighborRemoved = append(store.neighborRemoved, mw)
+		middleware.Sort(store.neighborRemoved)
 	default:
 		return errors.New("unknown middleware type")
 	}

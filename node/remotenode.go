@@ -156,8 +156,8 @@ func (rn *RemoteNode) Start() error {
 
 			rn.SetReady(true)
 
-			for _, f := range rn.LocalNode.middlewareStore.remoteNodeReady {
-				if !f(rn) {
+			for _, mw := range rn.LocalNode.middlewareStore.remoteNodeReady {
+				if !mw.Func(rn) {
 					break
 				}
 			}
@@ -189,8 +189,8 @@ func (rn *RemoteNode) Stop(err error) {
 				rn.conn.Close()
 			}
 
-			for _, f := range rn.LocalNode.middlewareStore.remoteNodeDisconnected {
-				if !f(rn) {
+			for _, mw := range rn.LocalNode.middlewareStore.remoteNodeDisconnected {
+				if !mw.Func(rn) {
 					break
 				}
 			}

@@ -66,7 +66,7 @@ func main() {
 			return
 		}
 
-		nn.MustApplyMiddleware(node.BytesReceived(func(msg, msgID, srcID []byte, remoteNode *node.RemoteNode) ([]byte, bool) {
+		nn.MustApplyMiddleware(node.BytesReceived{func(msg, msgID, srcID []byte, remoteNode *node.RemoteNode) ([]byte, bool) {
 			log.Infof("Receive message \"%s\" from %x by %x", string(msg), srcID, remoteNode.Id)
 
 			_, err = nn.SendBytesRelayReply(msgID, []byte("Well received!"), srcID)
@@ -75,18 +75,18 @@ func main() {
 			}
 
 			return msg, true
-		}))
+		}, 0})
 
 		nnets = append(nnets, nn)
 	}
 
-	nnets[0].MustApplyMiddleware(chord.FingerTableAdded(func(remoteNode *node.RemoteNode, fingerIndex, nodeIndex int) bool {
+	nnets[0].MustApplyMiddleware(chord.FingerTableAdded{func(remoteNode *node.RemoteNode, fingerIndex, nodeIndex int) bool {
 		err = nnets[0].SendBytesDirectAsync([]byte("Hello my finger!"), remoteNode)
 		if err != nil {
 			log.Error(err)
 		}
 		return true
-	}))
+	}, 0})
 
 	for i := 0; i < len(nnets); i++ {
 		time.Sleep(112358 * time.Microsecond)
