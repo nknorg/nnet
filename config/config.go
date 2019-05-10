@@ -14,6 +14,10 @@ type Config struct {
 	NodeIDBytes    uint32 // length of node id in bytes
 	MessageIDBytes uint8  // MsgIDBytes is the length of message id in RandBytes
 
+	Multiplexer        string // which multiplexer to use, e.g. smux, yamux
+	NumStreamsToOpen   uint32 // number of streams to open per remote node
+	NumStreamsToAccept uint32 // number of streams to accept per remote node
+
 	LocalRxMsgChanLen              uint32        // Max number of msg that can be buffered per routing type
 	LocalHandleMsgChanLen          uint32        // Max number of msg to be processed that can be buffered
 	LocalRxMsgCacheExpiration      time.Duration // How long a received message id stays in cache before expiration
@@ -45,6 +49,10 @@ func DefaultConfig() *Config {
 		Transport:      "tcp",
 		NodeIDBytes:    32,
 		MessageIDBytes: 8,
+
+		Multiplexer:        "smux",
+		NumStreamsToOpen:   8,
+		NumStreamsToAccept: 32,
 
 		LocalRxMsgChanLen:              23333,
 		LocalHandleMsgChanLen:          23333,

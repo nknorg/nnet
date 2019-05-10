@@ -201,6 +201,9 @@ func (ln *LocalNode) listen() {
 		conn, err := listener.Accept()
 
 		if ln.IsStopped() {
+			if conn != nil {
+				conn.Close()
+			}
 			return
 		}
 
