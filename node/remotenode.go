@@ -12,6 +12,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/nknorg/nnet/cache"
 	"github.com/nknorg/nnet/log"
+	"github.com/nknorg/nnet/multiplexer"
 	"github.com/nknorg/nnet/protobuf"
 	"github.com/nknorg/nnet/transport"
 	"github.com/nknorg/nnet/util"
@@ -98,8 +99,7 @@ func (rn *RemoteNode) Start() error {
 		}
 
 		go rn.handleMsg()
-		go rn.rx()
-		go rn.tx()
+		go rn.startMultiplexer()
 		go rn.startMeasuringRoundTripTime()
 
 		go func() {
@@ -198,6 +198,35 @@ func (rn *RemoteNode) Stop(err error) {
 	})
 }
 
+func (rn *RemoteNode) startMultiplexer() {
+	mux, err := multiplexer.NewMultiplexer(rn.LocalNode.Multiplexer, rn.conn, rn.IsOutbound)
+	if err != nil {
+		rn.Stop(fmt.Errorf("Create multiplexer error: %s", err))
+		return
+	}
+
+	var conn net.Conn
+	if rn.IsOutbound {
+		for i := uint32(0); i < rn.LocalNode.NumStreamsToOpen; i++ {
+			conn, err = mux.OpenStream()
+			if err != nil {
+				rn.Stop(fmt.Errorf("Open stream error: %s", err))
+				return
+			}
+			go rn.rx(conn, false)
+		}
+	} else {
+		for i := uint32(0); i < rn.LocalNode.NumStreamsToAccept; i++ {
+			conn, err = mux.AcceptStream()
+			if err != nil {
+				rn.Stop(fmt.Errorf("Accept stream error: %s", err))
+				return
+			}
+			go rn.rx(conn, true)
+		}
+	}
+}
+
 // handleMsg starts a loop that handles received msg
 func (rn *RemoteNode) handleMsg() {
 	var msg *protobuf.Message
@@ -277,16 +306,20 @@ func (rn *RemoteNode) handleMsgBuf(buf []byte) {
 }
 
 // rx receives and handle data from RemoteNode rn
-func (rn *RemoteNode) rx() {
+func (rn *RemoteNode) rx(conn net.Conn, isActive bool) {
 	msgLenBuf := make([]byte, msgLenBytes)
 	var readLen uint32
+
+	if isActive {
+		go rn.tx(conn)
+	}
 
 	for {
 		if rn.IsStopped() {
 			return
 		}
 
-		l, err := rn.conn.Read(msgLenBuf)
+		l, err := conn.Read(msgLenBuf)
 		if err != nil {
 			rn.Stop(fmt.Errorf("Read msg len error: %s", err))
 			continue
@@ -294,6 +327,11 @@ func (rn *RemoteNode) rx() {
 		if l != msgLenBytes {
 			rn.Stop(fmt.Errorf("Msg len has %d bytes, which is less than expected %d", l, msgLenBytes))
 			continue
+		}
+
+		if !isActive {
+			isActive = true
+			go rn.tx(conn)
 		}
 
 		rn.Lock()
@@ -314,7 +352,7 @@ func (rn *RemoteNode) rx() {
 		buf := make([]byte, msgLen)
 
 		for readLen = 0; readLen < msgLen; readLen += uint32(l) {
-			l, err = rn.conn.Read(buf[readLen:])
+			l, err = conn.Read(buf[readLen:])
 			if err != nil {
 				break
 			}
@@ -339,7 +377,7 @@ func (rn *RemoteNode) rx() {
 }
 
 // tx marshals and sends data in txMsgChan to RemoteNode rn
-func (rn *RemoteNode) tx() {
+func (rn *RemoteNode) tx(conn net.Conn) {
 	var msg *protobuf.Message
 	var buf []byte
 	var ok bool
@@ -373,13 +411,13 @@ func (rn *RemoteNode) tx() {
 
 			binary.BigEndian.PutUint32(msgLenBuf, uint32(len(buf)))
 
-			_, err = rn.conn.Write(msgLenBuf)
+			_, err = conn.Write(msgLenBuf)
 			if err != nil {
 				rn.Stop(fmt.Errorf("Write to conn error: %s", err))
 				continue
 			}
 
-			_, err = rn.conn.Write(buf)
+			_, err = conn.Write(buf)
 			if err != nil {
 				rn.Stop(fmt.Errorf("Write to conn error: %s", err))
 				continue
