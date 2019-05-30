@@ -372,6 +372,18 @@ func (rn *RemoteNode) rx(conn net.Conn, isActive bool) {
 			continue
 		}
 
+		var shouldCallNextMiddleware bool
+		for _, mw := range rn.LocalNode.middlewareStore.messageWillDecode {
+			buf, shouldCallNextMiddleware = mw.Func(rn, buf)
+			if buf == nil || !shouldCallNextMiddleware {
+				break
+			}
+		}
+
+		if buf == nil {
+			continue
+		}
+
 		rn.handleMsgBuf(buf)
 	}
 }
@@ -401,6 +413,18 @@ func (rn *RemoteNode) tx(conn net.Conn) {
 			buf, err = proto.Marshal(msg)
 			if err != nil {
 				log.Error(err)
+				continue
+			}
+
+			var shouldCallNextMiddleware bool
+			for _, mw := range rn.LocalNode.middlewareStore.messageEncoded {
+				buf, shouldCallNextMiddleware = mw.Func(rn, buf)
+				if buf == nil || !shouldCallNextMiddleware {
+					break
+				}
+			}
+
+			if buf == nil {
 				continue
 			}
 

@@ -71,6 +71,24 @@ type RemoteNodeDisconnected struct {
 	Priority int32
 }
 
+// MessageEncoded is called when a protobuf.Message is encoded into bytes and is
+// about to be sent to RemoteNode. This is a good place for transcoding. Returns
+// the bytes to send and whether we should proceed to the next middleware. If
+// returned bytes is nil, msg will be dropped.
+type MessageEncoded struct {
+	Func     func(*RemoteNode, []byte) ([]byte, bool)
+	Priority int32
+}
+
+// MessageWillDecode is called when bytes is received from a RemoteNode and is
+// about to be decoded into protobuf.Message. This is a good place for
+// transcoding. Returns the bytes to send and whether we should proceed to the
+// next middleware. If returned bytes is nil, msg will be dropped.
+type MessageWillDecode struct {
+	Func     func(*RemoteNode, []byte) ([]byte, bool)
+	Priority int32
+}
+
 // middlewareStore stores the functions that will be called when certain events
 // are triggered or in some pipeline
 type middlewareStore struct {
@@ -82,6 +100,8 @@ type middlewareStore struct {
 	remoteNodeConnected    []RemoteNodeConnected
 	remoteNodeReady        []RemoteNodeReady
 	remoteNodeDisconnected []RemoteNodeDisconnected
+	messageEncoded         []MessageEncoded
+	messageWillDecode      []MessageWillDecode
 }
 
 // newMiddlewareStore creates a middlewareStore
@@ -95,6 +115,8 @@ func newMiddlewareStore() *middlewareStore {
 		remoteNodeConnected:    make([]RemoteNodeConnected, 0),
 		remoteNodeReady:        make([]RemoteNodeReady, 0),
 		remoteNodeDisconnected: make([]RemoteNodeDisconnected, 0),
+		messageEncoded:         make([]MessageEncoded, 0),
+		messageWillDecode:      make([]MessageWillDecode, 0),
 	}
 }
 
@@ -149,6 +171,18 @@ func (store *middlewareStore) ApplyMiddleware(mw interface{}) error {
 		}
 		store.remoteNodeDisconnected = append(store.remoteNodeDisconnected, mw)
 		middleware.Sort(store.remoteNodeDisconnected)
+	case MessageEncoded:
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
+		}
+		store.messageEncoded = append(store.messageEncoded, mw)
+		middleware.Sort(store.messageEncoded)
+	case MessageWillDecode:
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
+		}
+		store.messageWillDecode = append(store.messageWillDecode, mw)
+		middleware.Sort(store.messageWillDecode)
 	default:
 		return errors.New("unknown middleware type")
 	}
