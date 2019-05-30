@@ -201,7 +201,7 @@ func (c *Chord) Start(isCreate bool) error {
 
 				for _, succ := range succs {
 					if CompareID(succ.Id, c.LocalNode.Id) != 0 {
-						err = c.Connect(succ.Addr, succ.Id)
+						err = c.Connect(succ)
 						if err != nil {
 							log.Error(err)
 						}
@@ -286,7 +286,7 @@ func (c *Chord) Stop(err error) {
 
 // Join joins an existing chord network starting from the seedNodeAddr
 func (c *Chord) Join(seedNodeAddr string) error {
-	return c.Connect(seedNodeAddr, nil)
+	return c.Connect(&protobuf.Node{Addr: seedNodeAddr})
 }
 
 // handleMsg starts a loop that handles received msg
@@ -402,7 +402,7 @@ func (c *Chord) findNewPredecessors() {
 			if c.predecessors.IsIDInRange(n.Id) && !c.predecessors.Exists(n.Id) {
 				existing = c.predecessors.GetFirst()
 				if existing == nil || c.predecessors.cmp(n, existing.Node.Node) < 0 {
-					err = c.Connect(n.Addr, n.Id)
+					err = c.Connect(n)
 					if err != nil {
 						log.Error("Connect to new predecessor error:", err)
 					}
@@ -469,7 +469,7 @@ func (c *Chord) findNewFinger() {
 				if c.fingerTable[i].IsIDInRange(succs[0].Id) && !c.fingerTable[i].Exists(succs[0].Id) {
 					existing = c.fingerTable[i].GetFirst()
 					if existing == nil || c.fingerTable[i].cmp(succs[0], existing.Node.Node) < 0 {
-						err = c.Connect(succs[0].Addr, succs[0].Id)
+						err = c.Connect(succs[0])
 						if err != nil {
 							log.Error("Connect to new successor error:", err)
 						}
