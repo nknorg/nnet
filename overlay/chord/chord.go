@@ -204,11 +204,11 @@ func (c *Chord) Start(isCreate bool) error {
 						err = c.Connect(succ)
 						if err != nil {
 							log.Error(err)
+							continue
 						}
+						c.SetReady(true)
 					}
 				}
-
-				c.SetReady(true)
 
 				c.stabilize()
 			})
