@@ -304,7 +304,7 @@ func (ln *LocalNode) Connect(n *protobuf.Node) (*RemoteNode, bool, error) {
 }
 
 // StartRemoteNode creates and starts a remote node using conn. If n is not
-// nil, its id and address will be used to validate GetNode response.
+// nil, its id and address will be used to validate ExchangeNode info.
 func (ln *LocalNode) StartRemoteNode(conn net.Conn, isOutbound bool, n *protobuf.Node) (*RemoteNode, error) {
 	remoteNode, err := NewRemoteNode(ln, conn, isOutbound, n)
 	if err != nil {

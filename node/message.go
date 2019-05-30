@@ -78,14 +78,16 @@ func (ln *LocalNode) NewPingReply(replyToID []byte) (*protobuf.Message, error) {
 	return msg, nil
 }
 
-// NewGetNodeMessage creates a GET_NODE message to get node info
-func (ln *LocalNode) NewGetNodeMessage() (*protobuf.Message, error) {
+// NewExchangeNodeMessage creates a EXCHANGE_NODE message to get node info
+func (ln *LocalNode) NewExchangeNodeMessage() (*protobuf.Message, error) {
 	id, err := message.GenID(ln.MessageIDBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	msgBody := &protobuf.GetNode{}
+	msgBody := &protobuf.ExchangeNode{
+		Node: ln.Node.Node,
+	}
 
 	buf, err := proto.Marshal(msgBody)
 	if err != nil {
@@ -93,7 +95,7 @@ func (ln *LocalNode) NewGetNodeMessage() (*protobuf.Message, error) {
 	}
 
 	msg := &protobuf.Message{
-		MessageType: protobuf.GET_NODE,
+		MessageType: protobuf.EXCHANGE_NODE,
 		RoutingType: protobuf.DIRECT,
 		MessageId:   id,
 		Message:     buf,
@@ -102,15 +104,15 @@ func (ln *LocalNode) NewGetNodeMessage() (*protobuf.Message, error) {
 	return msg, nil
 }
 
-// NewGetNodeReply creates a GET_NODE reply to send node info
-func (ln *LocalNode) NewGetNodeReply(replyToID []byte, n *protobuf.Node) (*protobuf.Message, error) {
+// NewExchangeNodeReply creates a EXCHANGE_NODE reply to send node info
+func (ln *LocalNode) NewExchangeNodeReply(replyToID []byte) (*protobuf.Message, error) {
 	id, err := message.GenID(ln.MessageIDBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	msgBody := &protobuf.GetNodeReply{
-		Node: n,
+	msgBody := &protobuf.ExchangeNodeReply{
+		Node: ln.Node.Node,
 	}
 
 	buf, err := proto.Marshal(msgBody)
@@ -119,7 +121,7 @@ func (ln *LocalNode) NewGetNodeReply(replyToID []byte, n *protobuf.Node) (*proto
 	}
 
 	msg := &protobuf.Message{
-		MessageType: protobuf.GET_NODE,
+		MessageType: protobuf.EXCHANGE_NODE,
 		RoutingType: protobuf.DIRECT,
 		ReplyToId:   replyToID,
 		MessageId:   id,
@@ -172,8 +174,20 @@ func (ln *LocalNode) handleRemoteMessage(remoteMsg *RemoteMessage) error {
 			return err
 		}
 
-	case protobuf.GET_NODE:
-		replyMsg, err := ln.NewGetNodeReply(remoteMsg.Msg.MessageId, remoteMsg.RemoteNode.LocalNode.Node.Node)
+	case protobuf.EXCHANGE_NODE:
+		msgBody := &protobuf.ExchangeNode{}
+		err := proto.Unmarshal(remoteMsg.Msg.Message, msgBody)
+		if err != nil {
+			return err
+		}
+
+		err = remoteMsg.RemoteNode.setNode(msgBody.Node)
+		if err != nil {
+			remoteMsg.RemoteNode.Stop(err)
+			return err
+		}
+
+		replyMsg, err := ln.NewExchangeNodeReply(remoteMsg.Msg.MessageId)
 		if err != nil {
 			return err
 		}

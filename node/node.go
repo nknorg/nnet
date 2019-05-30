@@ -2,6 +2,7 @@ package node
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/nknorg/nnet/common"
 	"github.com/nknorg/nnet/protobuf"
@@ -9,6 +10,7 @@ import (
 
 // Node is a remote or local node
 type Node struct {
+	sync.RWMutex
 	*protobuf.Node
 	common.LifeCycle
 }
