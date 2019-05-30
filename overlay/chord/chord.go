@@ -203,7 +203,7 @@ func (c *Chord) Start(isCreate bool) error {
 					if CompareID(succ.Id, c.LocalNode.Id) != 0 {
 						err = c.Connect(succ)
 						if err != nil {
-							log.Error(err)
+							log.Errorf("Connect to successor %x@%s error: %v", succ.Id, succ.Addr, err)
 							continue
 						}
 						c.SetReady(true)
@@ -307,14 +307,14 @@ func (c *Chord) handleMsg() {
 
 		shouldLocalNodeHandleMsg, err = c.handleRemoteMessage(remoteMsg)
 		if err != nil {
-			log.Error(err)
+			log.Errorf("Chord handle remote message error: %v", err)
 			continue
 		}
 
 		if shouldLocalNodeHandleMsg {
 			err = c.LocalNode.HandleRemoteMessage(remoteMsg)
 			if err != nil {
-				log.Error(err)
+				log.Errorf("Local node handle remote message error: %v", err)
 				continue
 			}
 		}
@@ -344,7 +344,7 @@ func (c *Chord) updateSuccessors() {
 
 		err = c.updateNeighborList(c.successors)
 		if err != nil {
-			log.Error("Update successors error:", err)
+			log.Errorf("Update successors error: %v", err)
 		}
 	}
 }
@@ -362,7 +362,7 @@ func (c *Chord) updatePredecessors() {
 
 		err = c.updateNeighborList(c.predecessors)
 		if err != nil {
-			log.Error("Update predecessor error:", err)
+			log.Errorf("Update predecessor error: %v", err)
 		}
 	}
 }
@@ -397,7 +397,7 @@ func (c *Chord) findNewPredecessors() {
 
 		maybeNewNodes, err = c.FindPredecessors(c.predecessors.startID, 1)
 		if err != nil {
-			log.Error("Find predecessors error:", err)
+			log.Errorf("Find predecessors error: %v", err)
 			continue
 		}
 
@@ -407,7 +407,7 @@ func (c *Chord) findNewPredecessors() {
 				if existing == nil || c.predecessors.cmp(n, existing.Node.Node) < 0 {
 					err = c.Connect(n)
 					if err != nil {
-						log.Error("Connect to new predecessor error:", err)
+						log.Errorf("Connect to new predecessor error: %v", err)
 					}
 				}
 			}
@@ -434,7 +434,7 @@ func (c *Chord) updateFinger() {
 
 			err = c.updateNeighborList(finger)
 			if err != nil {
-				log.Error("Update finger table error:", err)
+				log.Errorf("Update finger table error: %v", err)
 			}
 		}
 
@@ -460,7 +460,7 @@ func (c *Chord) findNewFinger() {
 
 			succs, err = c.FindSuccessors(c.fingerTable[i].startID, 1)
 			if err != nil {
-				log.Error("Find successor for finger table error:", err)
+				log.Errorf("Find successor for finger table error: %v", err)
 				continue
 			}
 
@@ -474,7 +474,7 @@ func (c *Chord) findNewFinger() {
 					if existing == nil || c.fingerTable[i].cmp(succs[0], existing.Node.Node) < 0 {
 						err = c.Connect(succs[0])
 						if err != nil {
-							log.Error("Connect to new successor error:", err)
+							log.Errorf("Connect to new successor error: %v", err)
 						}
 					}
 					break

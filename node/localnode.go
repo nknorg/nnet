@@ -160,7 +160,7 @@ func (ln *LocalNode) handleMsg() {
 
 		err = ln.handleRemoteMessage(remoteMsg)
 		if err != nil {
-			log.Error(err)
+			log.Errorf("Handle remote message error: %v", err)
 			continue
 		}
 
@@ -208,7 +208,7 @@ func (ln *LocalNode) listen() {
 		}
 
 		if err != nil {
-			log.Error("Error accepting connection:", err)
+			log.Errorf("Error accepting connection: %v", err)
 			time.Sleep(1 * time.Second)
 			continue
 		}
@@ -224,7 +224,7 @@ func (ln *LocalNode) listen() {
 
 		rn, err := ln.StartRemoteNode(conn, false, nil)
 		if err != nil {
-			log.Error("Error creating remote node:", err)
+			log.Errorf("Error creating remote node: %v", err)
 			ln.neighbors.Delete(conn.RemoteAddr().String())
 			conn.Close()
 			continue
