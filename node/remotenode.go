@@ -219,7 +219,7 @@ func (rn *RemoteNode) Stop(err error) {
 
 		err = rn.NotifyStop()
 		if err != nil {
-			log.Warning("Notify remote node stop error:", err)
+			log.Warning("Notify remote node %v stop error:", rn, err)
 		}
 
 		time.AfterFunc(stopGracePeriod, func() {
@@ -293,7 +293,7 @@ func (rn *RemoteNode) handleMsg() {
 
 			added, err = rn.LocalNode.AddToRxCache(msg.MessageId)
 			if err != nil {
-				log.Error(err)
+				log.Errorf("Add msg id %x to rx cache error: %v", msg.MessageId, err)
 				continue
 			}
 			if !added {
@@ -302,13 +302,13 @@ func (rn *RemoteNode) handleMsg() {
 
 			remoteMsg, err = NewRemoteMessage(rn, msg)
 			if err != nil {
-				log.Error(err)
+				log.Errorf("New remote message error: %v", err)
 				continue
 			}
 
 			msgChan, err = rn.LocalNode.GetRxMsgChan(msg.RoutingType)
 			if err != nil {
-				log.Error(err)
+				log.Errorf("Get rx msg chan for routing type %v error: %v", msg.RoutingType, err)
 				continue
 			}
 
@@ -453,7 +453,7 @@ func (rn *RemoteNode) tx(conn net.Conn) {
 
 			buf, err = proto.Marshal(msg)
 			if err != nil {
-				log.Error(err)
+				log.Errorf("Marshal msg error: %v", err)
 				continue
 			}
 
@@ -511,7 +511,7 @@ func (rn *RemoteNode) startMeasuringRoundTripTime() {
 		startTime = time.Now()
 		err = rn.Ping()
 		if err != nil {
-			log.Warningf("Ping error: %v", err)
+			log.Warningf("Ping %v error: %v", rn, err)
 			continue
 		}
 		roundTripTime = time.Since(startTime)

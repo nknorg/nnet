@@ -186,7 +186,7 @@ func (r *Routing) handleMsg(router Router) {
 
 		_, _, err = r.SendMessage(router, remoteMsg, false, 0)
 		if err != nil {
-			log.Warning(err)
+			log.Warningf("Route message error: %v", err)
 		}
 	}
 }

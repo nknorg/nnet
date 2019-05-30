@@ -177,24 +177,24 @@ func (c *Chord) addRemoteNode(remoteNode *node.RemoteNode) error {
 
 	err := c.addSuccessor(remoteNode)
 	if err != nil {
-		log.Error(err)
+		log.Errorf("Add %v to successors error: %v", remoteNode, err)
 	}
 
 	err = c.addPredecessor(remoteNode)
 	if err != nil {
-		log.Error(err)
+		log.Errorf("Add %v to predecessors error: %v", remoteNode, err)
 	}
 
 	for i := range c.fingerTable {
 		err = c.addFingerTable(remoteNode, i)
 		if err != nil {
-			log.Error(err)
+			log.Errorf("Add %v to finger table %d error: %v", remoteNode, i, err)
 		}
 	}
 
 	err = c.addNeighbor(remoteNode)
 	if err != nil {
-		log.Error(err)
+		log.Errorf("Add %v to neighbors error: %v", remoteNode, err)
 	}
 
 	return nil
@@ -214,7 +214,7 @@ func (c *Chord) removeNeighbor(remoteNode *node.RemoteNode) error {
 			if rn != remoteNode {
 				err := c.addSuccessor(rn)
 				if err != nil {
-					log.Error(err)
+					log.Errorf("Add %v to successors error: %v", rn, err)
 				}
 			}
 		}
@@ -233,7 +233,7 @@ func (c *Chord) removeNeighbor(remoteNode *node.RemoteNode) error {
 			if neighbors[len(neighbors)-i-1] != remoteNode {
 				err := c.addPredecessor(neighbors[len(neighbors)-i-1])
 				if err != nil {
-					log.Error(err)
+					log.Errorf("Add %v to predecessors error: %v", neighbors[len(neighbors)-i-1], err)
 				}
 			}
 		}
@@ -252,7 +252,7 @@ func (c *Chord) removeNeighbor(remoteNode *node.RemoteNode) error {
 				if rn != remoteNode {
 					err := c.addFingerTable(rn, i)
 					if err != nil {
-						log.Error(err)
+						log.Errorf("Add %v to finger table %d error: %v", rn, i, err)
 					}
 				}
 			}

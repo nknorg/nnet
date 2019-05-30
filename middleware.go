@@ -48,7 +48,7 @@ func (nn *NNet) ApplyMiddleware(mw interface{}) error {
 func (nn *NNet) MustApplyMiddleware(mw interface{}) {
 	err := nn.ApplyMiddleware(mw)
 	if err != nil {
-		log.Error(err)
+		log.Errorf("Apply middleware error: %v", err)
 		panic(err)
 	}
 }
