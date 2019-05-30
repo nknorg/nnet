@@ -274,6 +274,17 @@ func (ln *LocalNode) Connect(n *protobuf.Node) (*RemoteNode, bool, error) {
 		}
 	}
 
+	var shouldConnect, shouldCallNextMiddleware bool
+	for _, mw := range ln.middlewareStore.willConnectToNode {
+		shouldConnect, shouldCallNextMiddleware = mw.Func(n)
+		if !shouldConnect {
+			return nil, false, nil
+		}
+		if !shouldCallNextMiddleware {
+			break
+		}
+	}
+
 	conn, err := remoteAddress.Dial(ln.DialTimeout)
 	if err != nil {
 		ln.neighbors.Delete(key)

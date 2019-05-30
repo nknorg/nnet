@@ -24,7 +24,7 @@ func (c *Chord) Connect(n *protobuf.Node) error {
 		return err
 	}
 
-	if ready {
+	if ready && remoteNode != nil {
 		return c.addRemoteNode(remoteNode)
 	}
 

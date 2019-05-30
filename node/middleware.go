@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/nknorg/nnet/middleware"
+	"github.com/nknorg/nnet/protobuf"
 )
 
 // BytesReceived is called when local node receive user-defined BYTES message.
@@ -43,6 +44,14 @@ type LocalNodeWillStop struct {
 // handling messages. Returns if we should proceed to the next middleware.
 type LocalNodeStopped struct {
 	Func     func(*LocalNode) bool
+	Priority int32
+}
+
+// WillConnectToNode is called before local node connect to a new remote node.
+// Returns if local node should continue connecting and if we should proceed to
+// the next middleware.
+type WillConnectToNode struct {
+	Func     func(*protobuf.Node) (bool, bool)
 	Priority int32
 }
 
@@ -97,6 +106,7 @@ type middlewareStore struct {
 	localNodeStarted       []LocalNodeStarted
 	localNodeWillStop      []LocalNodeWillStop
 	localNodeStopped       []LocalNodeStopped
+	willConnectToNode      []WillConnectToNode
 	remoteNodeConnected    []RemoteNodeConnected
 	remoteNodeReady        []RemoteNodeReady
 	remoteNodeDisconnected []RemoteNodeDisconnected
@@ -112,6 +122,7 @@ func newMiddlewareStore() *middlewareStore {
 		localNodeStarted:       make([]LocalNodeStarted, 0),
 		localNodeWillStop:      make([]LocalNodeWillStop, 0),
 		localNodeStopped:       make([]LocalNodeStopped, 0),
+		willConnectToNode:      make([]WillConnectToNode, 0),
 		remoteNodeConnected:    make([]RemoteNodeConnected, 0),
 		remoteNodeReady:        make([]RemoteNodeReady, 0),
 		remoteNodeDisconnected: make([]RemoteNodeDisconnected, 0),
@@ -153,6 +164,12 @@ func (store *middlewareStore) ApplyMiddleware(mw interface{}) error {
 		}
 		store.localNodeStopped = append(store.localNodeStopped, mw)
 		middleware.Sort(store.localNodeStopped)
+	case WillConnectToNode:
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
+		}
+		store.willConnectToNode = append(store.willConnectToNode, mw)
+		middleware.Sort(store.willConnectToNode)
 	case RemoteNodeConnected:
 		if mw.Func == nil {
 			return errors.New("middleware function is nil")
