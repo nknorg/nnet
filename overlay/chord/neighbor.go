@@ -5,26 +5,26 @@ import (
 
 	"github.com/nknorg/nnet/log"
 	"github.com/nknorg/nnet/node"
+	"github.com/nknorg/nnet/protobuf"
 	"github.com/nknorg/nnet/util"
 )
 
-// Connect connects to a remote node. optionally with id info to check if
-// connection has established
-func (c *Chord) Connect(addr string, id []byte) error {
-	if id != nil {
-		remoteNode := c.neighbors.GetByID(id)
+// Connect connects to a node. The Addr field of the node is required.
+func (c *Chord) Connect(n *protobuf.Node) error {
+	if n.Id != nil {
+		remoteNode := c.neighbors.GetByID(n.Id)
 		if remoteNode != nil {
-			log.Infof("Node with id %x is already a neighbor", id)
+			log.Infof("Node with id %x is already a neighbor", n.Id)
 			return c.addRemoteNode(remoteNode)
 		}
 	}
 
-	remoteNode, ready, err := c.LocalNode.Connect(addr)
+	remoteNode, ready, err := c.LocalNode.Connect(n)
 	if err != nil {
 		return err
 	}
 
-	if ready {
+	if ready && remoteNode != nil {
 		return c.addRemoteNode(remoteNode)
 	}
 
@@ -305,7 +305,7 @@ func (c *Chord) updateNeighborList(neighborList *NeighborList) error {
 
 	errs := util.NewErrors()
 	for _, newNode := range newNodes {
-		err = c.Connect(newNode.Addr, newNode.Id)
+		err = c.Connect(newNode)
 		if err != nil {
 			errs = append(errs, err)
 		}

@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/nknorg/nnet/middleware"
+	"github.com/nknorg/nnet/protobuf"
 )
 
 // BytesReceived is called when local node receive user-defined BYTES message.
@@ -46,6 +47,14 @@ type LocalNodeStopped struct {
 	Priority int32
 }
 
+// WillConnectToNode is called before local node connect to a new remote node.
+// Returns if local node should continue connecting and if we should proceed to
+// the next middleware.
+type WillConnectToNode struct {
+	Func     func(*protobuf.Node) (bool, bool)
+	Priority int32
+}
+
 // RemoteNodeConnected is called when a connection is established with a remote
 // node, but the remote node id is typically nil, so it's not a good time to use
 // the node yet, but can be used to stop the connection to remote node. Returns
@@ -71,6 +80,24 @@ type RemoteNodeDisconnected struct {
 	Priority int32
 }
 
+// MessageEncoded is called when a protobuf.Message is encoded into bytes and is
+// about to be sent to RemoteNode. This is a good place for transcoding. Returns
+// the bytes to send and whether we should proceed to the next middleware. If
+// returned bytes is nil, msg will be dropped.
+type MessageEncoded struct {
+	Func     func(*RemoteNode, []byte) ([]byte, bool)
+	Priority int32
+}
+
+// MessageWillDecode is called when bytes is received from a RemoteNode and is
+// about to be decoded into protobuf.Message. This is a good place for
+// transcoding. Returns the bytes to send and whether we should proceed to the
+// next middleware. If returned bytes is nil, msg will be dropped.
+type MessageWillDecode struct {
+	Func     func(*RemoteNode, []byte) ([]byte, bool)
+	Priority int32
+}
+
 // middlewareStore stores the functions that will be called when certain events
 // are triggered or in some pipeline
 type middlewareStore struct {
@@ -79,9 +106,12 @@ type middlewareStore struct {
 	localNodeStarted       []LocalNodeStarted
 	localNodeWillStop      []LocalNodeWillStop
 	localNodeStopped       []LocalNodeStopped
+	willConnectToNode      []WillConnectToNode
 	remoteNodeConnected    []RemoteNodeConnected
 	remoteNodeReady        []RemoteNodeReady
 	remoteNodeDisconnected []RemoteNodeDisconnected
+	messageEncoded         []MessageEncoded
+	messageWillDecode      []MessageWillDecode
 }
 
 // newMiddlewareStore creates a middlewareStore
@@ -92,9 +122,12 @@ func newMiddlewareStore() *middlewareStore {
 		localNodeStarted:       make([]LocalNodeStarted, 0),
 		localNodeWillStop:      make([]LocalNodeWillStop, 0),
 		localNodeStopped:       make([]LocalNodeStopped, 0),
+		willConnectToNode:      make([]WillConnectToNode, 0),
 		remoteNodeConnected:    make([]RemoteNodeConnected, 0),
 		remoteNodeReady:        make([]RemoteNodeReady, 0),
 		remoteNodeDisconnected: make([]RemoteNodeDisconnected, 0),
+		messageEncoded:         make([]MessageEncoded, 0),
+		messageWillDecode:      make([]MessageWillDecode, 0),
 	}
 }
 
@@ -131,6 +164,12 @@ func (store *middlewareStore) ApplyMiddleware(mw interface{}) error {
 		}
 		store.localNodeStopped = append(store.localNodeStopped, mw)
 		middleware.Sort(store.localNodeStopped)
+	case WillConnectToNode:
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
+		}
+		store.willConnectToNode = append(store.willConnectToNode, mw)
+		middleware.Sort(store.willConnectToNode)
 	case RemoteNodeConnected:
 		if mw.Func == nil {
 			return errors.New("middleware function is nil")
@@ -149,6 +188,18 @@ func (store *middlewareStore) ApplyMiddleware(mw interface{}) error {
 		}
 		store.remoteNodeDisconnected = append(store.remoteNodeDisconnected, mw)
 		middleware.Sort(store.remoteNodeDisconnected)
+	case MessageEncoded:
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
+		}
+		store.messageEncoded = append(store.messageEncoded, mw)
+		middleware.Sort(store.messageEncoded)
+	case MessageWillDecode:
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
+		}
+		store.messageWillDecode = append(store.messageWillDecode, mw)
+		middleware.Sort(store.messageWillDecode)
 	default:
 		return errors.New("unknown middleware type")
 	}

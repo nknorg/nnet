@@ -222,7 +222,7 @@ func (ln *LocalNode) listen() {
 
 		log.Infof("Remote node connect from %s to local address %s", conn.RemoteAddr().String(), conn.LocalAddr())
 
-		rn, err := ln.StartRemoteNode(conn, false)
+		rn, err := ln.StartRemoteNode(conn, false, nil)
 		if err != nil {
 			log.Error("Error creating remote node:", err)
 			ln.neighbors.Delete(conn.RemoteAddr().String())
@@ -246,12 +246,12 @@ func (ln *LocalNode) SetInternalPort(port uint16) {
 // nil if another goroutine is connecting to the same address concurrently. The
 // remote node is ready if an active connection to the remoteNodeAddr exists and
 // node info has been exchanged.
-func (ln *LocalNode) Connect(remoteNodeAddr string) (*RemoteNode, bool, error) {
-	if remoteNodeAddr == ln.address.String() {
+func (ln *LocalNode) Connect(n *protobuf.Node) (*RemoteNode, bool, error) {
+	if n.Addr == ln.address.String() {
 		return nil, false, errors.New("trying to connect to self")
 	}
 
-	remoteAddress, err := transport.Parse(remoteNodeAddr)
+	remoteAddress, err := transport.Parse(n.Addr)
 	if err != nil {
 		return nil, false, err
 	}
@@ -274,13 +274,24 @@ func (ln *LocalNode) Connect(remoteNodeAddr string) (*RemoteNode, bool, error) {
 		}
 	}
 
+	var shouldConnect, shouldCallNextMiddleware bool
+	for _, mw := range ln.middlewareStore.willConnectToNode {
+		shouldConnect, shouldCallNextMiddleware = mw.Func(n)
+		if !shouldConnect {
+			return nil, false, nil
+		}
+		if !shouldCallNextMiddleware {
+			break
+		}
+	}
+
 	conn, err := remoteAddress.Dial(ln.DialTimeout)
 	if err != nil {
 		ln.neighbors.Delete(key)
 		return nil, false, err
 	}
 
-	remoteNode, err := ln.StartRemoteNode(conn, true)
+	remoteNode, err := ln.StartRemoteNode(conn, true, n)
 	if err != nil {
 		ln.neighbors.Delete(key)
 		conn.Close()
@@ -292,9 +303,10 @@ func (ln *LocalNode) Connect(remoteNodeAddr string) (*RemoteNode, bool, error) {
 	return remoteNode, false, nil
 }
 
-// StartRemoteNode creates and starts a remote node using conn
-func (ln *LocalNode) StartRemoteNode(conn net.Conn, isOutbound bool) (*RemoteNode, error) {
-	remoteNode, err := NewRemoteNode(ln, conn, isOutbound)
+// StartRemoteNode creates and starts a remote node using conn. If n is not
+// nil, its id and address will be used to validate GetNode response.
+func (ln *LocalNode) StartRemoteNode(conn net.Conn, isOutbound bool, n *protobuf.Node) (*RemoteNode, error) {
+	remoteNode, err := NewRemoteNode(ln, conn, isOutbound, n)
 	if err != nil {
 		return nil, err
 	}

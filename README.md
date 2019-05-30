@@ -27,8 +27,6 @@ Coming soon:
 
 - [x] Latency measurement
 - [x] Proximity routing
-- [ ] Push-pull broadcasting for large messages
-- [ ] Efficient Pub/Sub
 - [ ] Test cases
 
 ## Usage

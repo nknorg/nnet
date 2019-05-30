@@ -42,7 +42,7 @@ type RemoteNode struct {
 }
 
 // NewRemoteNode creates a remote node
-func NewRemoteNode(localNode *LocalNode, conn net.Conn, isOutbound bool) (*RemoteNode, error) {
+func NewRemoteNode(localNode *LocalNode, conn net.Conn, isOutbound bool, n *protobuf.Node) (*RemoteNode, error) {
 	if localNode == nil {
 		return nil, errors.New("Local node is nil")
 	}
@@ -50,9 +50,18 @@ func NewRemoteNode(localNode *LocalNode, conn net.Conn, isOutbound bool) (*Remot
 		return nil, errors.New("conn is nil")
 	}
 
-	node, err := NewNode(nil, "")
-	if err != nil {
-		return nil, err
+	var node *Node
+	var err error
+	if n != nil {
+		node, err = newNode(n)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		node, err = NewNode(nil, "")
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	txMsgCache := cache.NewGoCache(localNode.RemoteTxMsgCacheExpiration, localNode.RemoteTxMsgCacheCleanupInterval)
@@ -117,22 +126,8 @@ func (rn *RemoteNode) Start() error {
 				return
 			}
 
-			var existing *RemoteNode
-			rn.LocalNode.neighbors.Range(func(key, value interface{}) bool {
-				remoteNode, ok := value.(*RemoteNode)
-				if ok && remoteNode.IsReady() && bytes.Equal(remoteNode.Id, n.Id) {
-					if remoteNode.IsStopped() {
-						log.Warningf("Remove stopped remote node %v from list", remoteNode)
-						rn.LocalNode.neighbors.Delete(key)
-					} else {
-						existing = remoteNode
-					}
-					return false
-				}
-				return true
-			})
-			if existing != nil {
-				rn.Stop(fmt.Errorf("Node with id %x is already connected at addr %s", existing.Id, existing.conn.RemoteAddr().String()))
+			if rn.Id != nil && !bytes.Equal(rn.Id, n.Id) {
+				rn.Stop(fmt.Errorf("Node id %x is different from expected value %x", n.Id, rn.Id))
 				return
 			}
 
@@ -152,7 +147,42 @@ func (rn *RemoteNode) Start() error {
 				n.Addr = remoteAddr.String()
 			}
 
+			if rn.Addr != "" {
+				expectedAddr, err := transport.Parse(rn.Addr)
+				if err == nil && expectedAddr.Host == "" {
+					connAddr := rn.conn.RemoteAddr().String()
+					expectedAddr.Host, _, err = net.SplitHostPort(connAddr)
+					if err == nil {
+						rn.Addr = expectedAddr.String()
+					}
+				}
+
+				if rn.Addr != n.Addr {
+					rn.Stop(fmt.Errorf("Node addr %s is different from expected value %s", n.Addr, rn.Addr))
+					return
+				}
+			}
+
 			rn.Node.Node = n
+
+			var existing *RemoteNode
+			rn.LocalNode.neighbors.Range(func(key, value interface{}) bool {
+				remoteNode, ok := value.(*RemoteNode)
+				if ok && remoteNode.IsReady() && bytes.Equal(remoteNode.Id, n.Id) {
+					if remoteNode.IsStopped() {
+						log.Warningf("Remove stopped remote node %v from list", remoteNode)
+						rn.LocalNode.neighbors.Delete(key)
+					} else {
+						existing = remoteNode
+					}
+					return false
+				}
+				return true
+			})
+			if existing != nil {
+				rn.Stop(fmt.Errorf("Node with id %x is already connected at addr %s", existing.Id, existing.conn.RemoteAddr().String()))
+				return
+			}
 
 			rn.SetReady(true)
 
@@ -372,6 +402,18 @@ func (rn *RemoteNode) rx(conn net.Conn, isActive bool) {
 			continue
 		}
 
+		var shouldCallNextMiddleware bool
+		for _, mw := range rn.LocalNode.middlewareStore.messageWillDecode {
+			buf, shouldCallNextMiddleware = mw.Func(rn, buf)
+			if buf == nil || !shouldCallNextMiddleware {
+				break
+			}
+		}
+
+		if buf == nil {
+			continue
+		}
+
 		rn.handleMsgBuf(buf)
 	}
 }
@@ -401,6 +443,18 @@ func (rn *RemoteNode) tx(conn net.Conn) {
 			buf, err = proto.Marshal(msg)
 			if err != nil {
 				log.Error(err)
+				continue
+			}
+
+			var shouldCallNextMiddleware bool
+			for _, mw := range rn.LocalNode.middlewareStore.messageEncoded {
+				buf, shouldCallNextMiddleware = mw.Func(rn, buf)
+				if buf == nil || !shouldCallNextMiddleware {
+					break
+				}
+			}
+
+			if buf == nil {
 				continue
 			}
 
