@@ -28,7 +28,7 @@ enum RoutingType {
 enum MessageType {
   // Node message
   PING = 0;
-  GET_NODE = 1;
+  EXCHANGE_NODE = 1;
   STOP = 2;
 
   // Chord message
@@ -55,10 +55,11 @@ message Ping {
 message PingReply {
 }
 
-message GetNode {
+message ExchangeNode {
+  Node node = 1;
 }
 
-message GetNodeReply {
+message ExchangeNodeReply {
   Node node = 1;
 }
 

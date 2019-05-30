@@ -187,15 +187,15 @@ func TestPingReplyMarshalTo(t *testing.T) {
 	}
 }
 
-func TestGetNodeProto(t *testing.T) {
+func TestExchangeNodeProto(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedGetNode(popr, false)
+	p := NewPopulatedExchangeNode(popr, false)
 	dAtA, err := github_com_gogo_protobuf_proto.Marshal(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &GetNode{}
+	msg := &ExchangeNode{}
 	if err := github_com_gogo_protobuf_proto.Unmarshal(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -218,10 +218,10 @@ func TestGetNodeProto(t *testing.T) {
 	}
 }
 
-func TestGetNodeMarshalTo(t *testing.T) {
+func TestExchangeNodeMarshalTo(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedGetNode(popr, false)
+	p := NewPopulatedExchangeNode(popr, false)
 	size := p.Size()
 	dAtA := make([]byte, size)
 	for i := range dAtA {
@@ -231,7 +231,7 @@ func TestGetNodeMarshalTo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &GetNode{}
+	msg := &ExchangeNode{}
 	if err := github_com_gogo_protobuf_proto.Unmarshal(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -243,15 +243,15 @@ func TestGetNodeMarshalTo(t *testing.T) {
 	}
 }
 
-func TestGetNodeReplyProto(t *testing.T) {
+func TestExchangeNodeReplyProto(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedGetNodeReply(popr, false)
+	p := NewPopulatedExchangeNodeReply(popr, false)
 	dAtA, err := github_com_gogo_protobuf_proto.Marshal(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &GetNodeReply{}
+	msg := &ExchangeNodeReply{}
 	if err := github_com_gogo_protobuf_proto.Unmarshal(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -274,10 +274,10 @@ func TestGetNodeReplyProto(t *testing.T) {
 	}
 }
 
-func TestGetNodeReplyMarshalTo(t *testing.T) {
+func TestExchangeNodeReplyMarshalTo(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedGetNodeReply(popr, false)
+	p := NewPopulatedExchangeNodeReply(popr, false)
 	size := p.Size()
 	dAtA := make([]byte, size)
 	for i := range dAtA {
@@ -287,7 +287,7 @@ func TestGetNodeReplyMarshalTo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &GetNodeReply{}
+	msg := &ExchangeNodeReply{}
 	if err := github_com_gogo_protobuf_proto.Unmarshal(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -689,16 +689,16 @@ func TestPingReplyJSON(t *testing.T) {
 		t.Fatalf("seed = %d, %#v !Json Equal %#v", seed, msg, p)
 	}
 }
-func TestGetNodeJSON(t *testing.T) {
+func TestExchangeNodeJSON(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedGetNode(popr, true)
+	p := NewPopulatedExchangeNode(popr, true)
 	marshaler := github_com_gogo_protobuf_jsonpb.Marshaler{}
 	jsondata, err := marshaler.MarshalToString(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &GetNode{}
+	msg := &ExchangeNode{}
 	err = github_com_gogo_protobuf_jsonpb.UnmarshalString(jsondata, msg)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
@@ -707,16 +707,16 @@ func TestGetNodeJSON(t *testing.T) {
 		t.Fatalf("seed = %d, %#v !Json Equal %#v", seed, msg, p)
 	}
 }
-func TestGetNodeReplyJSON(t *testing.T) {
+func TestExchangeNodeReplyJSON(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedGetNodeReply(popr, true)
+	p := NewPopulatedExchangeNodeReply(popr, true)
 	marshaler := github_com_gogo_protobuf_jsonpb.Marshaler{}
 	jsondata, err := marshaler.MarshalToString(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &GetNodeReply{}
+	msg := &ExchangeNodeReply{}
 	err = github_com_gogo_protobuf_jsonpb.UnmarshalString(jsondata, msg)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
@@ -917,12 +917,12 @@ func TestPingReplyProtoCompactText(t *testing.T) {
 	}
 }
 
-func TestGetNodeProtoText(t *testing.T) {
+func TestExchangeNodeProtoText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedGetNode(popr, true)
+	p := NewPopulatedExchangeNode(popr, true)
 	dAtA := github_com_gogo_protobuf_proto.MarshalTextString(p)
-	msg := &GetNode{}
+	msg := &ExchangeNode{}
 	if err := github_com_gogo_protobuf_proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -931,12 +931,12 @@ func TestGetNodeProtoText(t *testing.T) {
 	}
 }
 
-func TestGetNodeProtoCompactText(t *testing.T) {
+func TestExchangeNodeProtoCompactText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedGetNode(popr, true)
+	p := NewPopulatedExchangeNode(popr, true)
 	dAtA := github_com_gogo_protobuf_proto.CompactTextString(p)
-	msg := &GetNode{}
+	msg := &ExchangeNode{}
 	if err := github_com_gogo_protobuf_proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -945,12 +945,12 @@ func TestGetNodeProtoCompactText(t *testing.T) {
 	}
 }
 
-func TestGetNodeReplyProtoText(t *testing.T) {
+func TestExchangeNodeReplyProtoText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedGetNodeReply(popr, true)
+	p := NewPopulatedExchangeNodeReply(popr, true)
 	dAtA := github_com_gogo_protobuf_proto.MarshalTextString(p)
-	msg := &GetNodeReply{}
+	msg := &ExchangeNodeReply{}
 	if err := github_com_gogo_protobuf_proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -959,12 +959,12 @@ func TestGetNodeReplyProtoText(t *testing.T) {
 	}
 }
 
-func TestGetNodeReplyProtoCompactText(t *testing.T) {
+func TestExchangeNodeReplyProtoCompactText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedGetNodeReply(popr, true)
+	p := NewPopulatedExchangeNodeReply(popr, true)
 	dAtA := github_com_gogo_protobuf_proto.CompactTextString(p)
-	msg := &GetNodeReply{}
+	msg := &ExchangeNodeReply{}
 	if err := github_com_gogo_protobuf_proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -1180,9 +1180,9 @@ func TestPingReplyGoString(t *testing.T) {
 		t.Fatal(err)
 	}
 }
-func TestGetNodeGoString(t *testing.T) {
+func TestExchangeNodeGoString(t *testing.T) {
 	popr := math_rand.New(math_rand.NewSource(time.Now().UnixNano()))
-	p := NewPopulatedGetNode(popr, false)
+	p := NewPopulatedExchangeNode(popr, false)
 	s1 := p.GoString()
 	s2 := fmt.Sprintf("%#v", p)
 	if s1 != s2 {
@@ -1193,9 +1193,9 @@ func TestGetNodeGoString(t *testing.T) {
 		t.Fatal(err)
 	}
 }
-func TestGetNodeReplyGoString(t *testing.T) {
+func TestExchangeNodeReplyGoString(t *testing.T) {
 	popr := math_rand.New(math_rand.NewSource(time.Now().UnixNano()))
-	p := NewPopulatedGetNodeReply(popr, false)
+	p := NewPopulatedExchangeNodeReply(popr, false)
 	s1 := p.GoString()
 	s2 := fmt.Sprintf("%#v", p)
 	if s1 != s2 {
@@ -1350,10 +1350,10 @@ func TestPingReplySize(t *testing.T) {
 	}
 }
 
-func TestGetNodeSize(t *testing.T) {
+func TestExchangeNodeSize(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedGetNode(popr, true)
+	p := NewPopulatedExchangeNode(popr, true)
 	size2 := github_com_gogo_protobuf_proto.Size(p)
 	dAtA, err := github_com_gogo_protobuf_proto.Marshal(p)
 	if err != nil {
@@ -1372,10 +1372,10 @@ func TestGetNodeSize(t *testing.T) {
 	}
 }
 
-func TestGetNodeReplySize(t *testing.T) {
+func TestExchangeNodeReplySize(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedGetNodeReply(popr, true)
+	p := NewPopulatedExchangeNodeReply(popr, true)
 	size2 := github_com_gogo_protobuf_proto.Size(p)
 	dAtA, err := github_com_gogo_protobuf_proto.Marshal(p)
 	if err != nil {
@@ -1553,18 +1553,18 @@ func TestPingReplyStringer(t *testing.T) {
 		t.Fatalf("String want %v got %v", s1, s2)
 	}
 }
-func TestGetNodeStringer(t *testing.T) {
+func TestExchangeNodeStringer(t *testing.T) {
 	popr := math_rand.New(math_rand.NewSource(time.Now().UnixNano()))
-	p := NewPopulatedGetNode(popr, false)
+	p := NewPopulatedExchangeNode(popr, false)
 	s1 := p.String()
 	s2 := fmt.Sprintf("%v", p)
 	if s1 != s2 {
 		t.Fatalf("String want %v got %v", s1, s2)
 	}
 }
-func TestGetNodeReplyStringer(t *testing.T) {
+func TestExchangeNodeReplyStringer(t *testing.T) {
 	popr := math_rand.New(math_rand.NewSource(time.Now().UnixNano()))
-	p := NewPopulatedGetNodeReply(popr, false)
+	p := NewPopulatedExchangeNodeReply(popr, false)
 	s1 := p.String()
 	s2 := fmt.Sprintf("%v", p)
 	if s1 != s2 {

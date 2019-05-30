@@ -210,6 +210,9 @@ func (c *Chord) Start(isCreate bool) error {
 					}
 				}
 
+				// This is needed if len(succs) == 0
+				c.SetReady(true)
+
 				c.stabilize()
 			})
 			return true

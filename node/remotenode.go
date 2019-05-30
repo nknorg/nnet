@@ -100,6 +100,50 @@ func (rn *RemoteNode) GetRoundTripTime() time.Duration {
 	return rn.roundTripTime
 }
 
+func (rn *RemoteNode) setNode(n *protobuf.Node) error {
+	rn.Node.Lock()
+	defer rn.Node.Unlock()
+
+	if rn.Id != nil && !bytes.Equal(rn.Id, n.Id) {
+		return fmt.Errorf("Node id %x is different from expected value %x", n.Id, rn.Id)
+	}
+
+	remoteAddr, err := transport.Parse(n.Addr)
+	if err != nil {
+		return fmt.Errorf("Parse node addr %s error: %s", n.Addr, err)
+	}
+
+	if remoteAddr.Host == "" {
+		connAddr := rn.conn.RemoteAddr().String()
+		remoteAddr.Host, _, err = net.SplitHostPort(connAddr)
+		if err != nil {
+			return fmt.Errorf("Parse conn remote addr %s error: %s", connAddr, err)
+		}
+		n.Addr = remoteAddr.String()
+	}
+
+	if rn.Addr != "" {
+		expectedAddr, err := transport.Parse(rn.Addr)
+		if err == nil && expectedAddr.Host == "" {
+			connAddr := rn.conn.RemoteAddr().String()
+			expectedAddr.Host, _, err = net.SplitHostPort(connAddr)
+			if err == nil {
+				rn.Addr = expectedAddr.String()
+			}
+		}
+
+		if rn.Addr != n.Addr {
+			return fmt.Errorf("Node addr %s is different from expected value %s", n.Addr, rn.Addr)
+		}
+	}
+
+	if !proto.Equal(rn.Node.Node, n) {
+		rn.Node.Node = n
+	}
+
+	return nil
+}
+
 // Start starts the runtime loop of the remote node
 func (rn *RemoteNode) Start() error {
 	rn.StartOnce.Do(func() {
@@ -116,7 +160,7 @@ func (rn *RemoteNode) Start() error {
 			var err error
 
 			for i := 0; i < startRetries; i++ {
-				n, err = rn.GetNode()
+				n, err = rn.ExchangeNode()
 				if err == nil {
 					break
 				}
@@ -126,44 +170,11 @@ func (rn *RemoteNode) Start() error {
 				return
 			}
 
-			if rn.Id != nil && !bytes.Equal(rn.Id, n.Id) {
-				rn.Stop(fmt.Errorf("Node id %x is different from expected value %x", n.Id, rn.Id))
-				return
-			}
-
-			remoteAddr, err := transport.Parse(n.Addr)
+			err = rn.setNode(n)
 			if err != nil {
-				rn.Stop(fmt.Errorf("Parse node addr %s error: %s", n.Addr, err))
+				rn.Stop(err)
 				return
 			}
-
-			if remoteAddr.Host == "" {
-				connAddr := rn.conn.RemoteAddr().String()
-				remoteAddr.Host, _, err = net.SplitHostPort(connAddr)
-				if err != nil {
-					rn.Stop(fmt.Errorf("Parse conn remote addr %s error: %s", connAddr, err))
-					return
-				}
-				n.Addr = remoteAddr.String()
-			}
-
-			if rn.Addr != "" {
-				expectedAddr, err := transport.Parse(rn.Addr)
-				if err == nil && expectedAddr.Host == "" {
-					connAddr := rn.conn.RemoteAddr().String()
-					expectedAddr.Host, _, err = net.SplitHostPort(connAddr)
-					if err == nil {
-						rn.Addr = expectedAddr.String()
-					}
-				}
-
-				if rn.Addr != n.Addr {
-					rn.Stop(fmt.Errorf("Node addr %s is different from expected value %s", n.Addr, rn.Addr))
-					return
-				}
-			}
-
-			rn.Node.Node = n
 
 			var existing *RemoteNode
 			rn.LocalNode.neighbors.Range(func(key, value interface{}) bool {
@@ -591,9 +602,9 @@ func (rn *RemoteNode) Ping() error {
 	return nil
 }
 
-// GetNode sends a GetNode message to remote node and wait for reply
-func (rn *RemoteNode) GetNode() (*protobuf.Node, error) {
-	msg, err := rn.LocalNode.NewGetNodeMessage()
+// ExchangeNode sends a ExchangeNode message to remote node and wait for reply
+func (rn *RemoteNode) ExchangeNode() (*protobuf.Node, error) {
+	msg, err := rn.LocalNode.NewExchangeNodeMessage()
 	if err != nil {
 		return nil, err
 	}
@@ -603,7 +614,7 @@ func (rn *RemoteNode) GetNode() (*protobuf.Node, error) {
 		return nil, err
 	}
 
-	replyBody := &protobuf.GetNodeReply{}
+	replyBody := &protobuf.ExchangeNodeReply{}
 	err = proto.Unmarshal(reply.Msg.Message, replyBody)
 	if err != nil {
 		return nil, err
