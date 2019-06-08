@@ -15,11 +15,6 @@ import (
 	"github.com/nknorg/nnet/transport"
 )
 
-const (
-	// How many concurrent goroutines are handling messages
-	numWorkers = 1
-)
-
 // LocalNode is a local node
 type LocalNode struct {
 	*Node
@@ -91,7 +86,7 @@ func (ln *LocalNode) Start() error {
 			}
 		}
 
-		for i := 0; i < numWorkers; i++ {
+		for i := uint32(0); i < ln.LocalHandleMsgWorkers; i++ {
 			go ln.handleMsg()
 		}
 

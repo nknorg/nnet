@@ -20,6 +20,7 @@ type Config struct {
 
 	LocalRxMsgChanLen              uint32        // Max number of msg that can be buffered per routing type
 	LocalHandleMsgChanLen          uint32        // Max number of msg to be processed that can be buffered
+	LocalHandleMsgWorkers          uint32        // Number of concurrent workers handling msg sent to local node
 	LocalRxMsgCacheExpiration      time.Duration // How long a received message id stays in cache before expiration
 	LocalRxMsgCacheCleanupInterval time.Duration // How often to check and delete expired received message id
 
@@ -56,6 +57,7 @@ func DefaultConfig() *Config {
 
 		LocalRxMsgChanLen:              23333,
 		LocalHandleMsgChanLen:          23333,
+		LocalHandleMsgWorkers:          1,
 		LocalRxMsgCacheExpiration:      300 * time.Second,
 		LocalRxMsgCacheCleanupInterval: 10 * time.Second,
 
