@@ -33,7 +33,7 @@ Coming soon:
 
 ### Requirements:
 
-* Go 1.10+
+* Go 1.11+
 
 ### Install
 
@@ -41,11 +41,8 @@ Coming soon:
 go get -u -d github.com/nknorg/nnet
 ```
 
-It's recommended to use package management tools such as
-[glide](https://github.com/Masterminds/glide) to ensure reproducibility by
-freezing dependencies at exact version/commit. If you have glide installed, you
-can run `glide install` in `$GOPATH/src/github.com/nknorg/nnet/` directory to
-use exactly the same version of dependencies as we do.
+It's recommended to use [Go Modules](https://github.com/golang/go/wiki/Modules)
+to ensure reproducibility of dependencies.
 
 ### Basic
 
@@ -182,7 +179,7 @@ go run $GOPATH/src/github.com/nknorg/nnet/examples/middleware/main.go
 ```
 
 Also, examples like [examples/message/main.go](examples/message/main.go) and
-[examples/efficient-broadcasting/main.go](examples/efficient-broadcasting/main.go)
+[examples/efficient-broadcast/main.go](examples/efficient-broadcast/main.go)
 use middleware to handle and count messages.
 
 ### Sending and Receiving Messages
@@ -247,13 +244,13 @@ go run $GOPATH/src/github.com/nknorg/nnet/examples/message/main.go
 ```
 
 There is another example
-[examples/efficient-broadcasting/main.go](examples/efficient-broadcasting/main.go)
+[examples/efficient-broadcast/main.go](examples/efficient-broadcast/main.go)
 that counts and compares the received message count for push and tree broadcast
 message. You will see how tree message can reduce the bandwidth usage by an
 order of magnitude. You can run it by
 
 ```bash
-go run $GOPATH/src/github.com/nknorg/nnet/examples/efficient-broadcasting/main.go
+go run $GOPATH/src/github.com/nknorg/nnet/examples/efficient-broadcast/main.go
 ```
 
 ### Transport protocol
