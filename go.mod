@@ -1,4 +1,4 @@
-module github.com/yilunzhang/nnet
+module github.com/nknorg/nnet
 
 require (
 	github.com/gogo/protobuf v1.1.1
