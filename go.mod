@@ -10,7 +10,6 @@ require (
 	github.com/klauspost/cpuid v1.2.1
 	github.com/klauspost/reedsolomon v0.0.0-20190407153631-a373324398e4
 	github.com/nknorg/go-nat v1.0.1
-	github.com/nknorg/nnet v0.0.0-20190608015523-72ee4bffd903 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.0.0-20190227000051-27936f6d90f9

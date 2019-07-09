@@ -57,7 +57,7 @@ func (c *Chord) addSuccessor(remoteNode *node.RemoteNode) error {
 				}
 			}
 
-			c.maybeStopRemoteNode(replaced)
+			c.MaybeStopRemoteNode(replaced)
 		}
 	}
 
@@ -90,7 +90,7 @@ func (c *Chord) addPredecessor(remoteNode *node.RemoteNode) error {
 				}
 			}
 
-			c.maybeStopRemoteNode(replaced)
+			c.MaybeStopRemoteNode(replaced)
 		}
 	}
 
@@ -125,7 +125,7 @@ func (c *Chord) addFingerTable(remoteNode *node.RemoteNode, index int) error {
 				}
 			}
 
-			c.maybeStopRemoteNode(replaced)
+			c.MaybeStopRemoteNode(replaced)
 		}
 
 		if added != (replaced != nil) {
@@ -162,7 +162,7 @@ func (c *Chord) addNeighbor(remoteNode *node.RemoteNode) error {
 				}
 			}
 
-			c.maybeStopRemoteNode(replaced)
+			c.MaybeStopRemoteNode(replaced)
 		}
 	}
 
@@ -271,9 +271,9 @@ func (c *Chord) removeNeighbor(remoteNode *node.RemoteNode) error {
 	return nil
 }
 
-// maybeStopRemoteNode removes an outbound node that is no longer in successors,
+// MaybeStopRemoteNode removes an outbound node that is no longer in successors,
 // predecessor, or finger table
-func (c *Chord) maybeStopRemoteNode(remoteNode *node.RemoteNode) bool {
+func (c *Chord) MaybeStopRemoteNode(remoteNode *node.RemoteNode) bool {
 	if !remoteNode.IsOutbound {
 		return false
 	}
