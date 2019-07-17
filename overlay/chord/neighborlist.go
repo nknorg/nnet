@@ -215,7 +215,7 @@ func (sl *NeighborList) ToRemoteNodeList(sorted bool) []*node.RemoteNode {
 	nodes := make([]*node.RemoteNode, 0)
 	sl.nodes.Range(func(key, value interface{}) bool {
 		rn, ok := value.(*node.RemoteNode)
-		if ok {
+		if ok && !rn.IsStopped() {
 			nodes = append(nodes, rn)
 		}
 		return true
