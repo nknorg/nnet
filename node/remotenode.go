@@ -100,6 +100,28 @@ func (rn *RemoteNode) GetRoundTripTime() time.Duration {
 	return rn.roundTripTime
 }
 
+// setRoundTripTime sets the measured round trip time between local node and
+// remote node.
+func (rn *RemoteNode) setRoundTripTime(roundTripTime time.Duration) {
+	rn.Lock()
+	rn.roundTripTime = roundTripTime
+	rn.Unlock()
+}
+
+// GetLastRxTime returns the time received last ping response
+func (rn *RemoteNode) GetLastRxTime() time.Time {
+	rn.RLock()
+	defer rn.RUnlock()
+	return rn.lastRxTime
+}
+
+// setLastRxTime sets the time received last ping response
+func (rn *RemoteNode) setLastRxTime(lastRxTime time.Time) {
+	rn.Lock()
+	rn.lastRxTime = lastRxTime
+	rn.Unlock()
+}
+
 func (rn *RemoteNode) setNode(n *protobuf.Node) error {
 	rn.Node.Lock()
 	defer rn.Node.Unlock()
@@ -273,7 +295,6 @@ func (rn *RemoteNode) handleMsg() {
 	var msg *protobuf.Message
 	var remoteMsg *RemoteMessage
 	var msgChan chan *RemoteMessage
-	var lastRxTime time.Time
 	var added, ok bool
 	var err error
 	keepAliveTimeoutTimer := time.NewTimer(rn.LocalNode.KeepAliveTimeout)
@@ -318,10 +339,7 @@ func (rn *RemoteNode) handleMsg() {
 				log.Warningf("Msg chan full for routing type %d, discarding msg", msg.RoutingType)
 			}
 		case <-keepAliveTimeoutTimer.C:
-			rn.RLock()
-			lastRxTime = rn.lastRxTime
-			rn.RUnlock()
-			if time.Since(lastRxTime) > rn.LocalNode.KeepAliveTimeout {
+			if time.Since(rn.GetLastRxTime()) > rn.LocalNode.KeepAliveTimeout {
 				rn.Stop(errors.New("keepalive timeout"))
 			}
 		}
@@ -375,10 +393,6 @@ func (rn *RemoteNode) rx(conn net.Conn, isActive bool) {
 			go rn.tx(conn)
 		}
 
-		rn.Lock()
-		rn.lastRxTime = time.Now()
-		rn.Unlock()
-
 		msgLen := binary.BigEndian.Uint32(msgLenBuf)
 		if msgLen < 0 {
 			rn.Stop(fmt.Errorf("Msg len %d overflow", msgLen))
@@ -397,10 +411,6 @@ func (rn *RemoteNode) rx(conn net.Conn, isActive bool) {
 			if err != nil {
 				break
 			}
-
-			rn.Lock()
-			rn.lastRxTime = time.Now()
-			rn.Unlock()
 		}
 
 		if err != nil {
@@ -498,8 +508,8 @@ func (rn *RemoteNode) tx(conn net.Conn) {
 // measure round trip time to remote node.
 func (rn *RemoteNode) startMeasuringRoundTripTime() {
 	var err error
-	var startTime time.Time
-	var roundTripTime time.Duration
+	var txTime, rxTime time.Time
+	var lastRoundTripTime time.Duration
 
 	for {
 		time.Sleep(util.RandDuration(rn.LocalNode.MeasureRoundTripTimeInterval, 1.0/5.0))
@@ -508,22 +518,24 @@ func (rn *RemoteNode) startMeasuringRoundTripTime() {
 			return
 		}
 
-		startTime = time.Now()
+		txTime = time.Now()
 		err = rn.Ping()
-		roundTripTime = time.Since(startTime)
 		if err != nil {
 			log.Warningf("Ping %v error: %v", rn, err)
-			// This will guarantee rn.roundTripTime immediately becomes larger than any other available neighbors
-			roundTripTime = rn.LocalNode.DefaultReplyTimeout * 2
+			// This will guarantee rn.roundTripTime immediately becomes larger than
+			// any other available neighbors
+			lastRoundTripTime = rn.LocalNode.DefaultReplyTimeout * 2
+		} else {
+			rxTime = time.Now()
+			lastRoundTripTime = rxTime.Sub(txTime)
+			rn.setLastRxTime(rxTime)
 		}
 
-		rn.Lock()
 		if rn.roundTripTime > 0 {
-			rn.roundTripTime = (rn.roundTripTime + roundTripTime) / 2
+			rn.setRoundTripTime((rn.roundTripTime + lastRoundTripTime) / 2)
 		} else {
-			rn.roundTripTime = roundTripTime
+			rn.setRoundTripTime(lastRoundTripTime)
 		}
-		rn.Unlock()
 	}
 }
 
