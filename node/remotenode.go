@@ -502,7 +502,7 @@ func (rn *RemoteNode) startMeasuringRoundTripTime() {
 	var roundTripTime time.Duration
 
 	for {
-		time.Sleep(util.RandDuration(rn.LocalNode.MeasureRoundTripTimeInterval, 1.0/3.0))
+		time.Sleep(util.RandDuration(rn.LocalNode.MeasureRoundTripTimeInterval, 1.0/5.0))
 
 		if rn.IsStopped() {
 			return
@@ -510,11 +510,12 @@ func (rn *RemoteNode) startMeasuringRoundTripTime() {
 
 		startTime = time.Now()
 		err = rn.Ping()
+		roundTripTime = time.Since(startTime)
 		if err != nil {
 			log.Warningf("Ping %v error: %v", rn, err)
-			continue
+			// This will guarantee rn.roundTripTime immediately becomes larger than any other available neighbors
+			roundTripTime = rn.LocalNode.DefaultReplyTimeout * 2
 		}
-		roundTripTime = time.Since(startTime)
 
 		rn.Lock()
 		if rn.roundTripTime > 0 {
