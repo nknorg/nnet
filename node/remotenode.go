@@ -509,11 +509,9 @@ func (rn *RemoteNode) tx(conn net.Conn) {
 func (rn *RemoteNode) startMeasuringRoundTripTime() {
 	var err error
 	var txTime, rxTime time.Time
-	var lastRoundTripTime time.Duration
+	var lastRoundTripTime, interval time.Duration
 
 	for {
-		time.Sleep(util.RandDuration(rn.LocalNode.MeasureRoundTripTimeInterval, 1.0/5.0))
-
 		if rn.IsStopped() {
 			return
 		}
@@ -525,10 +523,12 @@ func (rn *RemoteNode) startMeasuringRoundTripTime() {
 			// This will guarantee rn.roundTripTime immediately becomes larger than
 			// any other available neighbors
 			lastRoundTripTime = rn.LocalNode.DefaultReplyTimeout * 2
+			interval = rn.LocalNode.MeasureRoundTripTimeInterval / 5
 		} else {
 			rxTime = time.Now()
 			lastRoundTripTime = rxTime.Sub(txTime)
 			rn.setLastRxTime(rxTime)
+			interval = util.RandDuration(rn.LocalNode.MeasureRoundTripTimeInterval, 1.0/5.0)
 		}
 
 		if rn.roundTripTime > 0 {
@@ -536,6 +536,8 @@ func (rn *RemoteNode) startMeasuringRoundTripTime() {
 		} else {
 			rn.setRoundTripTime(lastRoundTripTime)
 		}
+
+		time.Sleep(interval)
 	}
 }
 
