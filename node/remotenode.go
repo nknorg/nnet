@@ -276,7 +276,7 @@ func (rn *RemoteNode) startMultiplexer() {
 				rn.Stop(fmt.Errorf("Open stream error: %s", err))
 				return
 			}
-			go rn.rx(conn, false)
+			go rn.rx(conn, i == 0)
 		}
 	} else {
 		for i := uint32(0); i < rn.LocalNode.NumStreamsToAccept; i++ {
@@ -516,6 +516,8 @@ func (rn *RemoteNode) startMeasuringRoundTripTime() {
 			return
 		}
 
+		time.Sleep(interval)
+
 		txTime = time.Now()
 		err = rn.Ping()
 		if err != nil {
@@ -536,8 +538,6 @@ func (rn *RemoteNode) startMeasuringRoundTripTime() {
 		} else {
 			rn.setRoundTripTime(lastRoundTripTime)
 		}
-
-		time.Sleep(interval)
 	}
 }
 
