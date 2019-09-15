@@ -43,23 +43,31 @@ func IDToBigInt(id []byte) big.Int {
 
 // Checks if a key is STRICTLY between two ID's exclusively
 func Between(id1, id2, key []byte) bool {
-	if CompareID(id1, id2) == 1 {
-		return CompareID(id1, key) == -1 || CompareID(id2, key) == 1
+	if CompareID(id1, id2) > 0 {
+		return CompareID(id1, key) < 0 || CompareID(id2, key) > 0
 	}
-	return CompareID(id1, key) == -1 && CompareID(id2, key) == 1
+	return CompareID(id1, key) < 0 && CompareID(id2, key) > 0
 }
 
 // Checks if a key is between two ID's, left inclusive
 func BetweenLeftIncl(id1, id2, key []byte) bool {
-	if CompareID(id1, id2) == 1 {
-		return CompareID(id1, key) <= 0 || CompareID(id2, key) == 1
+	if CompareID(id1, id2) > 0 {
+		return CompareID(id1, key) <= 0 || CompareID(id2, key) > 0
 	}
-	return CompareID(id1, key) <= 0 && CompareID(id2, key) == 1
+	return CompareID(id1, key) <= 0 && CompareID(id2, key) > 0
+}
+
+// Checks if a key is between two ID's, right inclusive
+func BetweenRightIncl(id1, id2, key []byte) bool {
+	if CompareID(id1, id2) > 0 {
+		return CompareID(id1, key) < 0 || CompareID(id2, key) >= 0
+	}
+	return CompareID(id1, key) < 0 && CompareID(id2, key) >= 0
 }
 
 // Checks if a key is between two ID's, both inclusive
 func BetweenIncl(id1, id2, key []byte) bool {
-	if CompareID(id1, id2) == 1 {
+	if CompareID(id1, id2) > 0 {
 		return CompareID(id1, key) <= 0 || CompareID(id2, key) >= 0
 	}
 	return CompareID(id1, key) <= 0 && CompareID(id2, key) >= 0
