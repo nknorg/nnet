@@ -512,11 +512,11 @@ func (rn *RemoteNode) startMeasuringRoundTripTime() {
 	var lastRoundTripTime, interval time.Duration
 
 	for {
+		time.Sleep(interval)
+
 		if rn.IsStopped() {
 			return
 		}
-
-		time.Sleep(interval)
 
 		txTime = time.Now()
 		err = rn.Ping()

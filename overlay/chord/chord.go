@@ -47,8 +47,8 @@ func NewChord(localNode *node.LocalNode) (*Chord, error) {
 	conf := localNode.Config
 	nodeIDBits := conf.NodeIDBytes * 8
 
-	next := nextID(localNode.Id, nodeIDBits)
-	prev := prevID(localNode.Id, nodeIDBits)
+	next := NextID(localNode.Id, nodeIDBits)
+	prev := PrevID(localNode.Id, nodeIDBits)
 
 	successors, err := NewNeighborList(next, prev, nodeIDBits, conf.MinNumSuccessors, false)
 	if err != nil {
@@ -62,8 +62,8 @@ func NewChord(localNode *node.LocalNode) (*Chord, error) {
 
 	fingerTable := make([]*NeighborList, nodeIDBits)
 	for i := uint32(0); i < nodeIDBits; i++ {
-		startID := powerOffset(localNode.Id, i, nodeIDBits)
-		endID := prevID(powerOffset(localNode.Id, i+1, nodeIDBits), nodeIDBits)
+		startID := PowerOffset(localNode.Id, i, nodeIDBits)
+		endID := PrevID(PowerOffset(localNode.Id, i+1, nodeIDBits), nodeIDBits)
 		fingerTable[i], err = NewNeighborList(startID, endID, nodeIDBits, conf.NumFingerSuccessors, false)
 		if err != nil {
 			return nil, err
@@ -186,7 +186,7 @@ func (c *Chord) Start(isCreate bool) error {
 				var err error
 
 				// prev is used to prevent msg being routed to self
-				prev := prevID(c.LocalNode.Id, c.nodeIDBits)
+				prev := PrevID(c.LocalNode.Id, c.nodeIDBits)
 
 				for i := 0; i < joinRetries; i++ {
 					succs, err = c.FindSuccessors(prev, c.successors.Cap())
@@ -533,7 +533,7 @@ func (c *Chord) FindSuccAndPred(key []byte, numSucc, numPred uint32) ([]*protobu
 		return []*protobuf.Node{c.LocalNode.Node.Node}, []*protobuf.Node{c.LocalNode.Node.Node}, nil
 	}
 
-	if CompareID(key, c.LocalNode.Id) == 0 || between(c.LocalNode.Id, succ.Id, key) {
+	if CompareID(key, c.LocalNode.Id) == 0 || Between(c.LocalNode.Id, succ.Id, key) {
 		var succs, preds []*protobuf.Node
 
 		if numSucc > 0 {

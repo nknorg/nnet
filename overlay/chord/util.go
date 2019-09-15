@@ -20,7 +20,7 @@ func CompareID(id1, id2 []byte) int {
 	return bytes.Compare(id1, id2)
 }
 
-func bigIntToID(i big.Int, m uint32) []byte {
+func BigIntToID(i big.Int, m uint32) []byte {
 	b := i.Bytes()
 	lb := uint32(len(b))
 	lID := m / 8
@@ -35,51 +35,42 @@ func bigIntToID(i big.Int, m uint32) []byte {
 	return b
 }
 
-func idToBigInt(id []byte) big.Int {
+func IDToBigInt(id []byte) big.Int {
 	idInt := big.Int{}
 	idInt.SetBytes(id)
 	return idInt
 }
 
 // Checks if a key is STRICTLY between two ID's exclusively
-func between(id1, id2, key []byte) bool {
+func Between(id1, id2, key []byte) bool {
 	if CompareID(id1, id2) == 1 {
-		return CompareID(id1, key) == -1 ||
-			CompareID(id2, key) == 1
+		return CompareID(id1, key) == -1 || CompareID(id2, key) == 1
 	}
-
-	return CompareID(id1, key) == -1 &&
-		CompareID(id2, key) == 1
+	return CompareID(id1, key) == -1 && CompareID(id2, key) == 1
 }
 
 // Checks if a key is between two ID's, left inclusive
-func betweenLeftIncl(id1, id2, key []byte) bool {
+func BetweenLeftIncl(id1, id2, key []byte) bool {
 	if CompareID(id1, id2) == 1 {
-		return CompareID(id1, key) <= 0 ||
-			CompareID(id2, key) == 1
+		return CompareID(id1, key) <= 0 || CompareID(id2, key) == 1
 	}
-
-	return CompareID(id1, key) <= 0 &&
-		CompareID(id2, key) == 1
+	return CompareID(id1, key) <= 0 && CompareID(id2, key) == 1
 }
 
 // Checks if a key is between two ID's, both inclusive
-func betweenIncl(id1, id2, key []byte) bool {
+func BetweenIncl(id1, id2, key []byte) bool {
 	if CompareID(id1, id2) == 1 {
-		return CompareID(id1, key) <= 0 ||
-			CompareID(id2, key) >= 0
+		return CompareID(id1, key) <= 0 || CompareID(id2, key) >= 0
 	}
-
-	return CompareID(id1, key) <= 0 &&
-		CompareID(id2, key) >= 0
+	return CompareID(id1, key) <= 0 && CompareID(id2, key) >= 0
 }
 
 // Computes (id + 2^exp) % (2^mod)
-func powerOffsetBigInt(id []byte, exp uint32, mod uint32) big.Int {
+func PowerOffsetBigInt(id []byte, exp uint32, mod uint32) big.Int {
 	off := make([]byte, len(id))
 	copy(off, id)
 
-	idInt := idToBigInt(id)
+	idInt := IDToBigInt(id)
 
 	two := big.NewInt(2)
 	offset := big.Int{}
@@ -97,25 +88,25 @@ func powerOffsetBigInt(id []byte, exp uint32, mod uint32) big.Int {
 }
 
 // Computes (id + 2^exp) % (2^mod)
-func powerOffset(id []byte, exp uint32, mod uint32) []byte {
-	resInt := powerOffsetBigInt(id, exp, mod)
-	return bigIntToID(resInt, mod)
+func PowerOffset(id []byte, exp uint32, mod uint32) []byte {
+	resInt := PowerOffsetBigInt(id, exp, mod)
+	return BigIntToID(resInt, mod)
 }
 
 // Computes (id - 1) % (2^mod)
-func prevID(id []byte, mod uint32) []byte {
-	idInt := idToBigInt(id)
+func PrevID(id []byte, mod uint32) []byte {
+	idInt := IDToBigInt(id)
 	prev := big.Int{}
 	prev.Sub(&idInt, big.NewInt(1))
-	return bigIntToID(prev, mod)
+	return BigIntToID(prev, mod)
 }
 
 // Computes (id + 1) % (2^mod)
-func nextID(id []byte, mod uint32) []byte {
-	idInt := idToBigInt(id)
+func NextID(id []byte, mod uint32) []byte {
+	idInt := IDToBigInt(id)
 	next := big.Int{}
 	next.Add(&idInt, big.NewInt(1))
-	return bigIntToID(next, mod)
+	return BigIntToID(next, mod)
 }
 
 // Computes the forward distance from a to b modulus a ring size
