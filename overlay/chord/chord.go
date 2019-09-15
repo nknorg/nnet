@@ -619,3 +619,25 @@ func (c *Chord) FingerTable() [][]*node.RemoteNode {
 	}
 	return fingerTable
 }
+
+// FingerTableIdxInRemoteNode returns the finger table index (index of finger,
+// index in finger) of local node in remote node's finger table. Returns -1
+// index if local node is not in remote node's finger table.
+func (c *Chord) FingerTableIdxInRemoteNode(remoteNodeID []byte) (int, int) {
+	dist := Distance(remoteNodeID, c.LocalNode.Id, c.nodeIDBits)
+	fingerIdx := dist.BitLen() - 1
+	if fingerIdx < 0 {
+		return -1, -1
+	}
+
+	fingerID := PowerOffset(remoteNodeID, uint32(fingerIdx), c.nodeIDBits)
+
+	preds := c.Predecessors()
+	for i := 0; i < int(c.LocalNode.NumFingerSuccessors) && i < len(preds); i++ {
+		if BetweenRightIncl(preds[i].Id, c.LocalNode.Id, fingerID) {
+			return fingerIdx, i
+		}
+	}
+
+	return -1, -1
+}
