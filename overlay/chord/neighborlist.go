@@ -50,9 +50,9 @@ func (sl *NeighborList) cmp(node1, node2 *protobuf.Node) int {
 // IsIDInRange returns if id is in the range of NeighborList
 func (sl *NeighborList) IsIDInRange(id []byte) bool {
 	if sl.reversed {
-		return betweenIncl(sl.endID, sl.startID, id)
+		return BetweenIncl(sl.endID, sl.startID, id)
 	}
-	return betweenIncl(sl.startID, sl.endID, id)
+	return BetweenIncl(sl.startID, sl.endID, id)
 }
 
 // IsEmpty returns if there is at least one remote node in NeighborList

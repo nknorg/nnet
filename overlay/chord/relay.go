@@ -41,7 +41,7 @@ func (rr *RelayRouting) Start() error {
 // GetNodeToRoute returns the local node and remote nodes to route message to
 func (rr *RelayRouting) GetNodeToRoute(remoteMsg *node.RemoteMessage) (*node.LocalNode, []*node.RemoteNode, error) {
 	succ := rr.chord.successors.GetFirst()
-	if succ == nil || betweenLeftIncl(rr.chord.LocalNode.Id, succ.Id, remoteMsg.Msg.DestId) {
+	if succ == nil || BetweenLeftIncl(rr.chord.LocalNode.Id, succ.Id, remoteMsg.Msg.DestId) {
 		return rr.chord.LocalNode, nil, nil
 	}
 
@@ -50,7 +50,7 @@ func (rr *RelayRouting) GetNodeToRoute(remoteMsg *node.RemoteMessage) (*node.Loc
 		if successors[i] == remoteMsg.RemoteNode {
 			continue
 		}
-		if betweenLeftIncl(successors[i].Id, successors[i+1].Id, remoteMsg.Msg.DestId) {
+		if BetweenLeftIncl(successors[i].Id, successors[i+1].Id, remoteMsg.Msg.DestId) {
 			return nil, []*node.RemoteNode{successors[i]}, nil
 		}
 	}
@@ -61,14 +61,14 @@ func (rr *RelayRouting) GetNodeToRoute(remoteMsg *node.RemoteMessage) (*node.Loc
 		if first == nil {
 			continue
 		}
-		if !betweenIncl(rr.chord.LocalNode.Id, remoteMsg.Msg.DestId, first.Id) {
+		if !BetweenIncl(rr.chord.LocalNode.Id, remoteMsg.Msg.DestId, first.Id) {
 			continue
 		}
 
 		nextHop := first
 		minRoundTripTime := first.GetRoundTripTime()
 		for _, rn := range finger.ToRemoteNodeList(true) {
-			if betweenIncl(rr.chord.LocalNode.Id, remoteMsg.Msg.DestId, rn.Id) {
+			if BetweenIncl(rr.chord.LocalNode.Id, remoteMsg.Msg.DestId, rn.Id) {
 				rtt := rn.GetRoundTripTime()
 				if minRoundTripTime == 0 || (rtt > 0 && rtt <= minRoundTripTime) {
 					nextHop = rn
