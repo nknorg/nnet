@@ -68,7 +68,7 @@ func (rr *RelayRouting) GetNodeToRoute(remoteMsg *node.RemoteMessage) (*node.Loc
 		nextHop := first
 		minRoundTripTime := first.GetRoundTripTime()
 		for _, rn := range finger.ToRemoteNodeList(true) {
-			if BetweenIncl(rr.chord.LocalNode.Id, remoteMsg.Msg.DestId, rn.Id) {
+			if rn.IsOutbound && BetweenIncl(rr.chord.LocalNode.Id, remoteMsg.Msg.DestId, rn.Id) {
 				rtt := rn.GetRoundTripTime()
 				if minRoundTripTime == 0 || (rtt > 0 && rtt <= minRoundTripTime) {
 					nextHop = rn
