@@ -4,7 +4,30 @@ import (
 	"bytes"
 	"log"
 	"math/big"
+	"sync"
 )
+
+var (
+	two            = big.NewInt(2)
+	powerCache     = make(map[uint32]*big.Int, 1)
+	powerCacheLock sync.RWMutex
+)
+
+func getPower(exp uint32) *big.Int {
+	powerCacheLock.RLock()
+	power := powerCache[exp]
+	powerCacheLock.RUnlock()
+
+	if power == nil {
+		power = &big.Int{}
+		power.Exp(two, big.NewInt(int64(exp)), nil)
+		powerCacheLock.Lock()
+		powerCache[exp] = power
+		powerCacheLock.Unlock()
+	}
+
+	return power
+}
 
 // CompareID returns -1, 0, 1 if id1 <, =, > id2 respectively
 func CompareID(id1, id2 []byte) int {
@@ -73,56 +96,37 @@ func BetweenIncl(id1, id2, key []byte) bool {
 	return CompareID(id1, key) <= 0 && CompareID(id2, key) >= 0
 }
 
-// Computes (id + 2^exp) % (2^mod)
-func PowerOffsetBigInt(id []byte, exp uint32, mod uint32) big.Int {
-	off := make([]byte, len(id))
-	copy(off, id)
-
+// Computes (id + offset) % (2^m)
+func Offset(id []byte, offset *big.Int, m uint32) []byte {
 	idInt := IDToBigInt(id)
-
-	two := big.NewInt(2)
-	offset := big.Int{}
-	offset.Exp(two, big.NewInt(int64(exp)), nil)
 
 	sum := big.Int{}
-	sum.Add(&idInt, &offset)
+	sum.Add(&idInt, offset)
 
-	ceil := big.Int{}
-	ceil.Exp(two, big.NewInt(int64(mod)), nil)
+	idInt.Mod(&sum, getPower(m))
 
-	idInt.Mod(&sum, &ceil)
-
-	return idInt
+	return BigIntToID(idInt, m)
 }
 
-// Computes (id + 2^exp) % (2^mod)
-func PowerOffset(id []byte, exp uint32, mod uint32) []byte {
-	resInt := PowerOffsetBigInt(id, exp, mod)
-	return BigIntToID(resInt, mod)
+// Computes (id + 2^exp) % (2^m)
+func PowerOffset(id []byte, exp uint32, m uint32) []byte {
+	offset := big.Int{}
+	offset.Exp(two, big.NewInt(int64(exp)), nil)
+	return Offset(id, &offset, m)
 }
 
-// Computes (id - 1) % (2^mod)
-func PrevID(id []byte, mod uint32) []byte {
-	idInt := IDToBigInt(id)
-	prev := big.Int{}
-	prev.Sub(&idInt, big.NewInt(1))
-	return BigIntToID(prev, mod)
+// Computes (id - 1) % (2^m)
+func PrevID(id []byte, m uint32) []byte {
+	return Offset(id, big.NewInt(-1), m)
 }
 
-// Computes (id + 1) % (2^mod)
-func NextID(id []byte, mod uint32) []byte {
-	idInt := IDToBigInt(id)
-	next := big.Int{}
-	next.Add(&idInt, big.NewInt(1))
-	return BigIntToID(next, mod)
+// Computes (id + 1) % (2^m)
+func NextID(id []byte, m uint32) []byte {
+	return Offset(id, big.NewInt(1), m)
 }
 
 // Computes the forward distance from a to b modulus a ring size
-func Distance(a, b []byte, bits uint32) *big.Int {
-	// Get the ring size
-	var ring big.Int
-	ring.Exp(big.NewInt(2), big.NewInt(int64(bits)), nil)
-
+func Distance(a, b []byte, m uint32) *big.Int {
 	// Convert to int
 	var aInt, bInt big.Int
 	(&aInt).SetBytes(a)
@@ -133,6 +137,6 @@ func Distance(a, b []byte, bits uint32) *big.Int {
 	(&dist).Sub(&bInt, &aInt)
 
 	// Distance modulus ring size
-	(&dist).Mod(&dist, &ring)
+	(&dist).Mod(&dist, getPower(m))
 	return &dist
 }
