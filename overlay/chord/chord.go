@@ -142,18 +142,24 @@ func NewChord(localNode *node.LocalNode) (*Chord, error) {
 		return nil, err
 	}
 
-	err = localNode.ApplyMiddleware(node.RemoteNodeReady{func(rn *node.RemoteNode) bool {
-		c.addRemoteNode(rn)
-		return true
-	}, 0})
+	err = localNode.ApplyMiddleware(node.RemoteNodeReady{
+		Func: func(rn *node.RemoteNode) bool {
+			c.addRemoteNode(rn)
+			return true
+		},
+		Priority: 0,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	err = localNode.ApplyMiddleware(node.RemoteNodeDisconnected{func(rn *node.RemoteNode) bool {
-		c.removeNeighbor(rn)
-		return true
-	}, 0})
+	err = localNode.ApplyMiddleware(node.RemoteNodeDisconnected{
+		Func: func(rn *node.RemoteNode) bool {
+			c.removeNeighbor(rn)
+			return true
+		},
+		Priority: 0,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -165,13 +171,16 @@ func NewChord(localNode *node.LocalNode) (*Chord, error) {
 func (c *Chord) Start(isCreate bool) error {
 	c.StartOnce.Do(func() {
 		if !isCreate {
-			err := c.LocalNode.ApplyMiddleware(node.RemoteNodeConnected{func(rn *node.RemoteNode) bool {
-				if !c.IsReady() && !rn.IsOutbound {
-					rn.Stop(errors.New("Chord node is not ready yet"))
-					return false
-				}
-				return true
-			}, 0})
+			err := c.LocalNode.ApplyMiddleware(node.RemoteNodeConnected{
+				Func: func(rn *node.RemoteNode) bool {
+					if !c.IsReady() && !rn.IsOutbound {
+						rn.Stop(errors.New("Chord node is not ready yet"))
+						return false
+					}
+					return true
+				},
+				Priority: 0,
+			})
 			if err != nil {
 				c.Stop(err)
 				return
@@ -180,43 +189,46 @@ func (c *Chord) Start(isCreate bool) error {
 
 		var joinOnce sync.Once
 
-		err := c.ApplyMiddleware(SuccessorAdded{func(remoteNode *node.RemoteNode, index int) bool {
-			joinOnce.Do(func() {
-				var succs []*protobuf.Node
-				var err error
+		err := c.ApplyMiddleware(SuccessorAdded{
+			Func: func(remoteNode *node.RemoteNode, index int) bool {
+				joinOnce.Do(func() {
+					var succs []*protobuf.Node
+					var err error
 
-				// prev is used to prevent msg being routed to self
-				prev := PrevID(c.LocalNode.Id, c.nodeIDBits)
+					// prev is used to prevent msg being routed to self
+					prev := PrevID(c.LocalNode.Id, c.nodeIDBits)
 
-				for i := 0; i < joinRetries; i++ {
-					succs, err = c.FindSuccessors(prev, c.successors.Cap())
-					if err == nil {
-						break
-					}
-				}
-				if err != nil {
-					c.Stop(fmt.Errorf("Join failed: %s", err))
-					return
-				}
-
-				for _, succ := range succs {
-					if CompareID(succ.Id, c.LocalNode.Id) != 0 {
-						err = c.Connect(succ)
-						if err != nil {
-							log.Errorf("Connect to successor %x@%s error: %v", succ.Id, succ.Addr, err)
-							continue
+					for i := 0; i < joinRetries; i++ {
+						succs, err = c.FindSuccessors(prev, c.successors.Cap())
+						if err == nil {
+							break
 						}
-						c.SetReady(true)
 					}
-				}
+					if err != nil {
+						c.Stop(fmt.Errorf("Join failed: %s", err))
+						return
+					}
 
-				// This is needed if len(succs) == 0
-				c.SetReady(true)
+					for _, succ := range succs {
+						if CompareID(succ.Id, c.LocalNode.Id) != 0 {
+							err = c.Connect(succ)
+							if err != nil {
+								log.Errorf("Connect to successor %x@%s error: %v", succ.Id, succ.Addr, err)
+								continue
+							}
+							c.SetReady(true)
+						}
+					}
 
-				c.stabilize()
-			})
-			return true
-		}, 0})
+					// This is needed if len(succs) == 0
+					c.SetReady(true)
+
+					c.stabilize()
+				})
+				return true
+			},
+			Priority: 0,
+		})
 		if err != nil {
 			c.Stop(err)
 			return

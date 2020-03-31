@@ -1,5 +1,7 @@
 module github.com/nknorg/nnet
 
+go 1.11
+
 require (
 	github.com/gogo/protobuf v1.1.1
 	github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d
