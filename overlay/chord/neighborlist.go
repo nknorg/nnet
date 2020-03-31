@@ -4,12 +4,17 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"math/rand"
 	"sort"
 	"sync"
 
 	"github.com/nknorg/nnet/log"
 	"github.com/nknorg/nnet/node"
 	"github.com/nknorg/nnet/protobuf"
+)
+
+const (
+	randomQueryProbability = 0.5
 )
 
 // NeighborList is a list of nodes with minimal key that is greater than key
@@ -242,17 +247,28 @@ func (sl *NeighborList) ToProtoNodeList(sorted bool) []*protobuf.Node {
 // getNewNodesToConnect query and connect with potentially new nodes that should
 // be added to NeighborList
 func (sl *NeighborList) getNewNodesToConnect(msgIDBytes uint8) ([]*protobuf.Node, error) {
-	first := sl.GetFirst()
-	if first == nil {
-		return nil, errors.New("neighbor list is empty")
+	var selected *node.RemoteNode
+	var idx uint32
+	if rand.Float64() < randomQueryProbability {
+		neighbors := sl.ToRemoteNodeList(true)
+		if len(neighbors) == 0 {
+			return nil, errors.New("neighbor list is empty")
+		}
+		idx = rand.Uint32() % uint32(len(neighbors))
+		selected = neighbors[idx]
+	} else {
+		selected = sl.GetFirst()
+		if selected == nil {
+			return nil, errors.New("neighbor list is empty")
+		}
 	}
 
 	var succs, preds []*protobuf.Node
 	var err error
 	if sl.reversed {
-		succs, preds, err = GetSuccAndPred(first, 1, sl.Cap()-1, msgIDBytes)
+		succs, preds, err = GetSuccAndPred(selected, idx+1, sl.Cap()-idx-1, msgIDBytes)
 	} else {
-		succs, preds, err = GetSuccAndPred(first, sl.Cap()-1, 1, msgIDBytes)
+		succs, preds, err = GetSuccAndPred(selected, sl.Cap()-idx-1, idx+1, msgIDBytes)
 	}
 	if err != nil {
 		return nil, err
