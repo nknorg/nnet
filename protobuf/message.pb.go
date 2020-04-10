@@ -54,7 +54,7 @@ var RoutingType_value = map[string]int32{
 }
 
 func (RoutingType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_message_d56a4f06d2ed73d2, []int{0}
+	return fileDescriptor_message_e09adba97e66a114, []int{0}
 }
 
 type MessageType int32
@@ -89,7 +89,7 @@ var MessageType_value = map[string]int32{
 }
 
 func (MessageType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_message_d56a4f06d2ed73d2, []int{1}
+	return fileDescriptor_message_e09adba97e66a114, []int{1}
 }
 
 type Message struct {
@@ -105,7 +105,7 @@ type Message struct {
 func (m *Message) Reset()      { *m = Message{} }
 func (*Message) ProtoMessage() {}
 func (*Message) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_d56a4f06d2ed73d2, []int{0}
+	return fileDescriptor_message_e09adba97e66a114, []int{0}
 }
 func (m *Message) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -189,7 +189,7 @@ type Ping struct {
 func (m *Ping) Reset()      { *m = Ping{} }
 func (*Ping) ProtoMessage() {}
 func (*Ping) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_d56a4f06d2ed73d2, []int{1}
+	return fileDescriptor_message_e09adba97e66a114, []int{1}
 }
 func (m *Ping) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -224,7 +224,7 @@ type PingReply struct {
 func (m *PingReply) Reset()      { *m = PingReply{} }
 func (*PingReply) ProtoMessage() {}
 func (*PingReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_d56a4f06d2ed73d2, []int{2}
+	return fileDescriptor_message_e09adba97e66a114, []int{2}
 }
 func (m *PingReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -260,7 +260,7 @@ type ExchangeNode struct {
 func (m *ExchangeNode) Reset()      { *m = ExchangeNode{} }
 func (*ExchangeNode) ProtoMessage() {}
 func (*ExchangeNode) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_d56a4f06d2ed73d2, []int{3}
+	return fileDescriptor_message_e09adba97e66a114, []int{3}
 }
 func (m *ExchangeNode) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -303,7 +303,7 @@ type ExchangeNodeReply struct {
 func (m *ExchangeNodeReply) Reset()      { *m = ExchangeNodeReply{} }
 func (*ExchangeNodeReply) ProtoMessage() {}
 func (*ExchangeNodeReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_d56a4f06d2ed73d2, []int{4}
+	return fileDescriptor_message_e09adba97e66a114, []int{4}
 }
 func (m *ExchangeNodeReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -345,7 +345,7 @@ type Stop struct {
 func (m *Stop) Reset()      { *m = Stop{} }
 func (*Stop) ProtoMessage() {}
 func (*Stop) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_d56a4f06d2ed73d2, []int{5}
+	return fileDescriptor_message_e09adba97e66a114, []int{5}
 }
 func (m *Stop) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -382,7 +382,7 @@ type GetSuccAndPred struct {
 func (m *GetSuccAndPred) Reset()      { *m = GetSuccAndPred{} }
 func (*GetSuccAndPred) ProtoMessage() {}
 func (*GetSuccAndPred) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_d56a4f06d2ed73d2, []int{6}
+	return fileDescriptor_message_e09adba97e66a114, []int{6}
 }
 func (m *GetSuccAndPred) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -433,7 +433,7 @@ type GetSuccAndPredReply struct {
 func (m *GetSuccAndPredReply) Reset()      { *m = GetSuccAndPredReply{} }
 func (*GetSuccAndPredReply) ProtoMessage() {}
 func (*GetSuccAndPredReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_d56a4f06d2ed73d2, []int{7}
+	return fileDescriptor_message_e09adba97e66a114, []int{7}
 }
 func (m *GetSuccAndPredReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -485,7 +485,7 @@ type FindSuccAndPred struct {
 func (m *FindSuccAndPred) Reset()      { *m = FindSuccAndPred{} }
 func (*FindSuccAndPred) ProtoMessage() {}
 func (*FindSuccAndPred) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_d56a4f06d2ed73d2, []int{8}
+	return fileDescriptor_message_e09adba97e66a114, []int{8}
 }
 func (m *FindSuccAndPred) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -543,7 +543,7 @@ type FindSuccAndPredReply struct {
 func (m *FindSuccAndPredReply) Reset()      { *m = FindSuccAndPredReply{} }
 func (*FindSuccAndPredReply) ProtoMessage() {}
 func (*FindSuccAndPredReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_d56a4f06d2ed73d2, []int{9}
+	return fileDescriptor_message_e09adba97e66a114, []int{9}
 }
 func (m *FindSuccAndPredReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -593,7 +593,7 @@ type Bytes struct {
 func (m *Bytes) Reset()      { *m = Bytes{} }
 func (*Bytes) ProtoMessage() {}
 func (*Bytes) Descriptor() ([]byte, []int) {
-	return fileDescriptor_message_d56a4f06d2ed73d2, []int{10}
+	return fileDescriptor_message_e09adba97e66a114, []int{10}
 }
 func (m *Bytes) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -3167,9 +3167,9 @@ var (
 	ErrIntOverflowMessage   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("protobuf/message.proto", fileDescriptor_message_d56a4f06d2ed73d2) }
+func init() { proto.RegisterFile("protobuf/message.proto", fileDescriptor_message_e09adba97e66a114) }
 
-var fileDescriptor_message_d56a4f06d2ed73d2 = []byte{
+var fileDescriptor_message_e09adba97e66a114 = []byte{
 	// 636 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x53, 0x3f, 0x6f, 0xd3, 0x40,
 	0x1c, 0xf5, 0x25, 0x8e, 0xd3, 0xfe, 0x92, 0x06, 0xf7, 0x4a, 0x4b, 0x28, 0xe2, 0x54, 0x79, 0xaa,

@@ -35,7 +35,7 @@ type Node struct {
 func (m *Node) Reset()      { *m = Node{} }
 func (*Node) ProtoMessage() {}
 func (*Node) Descriptor() ([]byte, []int) {
-	return fileDescriptor_node_5ac078e24f8773e1, []int{0}
+	return fileDescriptor_node_44ad0f4d9f6b5211, []int{0}
 }
 func (m *Node) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -573,9 +573,9 @@ var (
 	ErrIntOverflowNode   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("protobuf/node.proto", fileDescriptor_node_5ac078e24f8773e1) }
+func init() { proto.RegisterFile("protobuf/node.proto", fileDescriptor_node_44ad0f4d9f6b5211) }
 
-var fileDescriptor_node_5ac078e24f8773e1 = []byte{
+var fileDescriptor_node_44ad0f4d9f6b5211 = []byte{
 	// 196 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x2e, 0x28, 0xca, 0x2f,
 	0xc9, 0x4f, 0x2a, 0x4d, 0xd3, 0xcf, 0xcb, 0x4f, 0x49, 0xd5, 0x03, 0xf3, 0x84, 0x38, 0x60, 0x82,
