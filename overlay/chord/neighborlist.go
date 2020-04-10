@@ -217,7 +217,7 @@ func (sl *NeighborList) Remove(remoteNode *node.RemoteNode) bool {
 
 // ToRemoteNodeList returns a list of RemoteNode that are in NeighborList
 func (sl *NeighborList) ToRemoteNodeList(sorted bool) []*node.RemoteNode {
-	nodes := make([]*node.RemoteNode, 0)
+	nodes := make([]*node.RemoteNode, 0, sl.Cap())
 	sl.nodes.Range(func(key, value interface{}) bool {
 		rn, ok := value.(*node.RemoteNode)
 		if ok && !rn.IsStopped() {
@@ -237,7 +237,7 @@ func (sl *NeighborList) ToRemoteNodeList(sorted bool) []*node.RemoteNode {
 
 // ToProtoNodeList returns a list of protobuf.Node that are in NeighborList
 func (sl *NeighborList) ToProtoNodeList(sorted bool) []*protobuf.Node {
-	nodes := make([]*protobuf.Node, 0)
+	nodes := make([]*protobuf.Node, 0, sl.Cap())
 	for _, remoteNode := range sl.ToRemoteNodeList(sorted) {
 		nodes = append(nodes, remoteNode.Node.Node)
 	}
@@ -279,7 +279,7 @@ func (sl *NeighborList) getNewNodesToConnect(msgIDBytes uint8) ([]*protobuf.Node
 	allNodes = append(allNodes, preds...)
 
 	seen := make(map[string]struct{}, len(allNodes))
-	uniqueNodes := make([]*protobuf.Node, 0)
+	uniqueNodes := make([]*protobuf.Node, 0, sl.Cap()+1)
 
 	for _, n := range allNodes {
 		if n == nil || n.Id == nil {
