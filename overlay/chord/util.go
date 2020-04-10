@@ -43,6 +43,7 @@ func CompareID(id1, id2 []byte) int {
 	return bytes.Compare(id1, id2)
 }
 
+// BigIntToID converts a big.Int with m bit rate to Chord ID bytes
 func BigIntToID(i big.Int, m uint32) []byte {
 	b := i.Bytes()
 	lb := uint32(len(b))
@@ -58,13 +59,14 @@ func BigIntToID(i big.Int, m uint32) []byte {
 	return b
 }
 
+// IDToBigInt converts a Chord ID bytes to big.Int
 func IDToBigInt(id []byte) big.Int {
 	idInt := big.Int{}
 	idInt.SetBytes(id)
 	return idInt
 }
 
-// Checks if a key is STRICTLY between two ID's exclusively
+// Between checks if a key is between two ID exclusively
 func Between(id1, id2, key []byte) bool {
 	if CompareID(id1, id2) > 0 {
 		return CompareID(id1, key) < 0 || CompareID(id2, key) > 0
@@ -72,7 +74,7 @@ func Between(id1, id2, key []byte) bool {
 	return CompareID(id1, key) < 0 && CompareID(id2, key) > 0
 }
 
-// Checks if a key is between two ID's, left inclusive
+// BetweenLeftIncl checks if a key is between two ID, left inclusive
 func BetweenLeftIncl(id1, id2, key []byte) bool {
 	if CompareID(id1, id2) > 0 {
 		return CompareID(id1, key) <= 0 || CompareID(id2, key) > 0
@@ -80,7 +82,7 @@ func BetweenLeftIncl(id1, id2, key []byte) bool {
 	return CompareID(id1, key) <= 0 && CompareID(id2, key) > 0
 }
 
-// Checks if a key is between two ID's, right inclusive
+// BetweenRightIncl checks if a key is between two ID, right inclusive
 func BetweenRightIncl(id1, id2, key []byte) bool {
 	if CompareID(id1, id2) > 0 {
 		return CompareID(id1, key) < 0 || CompareID(id2, key) >= 0
@@ -88,7 +90,7 @@ func BetweenRightIncl(id1, id2, key []byte) bool {
 	return CompareID(id1, key) < 0 && CompareID(id2, key) >= 0
 }
 
-// Checks if a key is between two ID's, both inclusive
+// BetweenIncl checks if a key is between two ID, both inclusive
 func BetweenIncl(id1, id2, key []byte) bool {
 	if CompareID(id1, id2) > 0 {
 		return CompareID(id1, key) <= 0 || CompareID(id2, key) >= 0
@@ -96,7 +98,7 @@ func BetweenIncl(id1, id2, key []byte) bool {
 	return CompareID(id1, key) <= 0 && CompareID(id2, key) >= 0
 }
 
-// Computes (id + offset) % (2^m)
+// Offset computes (id + offset) % (2^m)
 func Offset(id []byte, offset *big.Int, m uint32) []byte {
 	idInt := IDToBigInt(id)
 
@@ -108,24 +110,24 @@ func Offset(id []byte, offset *big.Int, m uint32) []byte {
 	return BigIntToID(idInt, m)
 }
 
-// Computes (id + 2^exp) % (2^m)
+// PowerOffset computes (id + 2^exp) % (2^m)
 func PowerOffset(id []byte, exp uint32, m uint32) []byte {
 	offset := big.Int{}
 	offset.Exp(two, big.NewInt(int64(exp)), nil)
 	return Offset(id, &offset, m)
 }
 
-// Computes (id - 1) % (2^m)
+// PrevID computes (id - 1) % (2^m)
 func PrevID(id []byte, m uint32) []byte {
 	return Offset(id, big.NewInt(-1), m)
 }
 
-// Computes (id + 1) % (2^m)
+// NextID computes (id + 1) % (2^m)
 func NextID(id []byte, m uint32) []byte {
 	return Offset(id, big.NewInt(1), m)
 }
 
-// Computes the forward distance from a to b modulus a ring size
+// Distance gcomputes the forward distance from a to b modulus a ring size
 func Distance(a, b []byte, m uint32) *big.Int {
 	// Convert to int
 	var aInt, bInt big.Int
