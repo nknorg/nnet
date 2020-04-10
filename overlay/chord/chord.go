@@ -548,7 +548,7 @@ func (c *Chord) updateSuccPredMaxNumNodes() {
 }
 
 // GetSuccAndPred sends a GetSuccAndPred message to remote node and returns its
-// successors and predecessor if no error occured
+// successors and predecessor if no error occurred
 func GetSuccAndPred(remoteNode *node.RemoteNode, numSucc, numPred uint32, msgIDBytes uint8) ([]*protobuf.Node, []*protobuf.Node, error) {
 	msg, err := NewGetSuccAndPredMessage(numSucc, numPred, msgIDBytes)
 	if err != nil {
