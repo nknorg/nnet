@@ -1,6 +1,8 @@
 package chord
 
 import (
+	"time"
+
 	"github.com/nknorg/nnet/node"
 	"github.com/nknorg/nnet/overlay/routing"
 )
@@ -57,27 +59,28 @@ func (rr *RelayRouting) GetNodeToRoute(remoteMsg *node.RemoteMessage) (*node.Loc
 
 	for i := len(rr.chord.fingerTable) - 1; i >= 0; i-- {
 		finger := rr.chord.fingerTable[i]
-		first := finger.GetFirst()
-		if first == nil {
-			continue
-		}
-		if !BetweenIncl(rr.chord.LocalNode.Id, remoteMsg.Msg.DestId, first.Id) {
+		if finger.IsEmpty() {
 			continue
 		}
 
-		nextHop := first
-		minRoundTripTime := first.GetRoundTripTime()
+		var nextHop *node.RemoteNode
+		var minRTT time.Duration
 		for _, rn := range finger.ToRemoteNodeList(true) {
-			if rn.IsOutbound && BetweenIncl(rr.chord.LocalNode.Id, remoteMsg.Msg.DestId, rn.Id) {
+			if !rn.IsOutbound && !rr.chord.predecessors.Exists(rn.Id) {
+				continue
+			}
+			if BetweenIncl(rr.chord.LocalNode.Id, remoteMsg.Msg.DestId, rn.Id) {
 				rtt := rn.GetRoundTripTime()
-				if minRoundTripTime == 0 || (rtt > 0 && rtt <= minRoundTripTime) {
+				if minRTT == 0 || (rtt > 0 && rtt <= minRTT) {
 					nextHop = rn
-					minRoundTripTime = rtt
+					minRTT = rtt
 				}
 			}
 		}
 
-		return nil, []*node.RemoteNode{nextHop}, nil
+		if nextHop != nil {
+			return nil, []*node.RemoteNode{nextHop}, nil
+		}
 	}
 
 	return nil, []*node.RemoteNode{succ}, nil
