@@ -341,6 +341,7 @@ func (c *Chord) stabilize() {
 	go c.findNewPredecessors()
 	go c.updateFinger()
 	go c.findNewFinger()
+	go c.stopInboundFingers()
 }
 
 // updateSuccessors periodically updates successors
@@ -348,11 +349,11 @@ func (c *Chord) updateSuccessors() {
 	var err error
 
 	for {
+		time.Sleep(util.RandDuration(c.baseStabilizeInterval, 1.0/3.0))
+
 		if c.IsStopped() {
 			return
 		}
-
-		time.Sleep(util.RandDuration(c.baseStabilizeInterval, 1.0/3.0))
 
 		err = c.updateNeighborList(c.successors)
 		if err != nil {
@@ -366,11 +367,11 @@ func (c *Chord) updatePredecessors() {
 	var err error
 
 	for {
+		time.Sleep(3 * util.RandDuration(c.baseStabilizeInterval, 1.0/3.0))
+
 		if c.IsStopped() {
 			return
 		}
-
-		time.Sleep(3 * util.RandDuration(c.baseStabilizeInterval, 1.0/3.0))
 
 		err = c.updateNeighborList(c.predecessors)
 		if err != nil {
@@ -387,11 +388,11 @@ func (c *Chord) findNewPredecessors() {
 	var maybeNewNodes []*protobuf.Node
 
 	for {
+		time.Sleep(5 * util.RandDuration(c.baseStabilizeInterval, 1.0/3.0))
+
 		if c.IsStopped() {
 			return
 		}
-
-		time.Sleep(5 * util.RandDuration(c.baseStabilizeInterval, 1.0/3.0))
 
 		// prevent unreachable node to find predecessors
 		if !hasInboundNeighbor {
@@ -433,25 +434,29 @@ func (c *Chord) updateFinger() {
 	var finger *NeighborList
 
 	for {
+		// to prevent endless looping when fingerTable is all empty
+		time.Sleep(util.RandDuration(c.baseStabilizeInterval, 1.0/3.0))
+
+		if c.IsStopped() {
+			return
+		}
+
 		for _, finger = range c.fingerTable {
 			if finger.IsEmpty() {
 				continue
 			}
 
+			time.Sleep(util.RandDuration(c.baseStabilizeInterval, 1.0/3.0))
+
 			if c.IsStopped() {
 				return
 			}
-
-			time.Sleep(util.RandDuration(c.baseStabilizeInterval, 1.0/3.0))
 
 			err = c.updateNeighborList(finger)
 			if err != nil {
 				log.Errorf("Update finger table error: %v", err)
 			}
 		}
-
-		// to prevent endless looping when fingerTable is all empty
-		time.Sleep(util.RandDuration(c.baseStabilizeInterval, 1.0/3.0))
 	}
 }
 
@@ -464,11 +469,11 @@ func (c *Chord) findNewFinger() {
 
 	for {
 		for i = 0; i < len(c.fingerTable); i++ {
+			time.Sleep(util.RandDuration(c.baseStabilizeInterval, 1.0/3.0))
+
 			if c.IsStopped() {
 				return
 			}
-
-			time.Sleep(util.RandDuration(c.baseStabilizeInterval, 1.0/3.0))
 
 			succs, err = c.FindSuccessors(c.fingerTable[i].startID, 1)
 			if err != nil {
@@ -492,6 +497,33 @@ func (c *Chord) findNewFinger() {
 					break
 				}
 				i++
+			}
+		}
+	}
+}
+
+// stopInboundFingers periodically disconnect inbound finger table nodes
+func (c *Chord) stopInboundFingers() {
+	var finger *NeighborList
+
+	for {
+		time.Sleep(10 * util.RandDuration(c.baseStabilizeInterval, 1.0/3.0))
+
+		if c.IsStopped() {
+			return
+		}
+
+		for _, finger = range c.fingerTable {
+			if finger.IsEmpty() {
+				continue
+			}
+
+			for _, rn := range finger.ToRemoteNodeList(true) {
+				if !rn.IsOutbound && !c.predecessors.Exists(rn.Id) {
+					rn.Stop(nil)
+					// prevent nodes in the same finger table stop at the same time
+					break
+				}
 			}
 		}
 	}
