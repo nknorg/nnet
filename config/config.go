@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/imdario/mergo"
+	"github.com/nknorg/nnet/protobuf"
 )
 
 // Config is the configuration struct
@@ -18,16 +19,18 @@ type Config struct {
 	NumStreamsToOpen   uint32 // number of streams to open per remote node
 	NumStreamsToAccept uint32 // number of streams to accept per remote node
 
-	LocalRxMsgChanLen              uint32        // Max number of msg that can be buffered per routing type
-	LocalHandleMsgChanLen          uint32        // Max number of msg to be processed that can be buffered
-	LocalHandleMsgWorkers          uint32        // Number of concurrent workers handling msg sent to local node
-	LocalRxMsgCacheExpiration      time.Duration // How long a received message id stays in cache before expiration
-	LocalRxMsgCacheCleanupInterval time.Duration // How often to check and delete expired received message id
+	LocalRxMsgChanLen              uint32                 // Max number of msg that can be buffered per routing type
+	LocalHandleMsgChanLen          uint32                 // Max number of msg to be processed that can be buffered
+	LocalHandleMsgWorkers          uint32                 // Number of concurrent workers handling msg sent to local node
+	LocalRxMsgCacheRoutingType     []protobuf.RoutingType // Only message id with these routing types will be cached
+	LocalRxMsgCacheExpiration      time.Duration          // How long a received message id stays in cache before expiration
+	LocalRxMsgCacheCleanupInterval time.Duration          // How often to check and delete expired received message id
 
-	RemoteRxMsgChanLen              uint32        // Max number of msg received that can be buffered
-	RemoteTxMsgChanLen              uint32        // Max number of msg to be sent that can be buffered
-	RemoteTxMsgCacheExpiration      time.Duration // How long a sent message id stays in cache before expiration
-	RemoteTxMsgCacheCleanupInterval time.Duration // How often to check and delete expired sent message
+	RemoteRxMsgChanLen              uint32                 // Max number of msg received that can be buffered
+	RemoteTxMsgChanLen              uint32                 // Max number of msg to be sent that can be buffered
+	RemoteTxMsgCacheRoutingType     []protobuf.RoutingType // Only message id with these routing types will be cached
+	RemoteTxMsgCacheExpiration      time.Duration          // How long a sent message id stays in cache before expiration
+	RemoteTxMsgCacheCleanupInterval time.Duration          // How often to check and delete expired sent message
 
 	MaxMessageSize               uint32        // Max message size in bytes
 	DefaultReplyTimeout          time.Duration // default timeout for receiving reply msg
@@ -58,11 +61,13 @@ func DefaultConfig() *Config {
 		LocalRxMsgChanLen:              23333,
 		LocalHandleMsgChanLen:          23333,
 		LocalHandleMsgWorkers:          1,
+		LocalRxMsgCacheRoutingType:     []protobuf.RoutingType{protobuf.BROADCAST_PUSH},
 		LocalRxMsgCacheExpiration:      300 * time.Second,
 		LocalRxMsgCacheCleanupInterval: 10 * time.Second,
 
 		RemoteRxMsgChanLen:              2333,
 		RemoteTxMsgChanLen:              2333,
+		RemoteTxMsgCacheRoutingType:     []protobuf.RoutingType{protobuf.BROADCAST_PUSH},
 		RemoteTxMsgCacheExpiration:      300 * time.Second,
 		RemoteTxMsgCacheCleanupInterval: 10 * time.Second,
 

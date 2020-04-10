@@ -299,6 +299,7 @@ func (rn *RemoteNode) handleMsg() {
 	var err error
 	keepAliveTimeoutTimer := time.NewTimer(rn.LocalNode.KeepAliveTimeout)
 
+NEXT_MESSAGE:
 	for {
 		if rn.IsStopped() {
 			util.StopTimer(keepAliveTimeoutTimer)
@@ -312,13 +313,17 @@ func (rn *RemoteNode) handleMsg() {
 				return
 			}
 
-			added, err = rn.LocalNode.AddToRxCache(msg.MessageId)
-			if err != nil {
-				log.Errorf("Add msg id %x to rx cache error: %v", msg.MessageId, err)
-				continue
-			}
-			if !added {
-				continue
+			for _, routingType := range rn.LocalNode.LocalRxMsgCacheRoutingType {
+				if routingType == msg.RoutingType {
+					added, err = rn.LocalNode.AddToRxCache(msg.MessageId)
+					if err != nil {
+						log.Errorf("Add msg id %x to rx cache error: %v", msg.MessageId, err)
+						continue NEXT_MESSAGE
+					}
+					if !added {
+						continue NEXT_MESSAGE
+					}
+				}
 			}
 
 			remoteMsg, err = NewRemoteMessage(rn, msg)
@@ -552,14 +557,18 @@ func (rn *RemoteNode) SendMessage(msg *protobuf.Message, hasReply bool, replyTim
 		return nil, errors.New("Message ID is empty")
 	}
 
-	_, found := rn.txMsgCache.Get(msg.MessageId)
-	if found {
-		return nil, nil
-	}
+	for _, routingType := range rn.LocalNode.RemoteTxMsgCacheRoutingType {
+		if routingType == msg.RoutingType {
+			_, found := rn.txMsgCache.Get(msg.MessageId)
+			if found {
+				return nil, nil
+			}
 
-	err := rn.txMsgCache.Add(msg.MessageId, struct{}{})
-	if err != nil {
-		return nil, err
+			err := rn.txMsgCache.Add(msg.MessageId, struct{}{})
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	select {
