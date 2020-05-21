@@ -577,7 +577,7 @@ func (c *Chord) FindSuccAndPred(key []byte, numSucc, numPred uint32) ([]*protobu
 		return []*protobuf.Node{c.LocalNode.Node.Node}, []*protobuf.Node{c.LocalNode.Node.Node}, nil
 	}
 
-	if CompareID(key, c.LocalNode.Id) == 0 || Between(c.LocalNode.Id, succ.Id, key) {
+	if BetweenLeftIncl(c.LocalNode.Id, succ.Id, key) {
 		var succs, preds []*protobuf.Node
 
 		if numSucc > 0 {
@@ -585,18 +585,23 @@ func (c *Chord) FindSuccAndPred(key []byte, numSucc, numPred uint32) ([]*protobu
 				succs = append(succs, c.LocalNode.Node.Node)
 			}
 
-			succs = append(succs, c.successors.ToProtoNodeList(true)...)
+			if len(succs) < int(numSucc) {
+				succs = append(succs, c.successors.ToProtoNodeList(true)...)
+			}
 
-			if succs != nil && len(succs) > int(numSucc) {
+			if len(succs) > int(numSucc) {
 				succs = succs[:numSucc]
 			}
 		}
 
 		if numPred > 0 {
 			preds = []*protobuf.Node{c.LocalNode.Node.Node}
-			preds = append(preds, c.predecessors.ToProtoNodeList(true)...)
 
-			if preds != nil && len(preds) > int(numPred) {
+			if len(preds) < int(numPred) {
+				preds = append(preds, c.predecessors.ToProtoNodeList(true)...)
+			}
+
+			if len(preds) > int(numPred) {
 				preds = preds[:numPred]
 			}
 		}
