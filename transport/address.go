@@ -16,8 +16,8 @@ type Address struct {
 }
 
 // NewAddress creates an Address struct with given protocol and address
-func NewAddress(protocol, host string, port uint16) (*Address, error) {
-	transport, err := NewTransport(protocol)
+func NewAddress(protocol, host string, port uint16, supportedTransports []Transport) (*Address, error) {
+	transport, err := NewTransport(protocol, supportedTransports)
 	if err != nil {
 		return nil, err
 	}
@@ -32,13 +32,13 @@ func NewAddress(protocol, host string, port uint16) (*Address, error) {
 }
 
 // Parse parses a raw addr string into an Address struct
-func Parse(rawAddr string) (*Address, error) {
+func Parse(rawAddr string, supportedTransports []Transport) (*Address, error) {
 	u, err := url.Parse(rawAddr)
 	if err != nil {
 		return nil, err
 	}
 
-	transport, err := NewTransport(u.Scheme)
+	transport, err := NewTransport(u.Scheme, supportedTransports)
 	if err != nil {
 		return nil, err
 	}
@@ -48,9 +48,12 @@ func Parse(rawAddr string) (*Address, error) {
 		return nil, err
 	}
 
-	port, err := strconv.Atoi(portStr)
-	if err != nil {
-		return nil, err
+	port := 0
+	if len(portStr) > 0 {
+		port, err = strconv.Atoi(portStr)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	addr := &Address{

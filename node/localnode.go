@@ -37,7 +37,7 @@ func NewLocalNode(id []byte, conf *config.Config) (*LocalNode, error) {
 		return nil, errors.New("node id is nil")
 	}
 
-	address, err := transport.NewAddress(conf.Transport, conf.Hostname, conf.Port)
+	address, err := transport.NewAddress(conf.Transport, conf.Hostname, conf.Port, conf.SupportedTransports)
 	if err != nil {
 		return nil, err
 	}
@@ -175,14 +175,18 @@ func (ln *LocalNode) listen() {
 		_, portStr, err := net.SplitHostPort(listener.Addr().String())
 		if err != nil {
 			ln.Stop(err)
+			return
 		}
 
-		port, err := strconv.Atoi(portStr)
-		if err != nil {
-			ln.Stop(err)
-		}
+		if len(portStr) > 0 {
+			port, err := strconv.Atoi(portStr)
+			if err != nil {
+				ln.Stop(err)
+				return
+			}
 
-		ln.SetInternalPort(uint16(port))
+			ln.SetInternalPort(uint16(port))
+		}
 	}
 
 	if ln.address.Port == 0 {
@@ -246,7 +250,7 @@ func (ln *LocalNode) Connect(n *protobuf.Node) (*RemoteNode, bool, error) {
 		return nil, false, errors.New("trying to connect to self")
 	}
 
-	remoteAddress, err := transport.Parse(n.Addr)
+	remoteAddress, err := transport.Parse(n.Addr, ln.SupportedTransports)
 	if err != nil {
 		return nil, false, err
 	}

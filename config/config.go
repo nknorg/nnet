@@ -5,15 +5,17 @@ import (
 
 	"github.com/imdario/mergo"
 	"github.com/nknorg/nnet/protobuf"
+	"github.com/nknorg/nnet/transport"
 )
 
 // Config is the configuration struct
 type Config struct {
-	Transport      string // which transport to use, e.g. tcp, udp, kcp
-	Hostname       string // IP or domain name for remote node to connect to, e.g. 127.0.0.1, nkn.org. Empty string means remote nodes will fill it with your address they saw, which works if all nodes are not in the same local network or are all in the local network, but will cause problem if some nodes are in the same local network
-	Port           uint16 // port to listen to incoming connections
-	NodeIDBytes    uint32 // length of node id in bytes
-	MessageIDBytes uint8  // MsgIDBytes is the length of message id in RandBytes
+	Transport           string                // which transport to use, e.g. tcp, kcp
+	SupportedTransports []transport.Transport // supported transport layers
+	Hostname            string                // IP or domain name for remote node to connect to, e.g. 127.0.0.1, nkn.org. Empty string means remote nodes will fill it with your address they saw, which works if all nodes are not in the same local network or are all in the local network, but will cause problem if some nodes are in the same local network
+	Port                uint16                // port to listen to incoming connections
+	NodeIDBytes         uint32                // length of node id in bytes
+	MessageIDBytes      uint8                 // MsgIDBytes is the length of message id in RandBytes
 
 	Multiplexer        string // which multiplexer to use, e.g. smux, yamux
 	NumStreamsToOpen   uint32 // number of streams to open per remote node
@@ -50,9 +52,10 @@ type Config struct {
 // DefaultConfig returns the default configurations
 func DefaultConfig() *Config {
 	defaultConfig := &Config{
-		Transport:      "tcp",
-		NodeIDBytes:    32,
-		MessageIDBytes: 8,
+		Transport:           "tcp",
+		SupportedTransports: []transport.Transport{transport.NewTCPTransport(), transport.NewKCPTransport()},
+		NodeIDBytes:         32,
+		MessageIDBytes:      8,
 
 		Multiplexer:        "smux",
 		NumStreamsToOpen:   8,
