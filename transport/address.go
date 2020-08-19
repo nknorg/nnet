@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -31,6 +32,20 @@ func NewAddress(protocol, host string, port uint16, supportedTransports []Transp
 	return addr, nil
 }
 
+func (addr *Address) String() string {
+	return fmt.Sprintf("%s://%s:%d", addr.Transport, addr.Host, addr.Port)
+}
+
+// ConnRemoteAddr returns the remote address string that transport can dial
+func (addr *Address) ConnRemoteAddr() string {
+	return fmt.Sprintf("%s:%d", addr.Host, addr.Port)
+}
+
+// Dial dials the remote address using local transport
+func (addr *Address) Dial(dialTimeout time.Duration) (net.Conn, error) {
+	return addr.Transport.Dial(addr.ConnRemoteAddr(), dialTimeout)
+}
+
 // Parse parses a raw addr string into an Address struct
 func Parse(rawAddr string, supportedTransports []Transport) (*Address, error) {
 	u, err := url.Parse(rawAddr)
@@ -43,7 +58,7 @@ func Parse(rawAddr string, supportedTransports []Transport) (*Address, error) {
 		return nil, err
 	}
 
-	host, portStr, err := net.SplitHostPort(u.Host)
+	host, portStr, err := SplitHostPort(u.Host)
 	if err != nil {
 		return nil, err
 	}
@@ -65,16 +80,11 @@ func Parse(rawAddr string, supportedTransports []Transport) (*Address, error) {
 	return addr, nil
 }
 
-func (addr *Address) String() string {
-	return fmt.Sprintf("%s://%s:%d", addr.Transport, addr.Host, addr.Port)
-}
-
-// ConnRemoteAddr returns the remote address string that transport can dial
-func (addr *Address) ConnRemoteAddr() string {
-	return fmt.Sprintf("%s:%d", addr.Host, addr.Port)
-}
-
-// Dial dials the remote address using local transport
-func (addr *Address) Dial(dialTimeout time.Duration) (net.Conn, error) {
-	return addr.Transport.Dial(addr.ConnRemoteAddr(), dialTimeout)
+// SplitHostPort is the same as net.SplitHostPort, except that it allows
+// hostport to be host without port.
+func SplitHostPort(hostport string) (host, port string, err error) {
+	if !strings.Contains(hostport, ":") {
+		hostport += ":"
+	}
+	return net.SplitHostPort(hostport)
 }
