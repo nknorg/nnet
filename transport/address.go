@@ -33,12 +33,16 @@ func NewAddress(protocol, host string, port uint16, supportedTransports []Transp
 }
 
 func (addr *Address) String() string {
-	return fmt.Sprintf("%s://%s:%d", addr.Transport, addr.Host, addr.Port)
+	return fmt.Sprintf("%s://%s", addr.Transport, addr.ConnRemoteAddr())
 }
 
 // ConnRemoteAddr returns the remote address string that transport can dial
 func (addr *Address) ConnRemoteAddr() string {
-	return fmt.Sprintf("%s:%d", addr.Host, addr.Port)
+	s := addr.Host
+	if addr.Port > 0 {
+		s = fmt.Sprintf(":%d", addr.Port)
+	}
+	return s
 }
 
 // Dial dials the remote address using local transport
