@@ -200,7 +200,7 @@ func (ln *LocalNode) listen() {
 		conn, err := listener.Accept()
 
 		if ln.IsStopped() {
-			if err != nil {
+			if err == nil {
 				conn.Close()
 			}
 			return
