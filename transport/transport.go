@@ -15,13 +15,11 @@ type Transport interface {
 }
 
 // NewTransport creates a transport based on conf
-func NewTransport(protocol string) (Transport, error) {
-	switch protocol {
-	case "kcp":
-		return NewKCPTransport(), nil
-	case "tcp":
-		return NewTCPTransport(), nil
-	default:
-		return nil, errors.New("Unknown protocol " + protocol)
+func NewTransport(protocol string, supportedTransports []Transport) (Transport, error) {
+	for _, t := range supportedTransports {
+		if protocol == t.String() {
+			return t, nil
+		}
 	}
+	return nil, errors.New("Unknown protocol " + protocol)
 }

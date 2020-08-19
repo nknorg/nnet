@@ -130,7 +130,7 @@ func (rn *RemoteNode) setNode(n *protobuf.Node) error {
 		return fmt.Errorf("Node id %x is different from expected value %x", n.Id, rn.Id)
 	}
 
-	remoteAddr, err := transport.Parse(n.Addr)
+	remoteAddr, err := transport.Parse(n.Addr, rn.LocalNode.SupportedTransports)
 	if err != nil {
 		return fmt.Errorf("Parse node addr %s error: %s", n.Addr, err)
 	}
@@ -145,7 +145,7 @@ func (rn *RemoteNode) setNode(n *protobuf.Node) error {
 	}
 
 	if rn.Addr != "" {
-		expectedAddr, err := transport.Parse(rn.Addr)
+		expectedAddr, err := transport.Parse(rn.Addr, rn.LocalNode.SupportedTransports)
 		if err == nil && expectedAddr.Host == "" {
 			connAddr := rn.conn.RemoteAddr().String()
 			expectedAddr.Host, _, err = net.SplitHostPort(connAddr)
