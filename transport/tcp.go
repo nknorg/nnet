@@ -7,9 +7,7 @@ import (
 )
 
 // TCPTransport is the transport layer based on TCP protocol
-type TCPTransport struct {
-	dialTimeout time.Duration
-}
+type TCPTransport struct{}
 
 // NewTCPTransport creates a new TCP transport layer
 func NewTCPTransport() *TCPTransport {

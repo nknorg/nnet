@@ -172,7 +172,7 @@ func (ln *LocalNode) listen() {
 	ln.listener = listener
 
 	if ln.port == 0 {
-		_, portStr, err := net.SplitHostPort(listener.Addr().String())
+		_, portStr, err := transport.SplitHostPort(listener.Addr().String())
 		if err != nil {
 			ln.Stop(err)
 			return
