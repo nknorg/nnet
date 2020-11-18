@@ -41,7 +41,7 @@ func main() {
 		return
 	}
 
-	transport, err := transport.NewTransport(*transportPtr)
+	transport, err := transport.NewTransport(*transportPtr, nn.GetConfig().SupportedTransports)
 	if err != nil {
 		log.Error(err)
 		return
