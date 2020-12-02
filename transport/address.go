@@ -40,7 +40,7 @@ func (addr *Address) String() string {
 func (addr *Address) ConnRemoteAddr() string {
 	s := addr.Host
 	if addr.Port > 0 {
-		s = fmt.Sprintf(":%d", addr.Port)
+		s += fmt.Sprintf(":%d", addr.Port)
 	}
 	return s
 }
