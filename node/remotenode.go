@@ -526,7 +526,7 @@ func (rn *RemoteNode) startMeasuringRoundTripTime() {
 		txTime = time.Now()
 		err = rn.Ping()
 		if err != nil {
-			log.Warningf("Ping %v error: %v", rn, err)
+			log.Debugf("Ping %v error: %v", rn, err)
 			// This will guarantee rn.roundTripTime immediately becomes larger than
 			// any other available neighbors
 			lastRoundTripTime = rn.LocalNode.DefaultReplyTimeout * 2

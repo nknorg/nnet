@@ -4,6 +4,8 @@ import logging "github.com/op/go-logging"
 
 // Logger is the logger interface
 type Logger interface {
+	Debug(args ...interface{})
+	Debugf(format string, args ...interface{})
 	Info(args ...interface{})
 	Infof(format string, args ...interface{})
 	Warning(args ...interface{})
@@ -19,6 +21,16 @@ var logger Logger = logging.MustGetLogger("nnet")
 func SetLogger(l Logger) error {
 	logger = l
 	return nil
+}
+
+// Debug logs to the DEBUG log. Arguments are handled in the manner of fmt.Print.
+func Debug(args ...interface{}) {
+	logger.Info(args...)
+}
+
+// Debugf logs to the DEBUG log. Arguments are handled in the manner of fmt.Printf.
+func Debugf(format string, args ...interface{}) {
+	logger.Infof(format, args...)
 }
 
 // Info logs to the INFO log. Arguments are handled in the manner of fmt.Print.
