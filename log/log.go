@@ -25,12 +25,12 @@ func SetLogger(l Logger) error {
 
 // Debug logs to the DEBUG log. Arguments are handled in the manner of fmt.Print.
 func Debug(args ...interface{}) {
-	logger.Info(args...)
+	logger.Debug(args...)
 }
 
 // Debugf logs to the DEBUG log. Arguments are handled in the manner of fmt.Printf.
 func Debugf(format string, args ...interface{}) {
-	logger.Infof(format, args...)
+	logger.Debugf(format, args...)
 }
 
 // Info logs to the INFO log. Arguments are handled in the manner of fmt.Print.
