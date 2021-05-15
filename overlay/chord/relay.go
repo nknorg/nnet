@@ -47,16 +47,6 @@ func (rr *RelayRouting) GetNodeToRoute(remoteMsg *node.RemoteMessage) (*node.Loc
 		return rr.chord.LocalNode, nil, nil
 	}
 
-	successors := rr.chord.successors.ToRemoteNodeList(true)
-	for i := 0; i < len(successors)-1; i++ {
-		if successors[i] == remoteMsg.RemoteNode {
-			continue
-		}
-		if BetweenLeftIncl(successors[i].Id, successors[i+1].Id, remoteMsg.Msg.DestId) {
-			return nil, []*node.RemoteNode{successors[i]}, nil
-		}
-	}
-
 	for i := len(rr.chord.fingerTable) - 1; i >= 0; i-- {
 		finger := rr.chord.fingerTable[i]
 		if finger.IsEmpty() {
@@ -80,6 +70,16 @@ func (rr *RelayRouting) GetNodeToRoute(remoteMsg *node.RemoteMessage) (*node.Loc
 
 		if nextHop != nil {
 			return nil, []*node.RemoteNode{nextHop}, nil
+		}
+	}
+
+	successors := rr.chord.successors.ToRemoteNodeList(true)
+	for i := 0; i < len(successors)-1; i++ {
+		if successors[i] == remoteMsg.RemoteNode {
+			continue
+		}
+		if BetweenLeftIncl(successors[i].Id, successors[i+1].Id, remoteMsg.Msg.DestId) {
+			return nil, []*node.RemoteNode{successors[i]}, nil
 		}
 	}
 
