@@ -52,6 +52,9 @@ func (rr *RelayRouting) GetNodeToRoute(remoteMsg *node.RemoteMessage) (*node.Loc
 		if finger.IsEmpty() {
 			continue
 		}
+		if CompareID(finger.startID, remoteMsg.Msg.DestId) > 0 {
+			continue
+		}
 
 		var nextHop *node.RemoteNode
 		var minRTT time.Duration
