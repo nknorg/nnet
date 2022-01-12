@@ -486,12 +486,14 @@ func (c *Chord) findNewFinger() {
 			}
 
 			for i < len(c.fingerTable) {
-				if c.fingerTable[i].IsIDInRange(succs[0].Id) && !c.fingerTable[i].Exists(succs[0].Id) {
-					existing = c.fingerTable[i].GetFirst()
-					if existing == nil || c.fingerTable[i].cmp(succs[0], existing.Node.Node) < 0 {
-						err = c.Connect(succs[0])
-						if err != nil {
-							log.Errorf("Connect to new successor error: %v", err)
+				if c.fingerTable[i].IsIDInRange(succs[0].Id) {
+					if !c.fingerTable[i].Exists(succs[0].Id) {
+						existing = c.fingerTable[i].GetFirst()
+						if existing == nil || c.fingerTable[i].cmp(succs[0], existing.Node.Node) < 0 {
+							err = c.Connect(succs[0])
+							if err != nil {
+								log.Errorf("Connect to new successor error: %v", err)
+							}
 						}
 					}
 					break
