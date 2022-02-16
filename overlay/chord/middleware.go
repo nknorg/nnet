@@ -88,6 +88,16 @@ type NeighborRemoved struct {
 	Priority int32
 }
 
+// RelayPriority is called when computing the priority of next hop candidate.
+// Node that has the highest priority value will be selected. Initial priority
+// is negative latency in unit of ms. When being called, it will also pass the
+// current priority value. Returns the new priority value and whether we should
+// proceed to the next middleware.
+type RelayPriority struct {
+	Func     func(*node.RemoteNode, float64) (float64, bool)
+	Priority int32
+}
+
 // middlewareStore stores the functions that will be called when certain events
 // are triggered or in some pipeline
 type middlewareStore struct {
@@ -103,6 +113,7 @@ type middlewareStore struct {
 	fingerTableRemoved []FingerTableRemoved
 	neighborAdded      []NeighborAdded
 	neighborRemoved    []NeighborRemoved
+	relayPriority      []RelayPriority
 }
 
 // newMiddlewareStore creates a middlewareStore
@@ -120,6 +131,7 @@ func newMiddlewareStore() *middlewareStore {
 		fingerTableRemoved: make([]FingerTableRemoved, 0),
 		neighborAdded:      make([]NeighborAdded, 0),
 		neighborRemoved:    make([]NeighborRemoved, 0),
+		relayPriority:      make([]RelayPriority, 0),
 	}
 }
 
@@ -198,6 +210,12 @@ func (store *middlewareStore) ApplyMiddleware(mw interface{}) error {
 		}
 		store.neighborRemoved = append(store.neighborRemoved, mw)
 		middleware.Sort(store.neighborRemoved)
+	case RelayPriority:
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
+		}
+		store.relayPriority = append(store.relayPriority, mw)
+		middleware.Sort(store.relayPriority)
 	default:
 		return errors.New("unknown middleware type")
 	}

@@ -1,6 +1,7 @@
 package chord
 
 import (
+	"math"
 	"time"
 
 	"github.com/nknorg/nnet/node"
@@ -54,16 +55,26 @@ func (rr *RelayRouting) GetNodeToRoute(remoteMsg *node.RemoteMessage) (*node.Loc
 		}
 
 		var nextHop *node.RemoteNode
-		var minRTT time.Duration
+		maxPriority := float64(math.MinInt64)
 		for _, rn := range finger.ToRemoteNodeList(true) {
 			if !rn.IsOutbound && !rr.chord.predecessors.Exists(rn.Id) {
 				continue
 			}
 			if BetweenIncl(rr.chord.LocalNode.Id, remoteMsg.Msg.DestId, rn.Id) {
+				priority := float64(math.MinInt32)
 				rtt := rn.GetRoundTripTime()
-				if minRTT == 0 || (rtt > 0 && rtt <= minRTT) {
+				if rtt > 0 {
+					priority = -float64(rtt) / float64(time.Millisecond)
+				}
+				var ok bool
+				for _, mw := range rr.chord.middlewareStore.relayPriority {
+					if priority, ok = mw.Func(rn, priority); !ok {
+						break
+					}
+				}
+				if priority >= maxPriority {
 					nextHop = rn
-					minRTT = rtt
+					maxPriority = priority
 				}
 			}
 		}
