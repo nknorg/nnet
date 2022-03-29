@@ -3,7 +3,7 @@ module github.com/nknorg/nnet
 go 1.11
 
 require (
-	github.com/gogo/protobuf v1.1.1
+	github.com/gogo/protobuf v1.3.2
 	github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d
 	github.com/huin/goupnp v1.0.0 // indirect
 	github.com/imdario/mergo v0.3.6
@@ -19,8 +19,5 @@ require (
 	github.com/tjfoc/gmsm v0.0.0-20190417070453-18fd8096dc8a // indirect
 	github.com/xtaci/kcp-go v4.3.1+incompatible
 	github.com/xtaci/smux v1.2.11
-	golang.org/x/crypto v0.0.0-20190426145343-a29dc8fdc734 // indirect
-	golang.org/x/net v0.0.0-20190502183928-7f726cade0ab // indirect
-	golang.org/x/text v0.3.2 // indirect
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 )
