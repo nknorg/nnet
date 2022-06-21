@@ -212,6 +212,22 @@ func (ln *LocalNode) listen() {
 			continue
 		}
 
+		shouldAccept := true
+		var shouldCallNextMiddleware bool
+		for _, mw := range ln.middlewareStore.connectionAccepted {
+			shouldAccept, shouldCallNextMiddleware = mw.Func(conn)
+			if !shouldAccept {
+				break
+			}
+			if !shouldCallNextMiddleware {
+				break
+			}
+		}
+		if !shouldAccept {
+			conn.Close()
+			continue
+		}
+
 		_, loaded := ln.neighbors.LoadOrStore(conn.RemoteAddr().String(), nil)
 		if loaded {
 			log.Errorf("Remote addr %s is already connected, reject connection", conn.RemoteAddr().String())

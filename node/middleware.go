@@ -2,6 +2,7 @@ package node
 
 import (
 	"errors"
+	"net"
 
 	"github.com/nknorg/nnet/middleware"
 	"github.com/nknorg/nnet/protobuf"
@@ -52,6 +53,14 @@ type LocalNodeStopped struct {
 // the next middleware.
 type WillConnectToNode struct {
 	Func     func(*protobuf.Node) (bool, bool)
+	Priority int32
+}
+
+// ConnectionAccepted is called when a network connection is accepted. Returns
+// if we should accept the connection and if we should proceed to the next
+// middleware.
+type ConnectionAccepted struct {
+	Func     func(net.Conn) (bool, bool)
 	Priority int32
 }
 
@@ -107,6 +116,7 @@ type middlewareStore struct {
 	localNodeWillStop      []LocalNodeWillStop
 	localNodeStopped       []LocalNodeStopped
 	willConnectToNode      []WillConnectToNode
+	connectionAccepted     []ConnectionAccepted
 	remoteNodeConnected    []RemoteNodeConnected
 	remoteNodeReady        []RemoteNodeReady
 	remoteNodeDisconnected []RemoteNodeDisconnected
@@ -123,6 +133,7 @@ func newMiddlewareStore() *middlewareStore {
 		localNodeWillStop:      make([]LocalNodeWillStop, 0),
 		localNodeStopped:       make([]LocalNodeStopped, 0),
 		willConnectToNode:      make([]WillConnectToNode, 0),
+		connectionAccepted:     make([]ConnectionAccepted, 0),
 		remoteNodeConnected:    make([]RemoteNodeConnected, 0),
 		remoteNodeReady:        make([]RemoteNodeReady, 0),
 		remoteNodeDisconnected: make([]RemoteNodeDisconnected, 0),
@@ -170,6 +181,12 @@ func (store *middlewareStore) ApplyMiddleware(mw interface{}) error {
 		}
 		store.willConnectToNode = append(store.willConnectToNode, mw)
 		middleware.Sort(store.willConnectToNode)
+	case ConnectionAccepted:
+		if mw.Func == nil {
+			return errors.New("middleware function is nil")
+		}
+		store.connectionAccepted = append(store.connectionAccepted, mw)
+		middleware.Sort(store.connectionAccepted)
 	case RemoteNodeConnected:
 		if mw.Func == nil {
 			return errors.New("middleware function is nil")
