@@ -3,7 +3,7 @@ package config
 import (
 	"time"
 
-	"github.com/imdario/mergo"
+	"github.com/jinzhu/copier"
 	"github.com/nknorg/nnet/protobuf"
 	"github.com/nknorg/nnet/transport"
 )
@@ -95,7 +95,7 @@ func DefaultConfig() *Config {
 // otherwise use default config
 func MergedConfig(conf *Config) (*Config, error) {
 	merged := DefaultConfig()
-	err := mergo.Merge(merged, conf, mergo.WithOverride)
+	err := copier.CopyWithOption(merged, conf, copier.Option{IgnoreEmpty: true, DeepCopy: true})
 	if err != nil {
 		return nil, err
 	}

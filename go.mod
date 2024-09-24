@@ -6,8 +6,8 @@ require (
 	github.com/gogo/protobuf v1.3.2
 	github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d
 	github.com/huin/goupnp v1.0.0 // indirect
-	github.com/imdario/mergo v0.3.6
 	github.com/jackpal/gateway v1.0.5 // indirect
+	github.com/jinzhu/copier v0.4.0
 	github.com/klauspost/cpuid v1.2.1 // indirect
 	github.com/klauspost/reedsolomon v0.0.0-20190407153631-a373324398e4 // indirect
 	github.com/nknorg/go-nat v1.0.1
