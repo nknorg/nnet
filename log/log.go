@@ -1,6 +1,6 @@
 package log
 
-import logging "github.com/op/go-logging"
+import "github.com/op/go-logging"
 
 // Logger is the logger interface
 type Logger interface {

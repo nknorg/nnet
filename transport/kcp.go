@@ -5,7 +5,7 @@ import (
 	"net"
 	"time"
 
-	kcp "github.com/xtaci/kcp-go"
+	"github.com/xtaci/kcp-go"
 )
 
 type kcpListener struct {
