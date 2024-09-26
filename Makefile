@@ -4,4 +4,4 @@ test:
 
 .PHONY: pb
 pb:
-	protoc -I=. -I=$(GOPATH)/src -I=$(GOPATH)/src/github.com/gogo/protobuf/protobuf --gogoslick_out=. protobuf/*.proto
+	protoc -I=. --go_out=paths=source_relative:. protobuf/**/*.proto
