@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+option go_package = "github.com/nknorg/nnet/protobuf/node";
+
+message Node {
+  bytes id = 1;
+  string addr = 2;
+  bytes data = 3;
+}
