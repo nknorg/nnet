@@ -1,5 +1,5 @@
 // This example shows how to encrypt the message between nodes. In this example
-// we use a fixed AES key. In production it is recommended to derive the shared
+// we use a fixed AES key. In production, it is recommended to derive the shared
 // key per node, or better, per session.
 
 // Run with default options: go run main.go

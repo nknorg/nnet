@@ -1,4 +1,4 @@
-// This example shows how to setup NAT traversal. The example uses go-nat
+// This example shows how to set up NAT traversal. The example uses go-nat
 // package, which only works for routers that support UPnP and NAT-PMP protocol.
 // NAT traversal can also be set up in middleware such as NetworkWillStart and
 // LocalNodeWillStart.

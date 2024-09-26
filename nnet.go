@@ -9,7 +9,7 @@ import (
 	"github.com/nknorg/nnet/util"
 )
 
-// NNet is is a peer to peer network
+// NNet is a peer to peer network
 type NNet struct {
 	overlay.Network
 }
