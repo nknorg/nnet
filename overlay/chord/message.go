@@ -1,21 +1,22 @@
 package chord
 
 import (
-	"github.com/gogo/protobuf/proto"
 	"github.com/nknorg/nnet/message"
 	"github.com/nknorg/nnet/node"
-	"github.com/nknorg/nnet/protobuf"
+	pbmsg "github.com/nknorg/nnet/protobuf/message"
+	pbnode "github.com/nknorg/nnet/protobuf/node"
+	"google.golang.org/protobuf/proto"
 )
 
 // NewGetSuccAndPredMessage creates a GET_SUCC_AND_PRED message to get the
 // successors and predecessor of a remote node
-func NewGetSuccAndPredMessage(numSucc, numPred uint32, msgIDBytes uint8) (*protobuf.Message, error) {
+func NewGetSuccAndPredMessage(numSucc, numPred uint32, msgIDBytes uint8) (*pbmsg.Message, error) {
 	id, err := message.GenID(msgIDBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	msgBody := &protobuf.GetSuccAndPred{
+	msgBody := &pbmsg.GetSuccAndPred{
 		NumSucc: numSucc,
 		NumPred: numPred,
 	}
@@ -25,9 +26,9 @@ func NewGetSuccAndPredMessage(numSucc, numPred uint32, msgIDBytes uint8) (*proto
 		return nil, err
 	}
 
-	msg := &protobuf.Message{
-		MessageType: protobuf.GET_SUCC_AND_PRED,
-		RoutingType: protobuf.DIRECT,
+	msg := &pbmsg.Message{
+		MessageType: pbmsg.MessageType_GET_SUCC_AND_PRED,
+		RoutingType: pbmsg.RoutingType_DIRECT,
 		MessageId:   id,
 		Message:     buf,
 	}
@@ -37,13 +38,13 @@ func NewGetSuccAndPredMessage(numSucc, numPred uint32, msgIDBytes uint8) (*proto
 
 // NewGetSuccAndPredReply creates a GET_SUCC_AND_PRED reply to send successors
 // and predecessor
-func (c *Chord) NewGetSuccAndPredReply(replyToID []byte, successors, predecessors []*protobuf.Node) (*protobuf.Message, error) {
+func (c *Chord) NewGetSuccAndPredReply(replyToID []byte, successors, predecessors []*pbnode.Node) (*pbmsg.Message, error) {
 	id, err := message.GenID(c.LocalNode.MessageIDBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	msgBody := &protobuf.GetSuccAndPredReply{
+	msgBody := &pbmsg.GetSuccAndPredReply{
 		Successors:   successors,
 		Predecessors: predecessors,
 	}
@@ -53,9 +54,9 @@ func (c *Chord) NewGetSuccAndPredReply(replyToID []byte, successors, predecessor
 		return nil, err
 	}
 
-	msg := &protobuf.Message{
-		MessageType: protobuf.GET_SUCC_AND_PRED,
-		RoutingType: protobuf.DIRECT,
+	msg := &pbmsg.Message{
+		MessageType: pbmsg.MessageType_GET_SUCC_AND_PRED,
+		RoutingType: pbmsg.RoutingType_DIRECT,
 		ReplyToId:   replyToID,
 		MessageId:   id,
 		Message:     buf,
@@ -66,13 +67,13 @@ func (c *Chord) NewGetSuccAndPredReply(replyToID []byte, successors, predecessor
 
 // NewFindSuccAndPredMessage creates a FIND_SUCC_AND_PRED message to find
 // numSucc successors and numPred predecessors of a key
-func (c *Chord) NewFindSuccAndPredMessage(key []byte, numSucc, numPred uint32) (*protobuf.Message, error) {
+func (c *Chord) NewFindSuccAndPredMessage(key []byte, numSucc, numPred uint32) (*pbmsg.Message, error) {
 	id, err := message.GenID(c.LocalNode.MessageIDBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	msgBody := &protobuf.FindSuccAndPred{
+	msgBody := &pbmsg.FindSuccAndPred{
 		Key:     key,
 		NumSucc: numSucc,
 		NumPred: numPred,
@@ -83,9 +84,9 @@ func (c *Chord) NewFindSuccAndPredMessage(key []byte, numSucc, numPred uint32) (
 		return nil, err
 	}
 
-	msg := &protobuf.Message{
-		MessageType: protobuf.FIND_SUCC_AND_PRED,
-		RoutingType: protobuf.DIRECT,
+	msg := &pbmsg.Message{
+		MessageType: pbmsg.MessageType_FIND_SUCC_AND_PRED,
+		RoutingType: pbmsg.RoutingType_DIRECT,
 		MessageId:   id,
 		Message:     buf,
 		DestId:      key,
@@ -96,13 +97,13 @@ func (c *Chord) NewFindSuccAndPredMessage(key []byte, numSucc, numPred uint32) (
 
 // NewFindSuccAndPredReply creates a FIND_SUCC_AND_PRED reply to send successors
 // and predecessors
-func (c *Chord) NewFindSuccAndPredReply(replyToID []byte, successors, predecessors []*protobuf.Node) (*protobuf.Message, error) {
+func (c *Chord) NewFindSuccAndPredReply(replyToID []byte, successors, predecessors []*pbnode.Node) (*pbmsg.Message, error) {
 	id, err := message.GenID(c.LocalNode.MessageIDBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	msgBody := &protobuf.FindSuccAndPredReply{
+	msgBody := &pbmsg.FindSuccAndPredReply{
 		Successors:   successors,
 		Predecessors: predecessors,
 	}
@@ -112,9 +113,9 @@ func (c *Chord) NewFindSuccAndPredReply(replyToID []byte, successors, predecesso
 		return nil, err
 	}
 
-	msg := &protobuf.Message{
-		MessageType: protobuf.FIND_SUCC_AND_PRED,
-		RoutingType: protobuf.DIRECT,
+	msg := &pbmsg.Message{
+		MessageType: pbmsg.MessageType_FIND_SUCC_AND_PRED,
+		RoutingType: pbmsg.RoutingType_DIRECT,
 		ReplyToId:   replyToID,
 		MessageId:   id,
 		Message:     buf,
@@ -131,8 +132,8 @@ func (c *Chord) handleRemoteMessage(remoteMsg *node.RemoteMessage) (bool, error)
 	}
 
 	switch remoteMsg.Msg.MessageType {
-	case protobuf.GET_SUCC_AND_PRED:
-		msgBody := &protobuf.GetSuccAndPred{}
+	case pbmsg.MessageType_GET_SUCC_AND_PRED:
+		msgBody := &pbmsg.GetSuccAndPred{}
 		err := proto.Unmarshal(remoteMsg.Msg.Message, msgBody)
 		if err != nil {
 			return false, err
@@ -158,8 +159,8 @@ func (c *Chord) handleRemoteMessage(remoteMsg *node.RemoteMessage) (bool, error)
 			return false, err
 		}
 
-	case protobuf.FIND_SUCC_AND_PRED:
-		msgBody := &protobuf.FindSuccAndPred{}
+	case pbmsg.MessageType_FIND_SUCC_AND_PRED:
+		msgBody := &pbmsg.FindSuccAndPred{}
 		err := proto.Unmarshal(remoteMsg.Msg.Message, msgBody)
 		if err != nil {
 			return false, err

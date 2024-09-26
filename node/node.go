@@ -2,20 +2,20 @@ package node
 
 import (
 	"fmt"
+	pbnode "github.com/nknorg/nnet/protobuf/node"
 	"sync"
 
 	"github.com/nknorg/nnet/common"
-	"github.com/nknorg/nnet/protobuf"
 )
 
 // Node is a remote or local node
 type Node struct {
 	sync.RWMutex
-	*protobuf.Node
+	*pbnode.Node
 	common.LifeCycle
 }
 
-func newNode(n *protobuf.Node) (*Node, error) {
+func newNode(n *pbnode.Node) (*Node, error) {
 	node := &Node{
 		Node: n,
 	}
@@ -24,7 +24,7 @@ func newNode(n *protobuf.Node) (*Node, error) {
 
 // NewNode creates a node
 func NewNode(id []byte, addr string) (*Node, error) {
-	n := &protobuf.Node{
+	n := &pbnode.Node{
 		Id:   id,
 		Addr: addr,
 	}

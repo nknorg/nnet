@@ -3,19 +3,19 @@ package overlay
 import (
 	"errors"
 	"fmt"
+	pbmsg "github.com/nknorg/nnet/protobuf/message"
 	"time"
 
 	"github.com/nknorg/nnet/common"
 	"github.com/nknorg/nnet/node"
 	"github.com/nknorg/nnet/overlay/routing"
-	"github.com/nknorg/nnet/protobuf"
 )
 
 // Overlay is an abstract overlay network
 type Overlay struct {
 	LocalNode    *node.LocalNode
 	LocalMsgChan chan *node.RemoteMessage
-	routers      map[protobuf.RoutingType]routing.Router
+	routers      map[pbmsg.RoutingType]routing.Router
 	common.LifeCycle
 }
 
@@ -28,7 +28,7 @@ func NewOverlay(localNode *node.LocalNode) (*Overlay, error) {
 	overlay := &Overlay{
 		LocalNode:    localNode,
 		LocalMsgChan: make(chan *node.RemoteMessage, localNode.OverlayLocalMsgChanLen),
-		routers:      make(map[protobuf.RoutingType]routing.Router),
+		routers:      make(map[pbmsg.RoutingType]routing.Router),
 	}
 	return overlay, nil
 }
@@ -40,7 +40,7 @@ func (ovl *Overlay) GetLocalNode() *node.LocalNode {
 
 // AddRouter adds a router for a routingType, and returns error if router has
 // already benn added for the type
-func (ovl *Overlay) AddRouter(routingType protobuf.RoutingType, router routing.Router) error {
+func (ovl *Overlay) AddRouter(routingType pbmsg.RoutingType, router routing.Router) error {
 	_, ok := ovl.routers[routingType]
 	if ok {
 		return fmt.Errorf("Router for type %v is already added", routingType)
@@ -51,7 +51,7 @@ func (ovl *Overlay) AddRouter(routingType protobuf.RoutingType, router routing.R
 
 // GetRouter gets a router for a routingType, and returns error if router of the
 // type has not benn added yet
-func (ovl *Overlay) GetRouter(routingType protobuf.RoutingType) (routing.Router, error) {
+func (ovl *Overlay) GetRouter(routingType pbmsg.RoutingType) (routing.Router, error) {
 	router, ok := ovl.routers[routingType]
 	if !ok {
 		return nil, fmt.Errorf("Router for type %v has not been added yet", routingType)
@@ -70,7 +70,7 @@ func (ovl *Overlay) GetRouters() []routing.Router {
 
 // SetRouter sets a router for a routingType regardless of whether a router has
 // been set up for this type or not
-func (ovl *Overlay) SetRouter(routingType protobuf.RoutingType, router routing.Router) {
+func (ovl *Overlay) SetRouter(routingType pbmsg.RoutingType, router routing.Router) {
 	ovl.routers[routingType] = router
 }
 
@@ -97,7 +97,7 @@ func (ovl *Overlay) StopRouters(err error) {
 // hasReply is false), if send success (which is true if successfully send
 // message to at least one next hop), and aggregated errors during message
 // sending.
-func (ovl *Overlay) SendMessage(msg *protobuf.Message, routingType protobuf.RoutingType, hasReply bool, replyTimeout time.Duration) (<-chan *node.RemoteMessage, bool, error) {
+func (ovl *Overlay) SendMessage(msg *pbmsg.Message, routingType pbmsg.RoutingType, hasReply bool, replyTimeout time.Duration) (<-chan *node.RemoteMessage, bool, error) {
 	router, err := ovl.GetRouter(routingType)
 	if err != nil {
 		return nil, false, err
@@ -109,7 +109,7 @@ func (ovl *Overlay) SendMessage(msg *protobuf.Message, routingType protobuf.Rout
 // SendMessageAsync sends msg to the best next hop, returns if send success
 // (which is true if successfully send message to at least one next hop), and
 // aggretated error during message sending
-func (ovl *Overlay) SendMessageAsync(msg *protobuf.Message, routingType protobuf.RoutingType) (bool, error) {
+func (ovl *Overlay) SendMessageAsync(msg *pbmsg.Message, routingType pbmsg.RoutingType) (bool, error) {
 	_, success, err := ovl.SendMessage(msg, routingType, false, 0)
 	return success, err
 }
@@ -119,7 +119,7 @@ func (ovl *Overlay) SendMessageAsync(msg *protobuf.Message, routingType protobuf
 // hop), and aggregated error during message sending, will also returns error if
 // haven't receive reply within replyTimeout. Will use default reply timeout if
 // replyTimeout = 0.
-func (ovl *Overlay) SendMessageSync(msg *protobuf.Message, routingType protobuf.RoutingType, replyTimeout time.Duration) (*protobuf.Message, bool, error) {
+func (ovl *Overlay) SendMessageSync(msg *pbmsg.Message, routingType pbmsg.RoutingType, replyTimeout time.Duration) (*pbmsg.Message, bool, error) {
 	if replyTimeout == 0 {
 		replyTimeout = ovl.LocalNode.DefaultReplyTimeout
 	}

@@ -3,6 +3,7 @@ package chord
 import (
 	"errors"
 	"fmt"
+	pbnode "github.com/nknorg/nnet/protobuf/node"
 	"math/big"
 	"math/rand"
 	"sort"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/nknorg/nnet/log"
 	"github.com/nknorg/nnet/node"
-	"github.com/nknorg/nnet/protobuf"
 )
 
 const (
@@ -44,7 +44,7 @@ func NewNeighborList(startID, endID []byte, nodeIDBits, maxNumNodes uint32, reve
 	return sl, nil
 }
 
-func (sl *NeighborList) cmp(node1, node2 *protobuf.Node) int {
+func (sl *NeighborList) cmp(node1, node2 *pbnode.Node) int {
 	res := Distance(sl.startID, node1.Id, sl.nodeIDBits).Cmp(Distance(sl.startID, node2.Id, sl.nodeIDBits))
 	if sl.reversed {
 		return -res
@@ -236,8 +236,8 @@ func (sl *NeighborList) ToRemoteNodeList(sorted bool) []*node.RemoteNode {
 }
 
 // ToProtoNodeList returns a list of protobuf.Node that are in NeighborList
-func (sl *NeighborList) ToProtoNodeList(sorted bool) []*protobuf.Node {
-	nodes := make([]*protobuf.Node, 0, sl.Cap())
+func (sl *NeighborList) ToProtoNodeList(sorted bool) []*pbnode.Node {
+	nodes := make([]*pbnode.Node, 0, sl.Cap())
 	for _, remoteNode := range sl.ToRemoteNodeList(sorted) {
 		nodes = append(nodes, remoteNode.Node.Node)
 	}
@@ -246,7 +246,7 @@ func (sl *NeighborList) ToProtoNodeList(sorted bool) []*protobuf.Node {
 
 // getNewNodesToConnect query and connect with potentially new nodes that should
 // be added to NeighborList
-func (sl *NeighborList) getNewNodesToConnect(msgIDBytes uint8) ([]*protobuf.Node, error) {
+func (sl *NeighborList) getNewNodesToConnect(msgIDBytes uint8) ([]*pbnode.Node, error) {
 	var selected *node.RemoteNode
 	var idx uint32
 	if rand.Float64() < randomQueryProbability {
@@ -263,7 +263,7 @@ func (sl *NeighborList) getNewNodesToConnect(msgIDBytes uint8) ([]*protobuf.Node
 		}
 	}
 
-	var succs, preds []*protobuf.Node
+	var succs, preds []*pbnode.Node
 	var err error
 	if sl.reversed {
 		succs, preds, err = GetSuccAndPred(selected, idx+1, sl.Cap()-idx-1, msgIDBytes)
@@ -279,7 +279,7 @@ func (sl *NeighborList) getNewNodesToConnect(msgIDBytes uint8) ([]*protobuf.Node
 	allNodes = append(allNodes, preds...)
 
 	seen := make(map[string]struct{}, len(allNodes))
-	uniqueNodes := make([]*protobuf.Node, 0, sl.Cap()+1)
+	uniqueNodes := make([]*pbnode.Node, 0, sl.Cap()+1)
 
 	for _, n := range allNodes {
 		if n == nil || n.Id == nil {
@@ -296,7 +296,7 @@ func (sl *NeighborList) getNewNodesToConnect(msgIDBytes uint8) ([]*protobuf.Node
 		return sl.cmp(uniqueNodes[i], uniqueNodes[j]) < 0
 	})
 
-	nodesToConnect := make([]*protobuf.Node, 0)
+	nodesToConnect := make([]*pbnode.Node, 0)
 
 	for i, n := range uniqueNodes {
 		if uint32(i) < sl.Cap() && sl.IsIDInRange(n.Id) && !sl.Exists(n.Id) {

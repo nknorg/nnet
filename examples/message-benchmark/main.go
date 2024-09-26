@@ -9,6 +9,7 @@ package main
 
 import (
 	"flag"
+	pbmsg "github.com/nknorg/nnet/protobuf/message"
 	"os"
 	"os/signal"
 	"sync"
@@ -17,7 +18,6 @@ import (
 	"github.com/nknorg/nnet"
 	"github.com/nknorg/nnet/log"
 	"github.com/nknorg/nnet/node"
-	"github.com/nknorg/nnet/protobuf"
 	"github.com/nknorg/nnet/util"
 )
 
@@ -48,12 +48,12 @@ func main() {
 		return
 	}
 
-	var broadcastType protobuf.RoutingType
+	var broadcastType pbmsg.RoutingType
 	switch *broadcastTypePtr {
 	case "push":
-		broadcastType = protobuf.BROADCAST_PUSH
+		broadcastType = pbmsg.RoutingType_BROADCAST_PUSH
 	case "tree":
-		broadcastType = protobuf.BROADCAST_TREE
+		broadcastType = pbmsg.RoutingType_BROADCAST_TREE
 	default:
 		log.Error("Unknown broadcast type")
 		return

@@ -8,6 +8,7 @@ package main
 
 import (
 	"flag"
+	pbmsg "github.com/nknorg/nnet/protobuf/message"
 	"os"
 	"os/signal"
 	"sync"
@@ -17,7 +18,6 @@ import (
 	"github.com/nknorg/nnet/log"
 	"github.com/nknorg/nnet/node"
 	"github.com/nknorg/nnet/overlay/chord"
-	"github.com/nknorg/nnet/protobuf"
 	"github.com/nknorg/nnet/util"
 )
 
@@ -113,7 +113,7 @@ func main() {
 	}
 	_, err = nnets[0].SendBytesBroadcastAsync(
 		[]byte("This message should be received by EVERYONE!"),
-		protobuf.BROADCAST_PUSH,
+		pbmsg.RoutingType_BROADCAST_PUSH,
 	)
 	if err != nil {
 		log.Error(err)

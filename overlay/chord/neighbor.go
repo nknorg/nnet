@@ -2,15 +2,15 @@ package chord
 
 import (
 	"errors"
+	pbnode "github.com/nknorg/nnet/protobuf/node"
 
 	"github.com/nknorg/nnet/log"
 	"github.com/nknorg/nnet/node"
-	"github.com/nknorg/nnet/protobuf"
 	"github.com/nknorg/nnet/util"
 )
 
 // Connect connects to a node. The Addr field of the node is required.
-func (c *Chord) Connect(n *protobuf.Node) error {
+func (c *Chord) Connect(n *pbnode.Node) error {
 	if n.Id != nil {
 		remoteNode := c.neighbors.GetByID(n.Id)
 		if remoteNode != nil {

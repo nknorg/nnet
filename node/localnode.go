@@ -3,6 +3,8 @@ package node
 import (
 	"errors"
 	"fmt"
+	pbmsg "github.com/nknorg/nnet/protobuf/message"
+	pbnode "github.com/nknorg/nnet/protobuf/node"
 	"net"
 	"strconv"
 	"sync"
@@ -11,7 +13,6 @@ import (
 	"github.com/nknorg/nnet/cache"
 	"github.com/nknorg/nnet/config"
 	"github.com/nknorg/nnet/log"
-	"github.com/nknorg/nnet/protobuf"
 	"github.com/nknorg/nnet/transport"
 )
 
@@ -24,7 +25,7 @@ type LocalNode struct {
 	port           uint16
 	listener       net.Listener
 	handleMsgChan  chan *RemoteMessage
-	rxMsgChan      map[protobuf.RoutingType]chan *RemoteMessage
+	rxMsgChan      map[pbmsg.RoutingType]chan *RemoteMessage
 	rxMsgCache     cache.Cache
 	replyChanCache cache.Cache
 	replyTimeout   time.Duration
@@ -49,7 +50,7 @@ func NewLocalNode(id []byte, conf *config.Config) (*LocalNode, error) {
 
 	handleMsgChan := make(chan *RemoteMessage, conf.LocalHandleMsgChanLen)
 
-	rxMsgChan := make(map[protobuf.RoutingType]chan *RemoteMessage)
+	rxMsgChan := make(map[pbmsg.RoutingType]chan *RemoteMessage)
 
 	rxMsgCache := cache.NewGoCache(conf.LocalRxMsgCacheExpiration, conf.LocalRxMsgCacheCleanupInterval)
 
@@ -70,8 +71,8 @@ func NewLocalNode(id []byte, conf *config.Config) (*LocalNode, error) {
 		replyTimeout:    conf.DefaultReplyTimeout,
 	}
 
-	for routingType := range protobuf.RoutingType_name {
-		localNode.RegisterRoutingType(protobuf.RoutingType(routingType))
+	for routingType := range pbmsg.RoutingType_name {
+		localNode.RegisterRoutingType(pbmsg.RoutingType(routingType))
 	}
 
 	return localNode, nil
@@ -261,7 +262,7 @@ func (ln *LocalNode) SetInternalPort(port uint16) {
 // nil if another goroutine is connecting to the same address concurrently. The
 // remote node is ready if an active connection to the remoteNodeAddr exists and
 // node info has been exchanged.
-func (ln *LocalNode) Connect(n *protobuf.Node) (*RemoteNode, bool, error) {
+func (ln *LocalNode) Connect(n *pbnode.Node) (*RemoteNode, bool, error) {
 	if n.Addr == ln.address.String() {
 		return nil, false, errors.New("trying to connect to self")
 	}
@@ -320,7 +321,7 @@ func (ln *LocalNode) Connect(n *protobuf.Node) (*RemoteNode, bool, error) {
 
 // StartRemoteNode creates and starts a remote node using conn. If n is not
 // nil, its id and address will be used to validate ExchangeNode info.
-func (ln *LocalNode) StartRemoteNode(conn net.Conn, isOutbound bool, n *protobuf.Node) (*RemoteNode, error) {
+func (ln *LocalNode) StartRemoteNode(conn net.Conn, isOutbound bool, n *pbnode.Node) (*RemoteNode, error) {
 	remoteNode, err := NewRemoteNode(ln, conn, isOutbound, n)
 	if err != nil {
 		return nil, err
@@ -341,13 +342,13 @@ func (ln *LocalNode) StartRemoteNode(conn net.Conn, isOutbound bool, n *protobuf
 }
 
 // RegisterRoutingType register a routing type and creates the rxMsgChan for it
-func (ln *LocalNode) RegisterRoutingType(routingType protobuf.RoutingType) {
+func (ln *LocalNode) RegisterRoutingType(routingType pbmsg.RoutingType) {
 	ln.rxMsgChan[routingType] = make(chan *RemoteMessage, ln.LocalRxMsgChanLen)
 }
 
 // GetRxMsgChan gets the message channel of a routing type, or return error if
 // channel for routing type does not exist
-func (ln *LocalNode) GetRxMsgChan(routingType protobuf.RoutingType) (chan *RemoteMessage, error) {
+func (ln *LocalNode) GetRxMsgChan(routingType pbmsg.RoutingType) (chan *RemoteMessage, error) {
 	c, ok := ln.rxMsgChan[routingType]
 	if !ok {
 		return nil, fmt.Errorf("Msg chan does not exist for type %d", routingType)

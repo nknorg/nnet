@@ -22,16 +22,16 @@ package main
 
 import (
 	"flag"
+	pbmsg "github.com/nknorg/nnet/protobuf/message"
 	"sync"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/nknorg/nnet"
 	"github.com/nknorg/nnet/log"
 	"github.com/nknorg/nnet/node"
 	"github.com/nknorg/nnet/overlay/routing"
-	"github.com/nknorg/nnet/protobuf"
 	"github.com/nknorg/nnet/util"
+	"google.golang.org/protobuf/proto"
 )
 
 func create(transport string, port uint16, id []byte, numFingerSuccessors uint32) (*nnet.NNet, error) {
@@ -89,8 +89,8 @@ func main() {
 		}
 
 		nn.MustApplyMiddleware(routing.RemoteMessageRouted{func(remoteMessage *node.RemoteMessage, localNode *node.LocalNode, remoteNodes []*node.RemoteNode) (*node.RemoteMessage, *node.LocalNode, []*node.RemoteNode, bool) {
-			if remoteMessage.Msg.MessageType == protobuf.BYTES {
-				msgBody := &protobuf.Bytes{}
+			if remoteMessage.Msg.MessageType == pbmsg.MessageType_BYTES {
+				msgBody := &pbmsg.Bytes{}
 				err = proto.Unmarshal(remoteMessage.Msg.Message, msgBody)
 				if err != nil {
 					log.Error(err)
@@ -98,10 +98,10 @@ func main() {
 
 				msgCountLock.Lock()
 				switch remoteMessage.Msg.RoutingType {
-				case protobuf.BROADCAST_PUSH:
+				case pbmsg.RoutingType_BROADCAST_PUSH:
 					pushMsgCount += len(remoteNodes)
 					log.Infof("Receive broadcast push message \"%s\" from %x", string(msgBody.Data), remoteMessage.Msg.SrcId)
-				case protobuf.BROADCAST_TREE:
+				case pbmsg.RoutingType_BROADCAST_TREE:
 					treeMsgCount += len(remoteNodes)
 					log.Infof("Receive broadcast tree message \"%s\" from %x", string(msgBody.Data), remoteMessage.Msg.SrcId)
 				}
@@ -138,7 +138,7 @@ func main() {
 	}
 	_, err = nnets[0].SendBytesBroadcastAsync(
 		[]byte("This message should be received by EVERYONE many times!"),
-		protobuf.BROADCAST_PUSH,
+		pbmsg.RoutingType_BROADCAST_PUSH,
 	)
 	if err != nil {
 		log.Error(err)
@@ -152,7 +152,7 @@ func main() {
 	}
 	_, err = nnets[0].SendBytesBroadcastAsync(
 		[]byte("This message should be received by EVERYONE almost once!"),
-		protobuf.BROADCAST_TREE,
+		pbmsg.RoutingType_BROADCAST_TREE,
 	)
 	if err != nil {
 		log.Error(err)
