@@ -2,11 +2,11 @@ package node
 
 import (
 	"errors"
+	pbmsg "github.com/nknorg/nnet/protobuf/message"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/nknorg/nnet/log"
 	"github.com/nknorg/nnet/message"
-	"github.com/nknorg/nnet/protobuf"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -18,11 +18,11 @@ const (
 // message is sent by local node.
 type RemoteMessage struct {
 	RemoteNode *RemoteNode
-	Msg        *protobuf.Message
+	Msg        *pbmsg.Message
 }
 
 // NewRemoteMessage creates a RemoteMessage with remote node rn and msg
-func NewRemoteMessage(rn *RemoteNode, msg *protobuf.Message) (*RemoteMessage, error) {
+func NewRemoteMessage(rn *RemoteNode, msg *pbmsg.Message) (*RemoteMessage, error) {
 	remoteMsg := &RemoteMessage{
 		RemoteNode: rn,
 		Msg:        msg,
@@ -31,22 +31,22 @@ func NewRemoteMessage(rn *RemoteNode, msg *protobuf.Message) (*RemoteMessage, er
 }
 
 // NewPingMessage creates a PING message for heartbeat
-func (ln *LocalNode) NewPingMessage() (*protobuf.Message, error) {
+func (ln *LocalNode) NewPingMessage() (*pbmsg.Message, error) {
 	id, err := message.GenID(ln.MessageIDBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	msgBody := &protobuf.Ping{}
+	msgBody := &pbmsg.Ping{}
 
 	buf, err := proto.Marshal(msgBody)
 	if err != nil {
 		return nil, err
 	}
 
-	msg := &protobuf.Message{
-		MessageType: protobuf.PING,
-		RoutingType: protobuf.DIRECT,
+	msg := &pbmsg.Message{
+		MessageType: pbmsg.MessageType_PING,
+		RoutingType: pbmsg.RoutingType_DIRECT,
 		MessageId:   id,
 		Message:     buf,
 	}
@@ -55,22 +55,22 @@ func (ln *LocalNode) NewPingMessage() (*protobuf.Message, error) {
 }
 
 // NewPingReply creates a PING reply for heartbeat
-func (ln *LocalNode) NewPingReply(replyToID []byte) (*protobuf.Message, error) {
+func (ln *LocalNode) NewPingReply(replyToID []byte) (*pbmsg.Message, error) {
 	id, err := message.GenID(ln.MessageIDBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	msgBody := &protobuf.PingReply{}
+	msgBody := &pbmsg.PingReply{}
 
 	buf, err := proto.Marshal(msgBody)
 	if err != nil {
 		return nil, err
 	}
 
-	msg := &protobuf.Message{
-		MessageType: protobuf.PING,
-		RoutingType: protobuf.DIRECT,
+	msg := &pbmsg.Message{
+		MessageType: pbmsg.MessageType_PING,
+		RoutingType: pbmsg.RoutingType_DIRECT,
 		ReplyToId:   replyToID,
 		MessageId:   id,
 		Message:     buf,
@@ -79,13 +79,13 @@ func (ln *LocalNode) NewPingReply(replyToID []byte) (*protobuf.Message, error) {
 }
 
 // NewExchangeNodeMessage creates a EXCHANGE_NODE message to get node info
-func (ln *LocalNode) NewExchangeNodeMessage() (*protobuf.Message, error) {
+func (ln *LocalNode) NewExchangeNodeMessage() (*pbmsg.Message, error) {
 	id, err := message.GenID(ln.MessageIDBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	msgBody := &protobuf.ExchangeNode{
+	msgBody := &pbmsg.ExchangeNode{
 		Node: ln.Node.Node,
 	}
 
@@ -94,9 +94,9 @@ func (ln *LocalNode) NewExchangeNodeMessage() (*protobuf.Message, error) {
 		return nil, err
 	}
 
-	msg := &protobuf.Message{
-		MessageType: protobuf.EXCHANGE_NODE,
-		RoutingType: protobuf.DIRECT,
+	msg := &pbmsg.Message{
+		MessageType: pbmsg.MessageType_EXCHANGE_NODE,
+		RoutingType: pbmsg.RoutingType_DIRECT,
 		MessageId:   id,
 		Message:     buf,
 	}
@@ -105,13 +105,13 @@ func (ln *LocalNode) NewExchangeNodeMessage() (*protobuf.Message, error) {
 }
 
 // NewExchangeNodeReply creates a EXCHANGE_NODE reply to send node info
-func (ln *LocalNode) NewExchangeNodeReply(replyToID []byte) (*protobuf.Message, error) {
+func (ln *LocalNode) NewExchangeNodeReply(replyToID []byte) (*pbmsg.Message, error) {
 	id, err := message.GenID(ln.MessageIDBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	msgBody := &protobuf.ExchangeNodeReply{
+	msgBody := &pbmsg.ExchangeNodeReply{
 		Node: ln.Node.Node,
 	}
 
@@ -120,9 +120,9 @@ func (ln *LocalNode) NewExchangeNodeReply(replyToID []byte) (*protobuf.Message, 
 		return nil, err
 	}
 
-	msg := &protobuf.Message{
-		MessageType: protobuf.EXCHANGE_NODE,
-		RoutingType: protobuf.DIRECT,
+	msg := &pbmsg.Message{
+		MessageType: pbmsg.MessageType_EXCHANGE_NODE,
+		RoutingType: pbmsg.RoutingType_DIRECT,
 		ReplyToId:   replyToID,
 		MessageId:   id,
 		Message:     buf,
@@ -133,22 +133,22 @@ func (ln *LocalNode) NewExchangeNodeReply(replyToID []byte) (*protobuf.Message, 
 
 // NewStopMessage creates a STOP message to notify local node to close
 // connection with remote node
-func (ln *LocalNode) NewStopMessage() (*protobuf.Message, error) {
+func (ln *LocalNode) NewStopMessage() (*pbmsg.Message, error) {
 	id, err := message.GenID(ln.MessageIDBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	msgBody := &protobuf.Stop{}
+	msgBody := &pbmsg.Stop{}
 
 	buf, err := proto.Marshal(msgBody)
 	if err != nil {
 		return nil, err
 	}
 
-	msg := &protobuf.Message{
-		MessageType: protobuf.STOP,
-		RoutingType: protobuf.DIRECT,
+	msg := &pbmsg.Message{
+		MessageType: pbmsg.MessageType_STOP,
+		RoutingType: pbmsg.RoutingType_DIRECT,
 		MessageId:   id,
 		Message:     buf,
 	}
@@ -158,12 +158,12 @@ func (ln *LocalNode) NewStopMessage() (*protobuf.Message, error) {
 
 // handleRemoteMessage handles a remote message and returns error
 func (ln *LocalNode) handleRemoteMessage(remoteMsg *RemoteMessage) error {
-	if remoteMsg.RemoteNode == nil && remoteMsg.Msg.MessageType != protobuf.BYTES {
+	if remoteMsg.RemoteNode == nil && remoteMsg.Msg.MessageType != pbmsg.MessageType_BYTES {
 		return errors.New("Message is sent by local node")
 	}
 
 	switch remoteMsg.Msg.MessageType {
-	case protobuf.PING:
+	case pbmsg.MessageType_PING:
 		replyMsg, err := ln.NewPingReply(remoteMsg.Msg.MessageId)
 		if err != nil {
 			return err
@@ -174,8 +174,8 @@ func (ln *LocalNode) handleRemoteMessage(remoteMsg *RemoteMessage) error {
 			return err
 		}
 
-	case protobuf.EXCHANGE_NODE:
-		msgBody := &protobuf.ExchangeNode{}
+	case pbmsg.MessageType_EXCHANGE_NODE:
+		msgBody := &pbmsg.ExchangeNode{}
 		err := proto.Unmarshal(remoteMsg.Msg.Message, msgBody)
 		if err != nil {
 			return err
@@ -197,12 +197,12 @@ func (ln *LocalNode) handleRemoteMessage(remoteMsg *RemoteMessage) error {
 			return err
 		}
 
-	case protobuf.STOP:
+	case pbmsg.MessageType_STOP:
 		log.Infof("Received stop message from remote node %v", remoteMsg.RemoteNode)
 		remoteMsg.RemoteNode.Stop(nil)
 
-	case protobuf.BYTES:
-		msgBody := &protobuf.Bytes{}
+	case pbmsg.MessageType_BYTES:
+		msgBody := &pbmsg.Bytes{}
 		err := proto.Unmarshal(remoteMsg.Msg.Message, msgBody)
 		if err != nil {
 			return err

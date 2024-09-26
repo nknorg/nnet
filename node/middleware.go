@@ -2,10 +2,10 @@ package node
 
 import (
 	"errors"
+	pbnode "github.com/nknorg/nnet/protobuf/node"
 	"net"
 
 	"github.com/nknorg/nnet/middleware"
-	"github.com/nknorg/nnet/protobuf"
 )
 
 // BytesReceived is called when local node receive user-defined BYTES message.
@@ -52,7 +52,7 @@ type LocalNodeStopped struct {
 // Returns if local node should continue connecting and if we should proceed to
 // the next middleware.
 type WillConnectToNode struct {
-	Func     func(*protobuf.Node) (bool, bool)
+	Func     func(*pbnode.Node) (bool, bool)
 	Priority int32
 }
 

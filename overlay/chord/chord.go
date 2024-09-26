@@ -3,16 +3,17 @@ package chord
 import (
 	"errors"
 	"fmt"
+	pbmsg "github.com/nknorg/nnet/protobuf/message"
+	pbnode "github.com/nknorg/nnet/protobuf/node"
 	"sync"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/nknorg/nnet/log"
 	"github.com/nknorg/nnet/node"
 	"github.com/nknorg/nnet/overlay"
 	"github.com/nknorg/nnet/overlay/routing"
-	"github.com/nknorg/nnet/protobuf"
 	"github.com/nknorg/nnet/util"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -90,7 +91,7 @@ func NewChord(localNode *node.LocalNode) (*Chord, error) {
 		middlewareStore:       middlewareStore,
 	}
 
-	directRxMsgChan, err := localNode.GetRxMsgChan(protobuf.DIRECT)
+	directRxMsgChan, err := localNode.GetRxMsgChan(pbmsg.RoutingType_DIRECT)
 	if err != nil {
 		return nil, err
 	}
@@ -98,12 +99,12 @@ func NewChord(localNode *node.LocalNode) (*Chord, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = ovl.AddRouter(protobuf.DIRECT, directRouting)
+	err = ovl.AddRouter(pbmsg.RoutingType_DIRECT, directRouting)
 	if err != nil {
 		return nil, err
 	}
 
-	relayRxMsgChan, err := localNode.GetRxMsgChan(protobuf.RELAY)
+	relayRxMsgChan, err := localNode.GetRxMsgChan(pbmsg.RoutingType_RELAY)
 	if err != nil {
 		return nil, err
 	}
@@ -111,12 +112,12 @@ func NewChord(localNode *node.LocalNode) (*Chord, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = ovl.AddRouter(protobuf.RELAY, relayRouting)
+	err = ovl.AddRouter(pbmsg.RoutingType_RELAY, relayRouting)
 	if err != nil {
 		return nil, err
 	}
 
-	broadcastRxMsgChan, err := localNode.GetRxMsgChan(protobuf.BROADCAST_PUSH)
+	broadcastRxMsgChan, err := localNode.GetRxMsgChan(pbmsg.RoutingType_BROADCAST_PUSH)
 	if err != nil {
 		return nil, err
 	}
@@ -124,12 +125,12 @@ func NewChord(localNode *node.LocalNode) (*Chord, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = ovl.AddRouter(protobuf.BROADCAST_PUSH, broadcastRouting)
+	err = ovl.AddRouter(pbmsg.RoutingType_BROADCAST_PUSH, broadcastRouting)
 	if err != nil {
 		return nil, err
 	}
 
-	broadcastTreeRxMsgChan, err := localNode.GetRxMsgChan(protobuf.BROADCAST_TREE)
+	broadcastTreeRxMsgChan, err := localNode.GetRxMsgChan(pbmsg.RoutingType_BROADCAST_TREE)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +138,7 @@ func NewChord(localNode *node.LocalNode) (*Chord, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = ovl.AddRouter(protobuf.BROADCAST_TREE, broadcastTreeRouting)
+	err = ovl.AddRouter(pbmsg.RoutingType_BROADCAST_TREE, broadcastTreeRouting)
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +193,7 @@ func (c *Chord) Start(isCreate bool) error {
 		err := c.ApplyMiddleware(SuccessorAdded{
 			Func: func(remoteNode *node.RemoteNode, index int) bool {
 				joinOnce.Do(func() {
-					var succs []*protobuf.Node
+					var succs []*pbnode.Node
 					var err error
 
 					// prev is used to prevent msg being routed to self
@@ -301,7 +302,7 @@ func (c *Chord) Stop(err error) {
 
 // Join joins an existing chord network starting from the seedNodeAddr
 func (c *Chord) Join(seedNodeAddr string) error {
-	return c.Connect(&protobuf.Node{Addr: seedNodeAddr})
+	return c.Connect(&pbnode.Node{Addr: seedNodeAddr})
 }
 
 // handleMsg starts a loop that handles received msg
@@ -385,7 +386,7 @@ func (c *Chord) findNewPredecessors() {
 	var hasInboundNeighbor bool
 	var err error
 	var existing *node.RemoteNode
-	var maybeNewNodes []*protobuf.Node
+	var maybeNewNodes []*pbnode.Node
 
 	for {
 		time.Sleep(5 * util.RandDuration(c.baseStabilizeInterval, 1.0/3.0))
@@ -465,7 +466,7 @@ func (c *Chord) findNewFinger() {
 	var err error
 	var i int
 	var existing *node.RemoteNode
-	var succs []*protobuf.Node
+	var succs []*pbnode.Node
 
 	for {
 		for i = 0; i < len(c.fingerTable); i++ {
@@ -551,7 +552,7 @@ func (c *Chord) updateSuccPredMaxNumNodes() {
 
 // GetSuccAndPred sends a GetSuccAndPred message to remote node and returns its
 // successors and predecessor if no error occurred
-func GetSuccAndPred(remoteNode *node.RemoteNode, numSucc, numPred uint32, msgIDBytes uint8) ([]*protobuf.Node, []*protobuf.Node, error) {
+func GetSuccAndPred(remoteNode *node.RemoteNode, numSucc, numPred uint32, msgIDBytes uint8) ([]*pbnode.Node, []*pbnode.Node, error) {
 	msg, err := NewGetSuccAndPredMessage(numSucc, numPred, msgIDBytes)
 	if err != nil {
 		return nil, nil, err
@@ -562,7 +563,7 @@ func GetSuccAndPred(remoteNode *node.RemoteNode, numSucc, numPred uint32, msgIDB
 		return nil, nil, err
 	}
 
-	replyBody := &protobuf.GetSuccAndPredReply{}
+	replyBody := &pbmsg.GetSuccAndPredReply{}
 	err = proto.Unmarshal(reply.Msg.Message, replyBody)
 	if err != nil {
 		return nil, nil, err
@@ -573,14 +574,14 @@ func GetSuccAndPred(remoteNode *node.RemoteNode, numSucc, numPred uint32, msgIDB
 
 // FindSuccAndPred sends a FindSuccAndPred message and returns numSucc
 // successors and numPred predecessors of a given key id
-func (c *Chord) FindSuccAndPred(key []byte, numSucc, numPred uint32) ([]*protobuf.Node, []*protobuf.Node, error) {
+func (c *Chord) FindSuccAndPred(key []byte, numSucc, numPred uint32) ([]*pbnode.Node, []*pbnode.Node, error) {
 	succ := c.successors.GetFirst()
 	if succ == nil {
-		return []*protobuf.Node{c.LocalNode.Node.Node}, []*protobuf.Node{c.LocalNode.Node.Node}, nil
+		return []*pbnode.Node{c.LocalNode.Node.Node}, []*pbnode.Node{c.LocalNode.Node.Node}, nil
 	}
 
 	if BetweenLeftIncl(c.LocalNode.Id, succ.Id, key) {
-		var succs, preds []*protobuf.Node
+		var succs, preds []*pbnode.Node
 
 		if numSucc > 0 {
 			if CompareID(key, c.LocalNode.Id) == 0 {
@@ -597,7 +598,7 @@ func (c *Chord) FindSuccAndPred(key []byte, numSucc, numPred uint32) ([]*protobu
 		}
 
 		if numPred > 0 {
-			preds = []*protobuf.Node{c.LocalNode.Node.Node}
+			preds = []*pbnode.Node{c.LocalNode.Node.Node}
 
 			if len(preds) < int(numPred) {
 				preds = append(preds, c.predecessors.ToProtoNodeList(true)...)
@@ -616,12 +617,12 @@ func (c *Chord) FindSuccAndPred(key []byte, numSucc, numPred uint32) ([]*protobu
 		return nil, nil, err
 	}
 
-	reply, _, err := c.SendMessageSync(msg, protobuf.RELAY, 0)
+	reply, _, err := c.SendMessageSync(msg, pbmsg.RoutingType_RELAY, 0)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	replyBody := &protobuf.FindSuccAndPredReply{}
+	replyBody := &pbmsg.FindSuccAndPredReply{}
 	err = proto.Unmarshal(reply.Message, replyBody)
 	if err != nil {
 		return nil, nil, err
@@ -640,14 +641,14 @@ func (c *Chord) FindSuccAndPred(key []byte, numSucc, numPred uint32) ([]*protobu
 
 // FindSuccessors sends a FindSuccessors message and returns numSucc successors
 // of a given key id
-func (c *Chord) FindSuccessors(key []byte, numSucc uint32) ([]*protobuf.Node, error) {
+func (c *Chord) FindSuccessors(key []byte, numSucc uint32) ([]*pbnode.Node, error) {
 	succs, _, err := c.FindSuccAndPred(key, numSucc, 0)
 	return succs, err
 }
 
 // FindPredecessors sends a FindPredecessors message and returns numPred
 // predecessors of a given key id
-func (c *Chord) FindPredecessors(key []byte, numPred uint32) ([]*protobuf.Node, error) {
+func (c *Chord) FindPredecessors(key []byte, numPred uint32) ([]*pbnode.Node, error) {
 	_, preds, err := c.FindSuccAndPred(key, 0, numPred)
 	return preds, err
 }

@@ -5,17 +5,18 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	pbmsg "github.com/nknorg/nnet/protobuf/message"
+	pbnode "github.com/nknorg/nnet/protobuf/node"
 	"net"
 	"sync"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/nknorg/nnet/cache"
 	"github.com/nknorg/nnet/log"
 	"github.com/nknorg/nnet/multiplexer"
-	"github.com/nknorg/nnet/protobuf"
 	"github.com/nknorg/nnet/transport"
 	"github.com/nknorg/nnet/util"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -32,8 +33,8 @@ type RemoteNode struct {
 	LocalNode  *LocalNode
 	IsOutbound bool
 	conn       net.Conn
-	rxMsgChan  chan *protobuf.Message
-	txMsgChan  chan *protobuf.Message
+	rxMsgChan  chan *pbmsg.Message
+	txMsgChan  chan *pbmsg.Message
 	txMsgCache cache.Cache
 
 	sync.RWMutex
@@ -42,7 +43,7 @@ type RemoteNode struct {
 }
 
 // NewRemoteNode creates a remote node
-func NewRemoteNode(localNode *LocalNode, conn net.Conn, isOutbound bool, n *protobuf.Node) (*RemoteNode, error) {
+func NewRemoteNode(localNode *LocalNode, conn net.Conn, isOutbound bool, n *pbnode.Node) (*RemoteNode, error) {
 	if localNode == nil {
 		return nil, errors.New("Local node is nil")
 	}
@@ -71,8 +72,8 @@ func NewRemoteNode(localNode *LocalNode, conn net.Conn, isOutbound bool, n *prot
 		LocalNode:  localNode,
 		conn:       conn,
 		IsOutbound: isOutbound,
-		rxMsgChan:  make(chan *protobuf.Message, localNode.RemoteRxMsgChanLen),
-		txMsgChan:  make(chan *protobuf.Message, localNode.RemoteTxMsgChanLen),
+		rxMsgChan:  make(chan *pbmsg.Message, localNode.RemoteRxMsgChanLen),
+		txMsgChan:  make(chan *pbmsg.Message, localNode.RemoteTxMsgChanLen),
 		txMsgCache: txMsgCache,
 		lastRxTime: time.Now(),
 	}
@@ -122,7 +123,7 @@ func (rn *RemoteNode) setLastRxTime(lastRxTime time.Time) {
 	rn.Unlock()
 }
 
-func (rn *RemoteNode) setNode(n *protobuf.Node) error {
+func (rn *RemoteNode) setNode(n *pbnode.Node) error {
 	rn.Node.Lock()
 	defer rn.Node.Unlock()
 
@@ -178,7 +179,7 @@ func (rn *RemoteNode) Start() error {
 		go rn.startMeasuringRoundTripTime()
 
 		go func() {
-			var n *protobuf.Node
+			var n *pbnode.Node
 			var err error
 
 			for i := 0; i < startRetries; i++ {
@@ -292,7 +293,7 @@ func (rn *RemoteNode) startMultiplexer() {
 
 // handleMsg starts a loop that handles received msg
 func (rn *RemoteNode) handleMsg() {
-	var msg *protobuf.Message
+	var msg *pbmsg.Message
 	var remoteMsg *RemoteMessage
 	var msgChan chan *RemoteMessage
 	var added, ok bool
@@ -355,7 +356,7 @@ NEXT_MESSAGE:
 
 // handleMsgBuf unmarshal buf to msg and send it to msg chan of the local node
 func (rn *RemoteNode) handleMsgBuf(buf []byte) {
-	msg := &protobuf.Message{}
+	msg := &pbmsg.Message{}
 	err := proto.Unmarshal(buf, msg)
 	if err != nil {
 		rn.Stop(fmt.Errorf("unmarshal msg error: %s", err))
@@ -446,7 +447,7 @@ func (rn *RemoteNode) rx(conn net.Conn, isActive bool) {
 
 // tx marshals and sends data in txMsgChan to RemoteNode rn
 func (rn *RemoteNode) tx(conn net.Conn) {
-	var msg *protobuf.Message
+	var msg *pbmsg.Message
 	var buf []byte
 	var ok bool
 	var err error
@@ -548,7 +549,7 @@ func (rn *RemoteNode) startMeasuringRoundTripTime() {
 
 // SendMessage marshals and sends msg, will returns a RemoteMessage chan if
 // hasReply is true and reply is received within replyTimeout.
-func (rn *RemoteNode) SendMessage(msg *protobuf.Message, hasReply bool, replyTimeout time.Duration) (<-chan *RemoteMessage, error) {
+func (rn *RemoteNode) SendMessage(msg *pbmsg.Message, hasReply bool, replyTimeout time.Duration) (<-chan *RemoteMessage, error) {
 	if rn.IsStopped() {
 		return nil, errors.New("Remote node has stopped")
 	}
@@ -585,15 +586,15 @@ func (rn *RemoteNode) SendMessage(msg *protobuf.Message, hasReply bool, replyTim
 }
 
 // SendMessageAsync sends msg and returns if there is an error
-func (rn *RemoteNode) SendMessageAsync(msg *protobuf.Message) error {
+func (rn *RemoteNode) SendMessageAsync(msg *pbmsg.Message) error {
 	_, err := rn.SendMessage(msg, false, 0)
 	return err
 }
 
-// SendMessageSync sends msg, returns reply message or error if don't receive
-// reply within replyTimeout. Will use default reply timeout in config if
-// replyTimeout = 0.
-func (rn *RemoteNode) SendMessageSync(msg *protobuf.Message, replyTimeout time.Duration) (*RemoteMessage, error) {
+// SendMessageSync sends msg, returns reply message or error if reply is
+// not received within replyTimeout. Will use default reply timeout in
+// config if replyTimeout = 0.
+func (rn *RemoteNode) SendMessageSync(msg *pbmsg.Message, replyTimeout time.Duration) (*RemoteMessage, error) {
 	if replyTimeout == 0 {
 		replyTimeout = rn.LocalNode.DefaultReplyTimeout
 	}
@@ -627,7 +628,7 @@ func (rn *RemoteNode) Ping() error {
 }
 
 // ExchangeNode sends a ExchangeNode message to remote node and wait for reply
-func (rn *RemoteNode) ExchangeNode() (*protobuf.Node, error) {
+func (rn *RemoteNode) ExchangeNode() (*pbnode.Node, error) {
 	msg, err := rn.LocalNode.NewExchangeNodeMessage()
 	if err != nil {
 		return nil, err
@@ -638,7 +639,7 @@ func (rn *RemoteNode) ExchangeNode() (*protobuf.Node, error) {
 		return nil, err
 	}
 
-	replyBody := &protobuf.ExchangeNodeReply{}
+	replyBody := &pbmsg.ExchangeNodeReply{}
 	err = proto.Unmarshal(reply.Msg.Message, replyBody)
 	if err != nil {
 		return nil, err
