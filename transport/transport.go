@@ -14,7 +14,7 @@ type Transport interface {
 	String() string
 }
 
-// NewTransport creates a transport based on conf
+// NewTransport creates transport based on conf
 func NewTransport(protocol string, supportedTransports []Transport) (Transport, error) {
 	for _, t := range supportedTransports {
 		if protocol == t.String() {

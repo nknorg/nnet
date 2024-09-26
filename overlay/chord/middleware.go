@@ -9,7 +9,7 @@ import (
 )
 
 // SuccessorAdded is called when a new remote node has been added to the
-// successor list. This does not necessarily means the remote node has just
+// successor list. This does not necessarily mean the remote node has just
 // established a new connection with local node, but may also because another
 // remote node previously in successor list was disconnected or removed. When
 // being called, it will also pass the index of the remote node in successor
@@ -20,7 +20,7 @@ type SuccessorAdded struct {
 }
 
 // SuccessorRemoved is called when a remote node has been removed from the
-// successor list. This does not necessarily means the remote node has just
+// successor list. This does not necessarily mean the remote node has just
 // disconnected with local node, but may also because another remote node is
 // added to the successor list. Returns if we should proceed to the next
 // middleware.
@@ -30,7 +30,7 @@ type SuccessorRemoved struct {
 }
 
 // PredecessorAdded is called when a new remote node has been added to the
-// predecessor list. This does not necessarily means the remote node has just
+// predecessor list. This does not necessarily mean the remote node has just
 // established a new connection with local node, but may also because another
 // remote node previously in predecessor list was disconnected or removed. When
 // being called, it will also pass the index of the remote node in predecessor
@@ -41,7 +41,7 @@ type PredecessorAdded struct {
 }
 
 // PredecessorRemoved is called when a remote node has been removed from the
-// predecessor list. This does not necessarily means the remote node has just
+// predecessor list. This does not necessarily mean the remote node has just
 // disconnected with local node, but may also because another remote node is
 // added to the predecessor list. Returns if we should proceed to the next
 // middleware.
@@ -51,7 +51,7 @@ type PredecessorRemoved struct {
 }
 
 // FingerTableAdded is called when a new remote node has been added to the
-// finger table. This does not necessarily means the remote node has just
+// finger table. This does not necessarily mean the remote node has just
 // established a new connection with local node, but may also because another
 // remote node previously in finger table was disconnected or removed. When
 // being called, it will also pass the index of finger table and the index of
@@ -63,7 +63,7 @@ type FingerTableAdded struct {
 }
 
 // FingerTableRemoved is called when a remote node has been removed from the
-// finger table. This does not necessarily means the remote node has just
+// finger table. This does not necessarily mean the remote node has just
 // disconnected with local node, but may also because another remote node is
 // added to the finger table. Returns if we should proceed to the next
 // middleware.
