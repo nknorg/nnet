@@ -95,7 +95,7 @@ func DefaultConfig() *Config {
 // otherwise use default config
 func MergedConfig(conf *Config) (*Config, error) {
 	merged := DefaultConfig()
-	err := copier.CopyWithOption(merged, conf, copier.Option{IgnoreEmpty: true, DeepCopy: true})
+	err := copier.CopyWithOption(merged, conf, copier.Option{IgnoreEmpty: true})
 	if err != nil {
 		return nil, err
 	}
