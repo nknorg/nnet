@@ -55,7 +55,7 @@ func (nn *NNet) NewRelayBytesMessage(data, srcID, key []byte) (*pbmsg.Message, e
 
 	msg := &pbmsg.Message{
 		MessageType: pbmsg.MessageType_BYTES,
-		RoutingType: pbmsg.RoutingType_DIRECT,
+		RoutingType: pbmsg.RoutingType_RELAY,
 		MessageId:   id,
 		Message:     buf,
 		SrcId:       srcID,
